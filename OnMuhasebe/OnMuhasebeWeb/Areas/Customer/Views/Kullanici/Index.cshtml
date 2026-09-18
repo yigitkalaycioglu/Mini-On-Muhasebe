@@ -1,0 +1,118 @@
+@*
+    KULLANICI LİSTESİ — KullaniciController  [Yalnızca Yönetici]
+    GET Index() → View(List<Kullanici>)
+    POST Delete(int id) → kullanıcıyı sil, RedirectToAction("Index")
+        (bağlı SatisFaturalari/AlisFaturalari/StokHareketleri/CariHareketleri varsa silme reddedilip
+        yalnızca Aktif = false yapılır)
+*@
+@model List<Kullanici>
+@{
+    ViewData["Title"] = "Kullanıcılar";
+    var mesaj = TempData["Mesaj"] as string;
+}
+
+<div class="page-header">
+    <div>
+        <h1>Kullanıcılar</h1>
+        <p class="page-subtitle">Sisteme giriş yapabilen kullanıcılar ve rolleri.</p>
+    </div>
+    <a asp-action="Create" class="btn btn-primary">+ Yeni Kullanıcı</a>
+</div>
+
+@if (!string.IsNullOrEmpty(mesaj))
+{
+    <div class="info-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><path d="M22 4 12 14.01l-3-3" /></svg>
+        <span>@mesaj</span>
+    </div>
+}
+
+<div class="table-card">
+    @if (Model.Any())
+    {
+        <div class="filter-bar">
+            <div class="filter-item filter-search">
+                <label for="arama">Ara</label>
+                <input id="arama" type="search" class="form-control" placeholder="Kullanıcı adı veya ad soyad..." data-tablo-arama="#tablo" />
+            </div>
+            <div class="filter-item">
+                <label for="rol">Rol</label>
+                <select id="rol" class="form-select" data-tablo-secim="#tablo" data-alan="rol">
+                    <option value="">Tümü</option>
+                    <option value="Yönetici">Yönetici</option>
+                    <option value="Standart">Standart</option>
+                </select>
+            </div>
+            <div class="filter-item">
+                <label for="durum">Durum</label>
+                <select id="durum" class="form-select" data-tablo-secim="#tablo" data-alan="durum">
+                    <option value="">Tümü</option>
+                    <option value="aktif">Aktif</option>
+                    <option value="pasif">Pasif</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="table-wrapper">
+            <table class="table" id="tablo">
+                <thead>
+                    <tr>
+                        <th>Kullanıcı Adı</th>
+                        <th>Ad Soyad</th>
+                        <th style="width: 130px;">Rol</th>
+                        <th style="width: 110px;">Durum</th>
+                        <th style="width: 100px;"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var k in Model)
+                    {
+                        <tr data-rol="@k.Rol" data-durum="@(k.Aktif ? "aktif" : "pasif")">
+                            <td class="text-mono">@k.KullaniciAdi</td>
+                            <td class="cell-strong">@k.AdSoyad</td>
+                            <td>
+                                <span class="badge-soft @(k.Rol == "Yönetici" ? "badge-brand" : "")">@k.Rol</span>
+                            </td>
+                            <td>
+                                @if (k.Aktif)
+                                {
+                                    <span class="badge-status badge-active">Aktif</span>
+                                }
+                                else
+                                {
+                                    <span class="badge-status badge-passive">Pasif</span>
+                                }
+                            </td>
+                            <td>
+                                <div class="row-actions">
+                                    <a asp-action="Edit" asp-route-id="@k.Id" class="btn btn-sm btn-ghost">Düzenle</a>
+                                    <form asp-action="Delete" asp-route-id="@k.Id" method="post" class="m-0"
+                                          data-onay="@k.KullaniciAdi kullanıcısı silinsin mi?">
+                                        <button type="submit" class="btn btn-sm btn-ghost" title="Sil" aria-label="Sil">
+                                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /></svg>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="table-footer">
+            <span data-tablo-sayac="#tablo">@Model.Count</span> kayıt gösteriliyor ·
+            @Model.Count(x => x.Rol == "Yönetici") yönetici, @Model.Count(x => x.Rol != "Yönetici") standart
+        </div>
+    }
+    else
+    {
+        <div class="empty-state">
+            <div class="empty-state-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>
+            </div>
+            <h3>Henüz kullanıcı yok</h3>
+            <p>İlk kullanıcıyı ekleyerek başlayın.</p>
+        </div>
+    }
+</div>

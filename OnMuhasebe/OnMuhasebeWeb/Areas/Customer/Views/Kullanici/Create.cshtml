@@ -1,0 +1,76 @@
+@*
+    YENİ KULLANICI — KullaniciController  [Yalnızca Yönetici]
+    GET  Create()
+    POST Create(Kullanici kullanici, string sifre, string sifreTekrar)
+         → şifre hash'lenip kullanici.SifreHash'e yazılmalı (düz metin saklanmaz)
+         → SifreHash formdan gelmediği için ModelState.Remove("SifreHash") gerekebilir
+*@
+@model Kullanici
+@{
+    ViewData["Title"] = "Yeni Kullanıcı";
+}
+
+<div class="page-header">
+    <div>
+        <h1>Yeni Kullanıcı</h1>
+        <p class="page-subtitle">Sisteme giriş yapabilecek yeni bir kullanıcı oluşturun.</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12 col-lg-8 col-xl-7">
+        <div class="card">
+            <div class="card-header">Kullanıcı bilgileri</div>
+            <div class="card-body">
+                <form asp-action="Create" method="post" id="kullaniciForm">
+                    <div asp-validation-summary="ModelOnly"></div>
+
+                    <partial name="_Form" model="Model" />
+
+                    <div class="form-section-title mt-4">Şifre</div>
+                    <div class="row g-3">
+                        <div class="col-12 col-md-6">
+                            <label for="sifre" class="form-label">Şifre <span class="zorunlu">*</span></label>
+                            <input id="sifre" name="sifre" type="password" class="form-control" minlength="6" autocomplete="new-password" required />
+                            <span class="form-hint">En az 6 karakter.</span>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label for="sifreTekrar" class="form-label">Şifre (tekrar) <span class="zorunlu">*</span></label>
+                            <input id="sifreTekrar" name="sifreTekrar" type="password" class="form-control" minlength="6" autocomplete="new-password" required />
+                            <span class="field-validation-error" id="sifreUyari" hidden>Şifreler eşleşmiyor.</span>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Kullanıcıyı Oluştur</button>
+                        <a asp-action="Index" class="btn btn-outline-secondary">Vazgeç</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            const form = document.getElementById('kullaniciForm');
+            const sifre = document.getElementById('sifre');
+            const tekrar = document.getElementById('sifreTekrar');
+            const uyari = document.getElementById('sifreUyari');
+
+            function kontrol() {
+                const eslesmiyor = tekrar.value.length > 0 && sifre.value !== tekrar.value;
+                uyari.hidden = !eslesmiyor;
+                return !eslesmiyor;
+            }
+
+            tekrar.addEventListener('input', kontrol);
+            sifre.addEventListener('input', kontrol);
+            form.addEventListener('submit', function (e) {
+                if (!kontrol()) e.preventDefault();
+            });
+        })();
+    </script>
+}

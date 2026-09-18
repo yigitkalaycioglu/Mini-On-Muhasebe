@@ -1,0 +1,73 @@
+@* Stok kartı Create ve Edit ekranlarının ortak alanları *@
+@model StokKarti
+@{
+    var aktif = Model?.Aktif ?? true;
+    // Yeni kartta KDV, "Varsayılan KDV Oranı" parametresinden gelir (yoksa 20)
+    var kdv = Model != null ? Model.KdvOrani.ToString("0.##") : (ViewData["VarsayilanKdv"]?.ToString() ?? "20");
+}
+
+<div class="form-section-title">Genel bilgiler</div>
+<div class="row g-3 mb-4">
+    <div class="col-12 col-md-4">
+        <label asp-for="StokKodu" class="form-label">Stok kodu <span class="zorunlu">*</span></label>
+        <input asp-for="StokKodu" class="form-control text-mono" placeholder="Örn: STK006" maxlength="20" required />
+        <span asp-validation-for="StokKodu"></span>
+    </div>
+    <div class="col-12 col-md-8">
+        <label asp-for="StokAdi" class="form-label">Stok adı <span class="zorunlu">*</span></label>
+        <input asp-for="StokAdi" class="form-control" placeholder="Örn: A4 Fotokopi Kağıdı" maxlength="150" required />
+        <span asp-validation-for="StokAdi"></span>
+    </div>
+    <div class="col-6 col-md-4">
+        <label asp-for="Birim" class="form-label">Birim <span class="zorunlu">*</span></label>
+        <input asp-for="Birim" class="form-control" list="birimListesi" placeholder="Adet" maxlength="10" required />
+        <datalist id="birimListesi">
+            <option value="Adet"></option>
+            <option value="Paket"></option>
+            <option value="Kutu"></option>
+            <option value="Kg"></option>
+            <option value="Lt"></option>
+            <option value="Metre"></option>
+        </datalist>
+        <span asp-validation-for="Birim"></span>
+    </div>
+    <div class="col-6 col-md-4">
+        <label for="KdvOrani" class="form-label">KDV oranı (%) <span class="zorunlu">*</span></label>
+        <input id="KdvOrani" name="KdvOrani" type="text" inputmode="decimal" class="form-control" list="kdvListesi" value="@kdv" required />
+        <datalist id="kdvListesi">
+            <option value="0"></option>
+            <option value="1"></option>
+            <option value="10"></option>
+            <option value="20"></option>
+        </datalist>
+        <span asp-validation-for="KdvOrani"></span>
+    </div>
+</div>
+
+<div class="form-section-title">Fiyat ve stok seviyesi</div>
+<div class="row g-3 mb-4">
+    <div class="col-12 col-md-4">
+        <label asp-for="AlisFiyati" class="form-label">Alış fiyatı (TL) <span class="zorunlu">*</span></label>
+        <input asp-for="AlisFiyati" type="text" inputmode="decimal" class="form-control" placeholder="0,00" />
+        <span asp-validation-for="AlisFiyati"></span>
+    </div>
+    <div class="col-12 col-md-4">
+        <label asp-for="SatisFiyati" class="form-label">Satış fiyatı (TL) <span class="zorunlu">*</span></label>
+        <input asp-for="SatisFiyati" type="text" inputmode="decimal" class="form-control" placeholder="0,00" />
+        <span asp-validation-for="SatisFiyati"></span>
+    </div>
+    <div class="col-12 col-md-4">
+        <label asp-for="KritikStok" class="form-label">Kritik stok seviyesi <span class="zorunlu">*</span></label>
+        <input asp-for="KritikStok" type="text" inputmode="decimal" class="form-control" placeholder="0" />
+        <span asp-validation-for="KritikStok"></span>
+        <span class="form-hint">Mevcut miktar bu değere düşünce uyarı verilir.</span>
+    </div>
+</div>
+<span class="form-hint mb-3" style="margin-top: -12px;">Ondalıklı değerleri virgülle yazın (ör. 12,50).</span>
+
+<div class="form-check form-switch mb-1">
+    <input class="form-check-input" type="checkbox" role="switch" id="Aktif" name="Aktif" value="true" checked="@aktif" />
+    <input type="hidden" name="Aktif" value="false" />
+    <label class="form-check-label" for="Aktif">Aktif</label>
+</div>
+<span class="form-hint">Pasif stok kartları faturalarda ve sayım fişinde seçilemez.</span>

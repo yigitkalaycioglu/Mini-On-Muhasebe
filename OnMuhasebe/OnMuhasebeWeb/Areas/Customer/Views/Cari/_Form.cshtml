@@ -1,0 +1,56 @@
+@* Cari Create ve Edit ekranlarının ortak alanları *@
+@model Cari
+@{
+    var aktif = Model?.Aktif ?? true;
+}
+
+<div class="form-section-title">Genel bilgiler</div>
+<div class="row g-3 mb-4">
+    <div class="col-12 col-md-4">
+        <label asp-for="CariKodu" class="form-label">Cari kodu <span class="zorunlu">*</span></label>
+        <input asp-for="CariKodu" class="form-control text-mono" placeholder="Örn: M0003" maxlength="20" required />
+        <span asp-validation-for="CariKodu"></span>
+    </div>
+    <div class="col-12 col-md-8">
+        <label asp-for="Unvan" class="form-label">Unvan <span class="zorunlu">*</span></label>
+        <input asp-for="Unvan" class="form-control" placeholder="Örn: ABC Ticaret Ltd. Şti." maxlength="150" required />
+        <span asp-validation-for="Unvan"></span>
+    </div>
+    <div class="col-12 col-md-4">
+        <label asp-for="CariTipi" class="form-label">Cari tipi <span class="zorunlu">*</span></label>
+        <select asp-for="CariTipi" class="form-select" required>
+            <option value="1">Müşteri</option>
+            <option value="2">Tedarikçi</option>
+            <option value="3">Müşteri + Tedarikçi</option>
+        </select>
+        <span asp-validation-for="CariTipi"></span>
+    </div>
+    <div class="col-12 col-md-4">
+        <label asp-for="Telefon" class="form-label">Telefon</label>
+        <input asp-for="Telefon" type="tel" class="form-control" placeholder="0216 111 22 33" maxlength="20" />
+    </div>
+</div>
+
+<div class="form-section-title">Vergi bilgileri</div>
+<div class="row g-3 mb-4">
+    <div class="col-12 col-md-6">
+        <label asp-for="VergiDairesi" class="form-label">Vergi dairesi</label>
+        <input asp-for="VergiDairesi" class="form-control" maxlength="50" />
+    </div>
+    <div class="col-12 col-md-6">
+        <label asp-for="VergiNo" class="form-label">Vergi / TC kimlik no</label>
+        <input asp-for="VergiNo" class="form-control text-mono" inputmode="numeric" maxlength="20" />
+    </div>
+</div>
+
+<div class="form-section-title">Adres</div>
+<div class="mb-4">
+    <textarea asp-for="Adres" class="form-control" rows="2" maxlength="250" placeholder="Açık adres"></textarea>
+</div>
+
+<div class="form-check form-switch mb-1">
+    <input class="form-check-input" type="checkbox" role="switch" id="Aktif" name="Aktif" value="true" checked="@aktif" />
+    <input type="hidden" name="Aktif" value="false" />
+    <label class="form-check-label" for="Aktif">Aktif</label>
+</div>
+<span class="form-hint">Pasif cariler faturalarda ve tahsilat/ödeme ekranında seçilemez.</span>

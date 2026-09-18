@@ -1,0 +1,102 @@
+@*
+    Satış ve Alış faturası ortak kalem tablosu.
+    Çağıran view bu partial'dan ÖNCE şunları ViewData'ya koymalıdır:
+      ViewData["KalemKoleksiyonu"] : "SatisFaturaSatirlari" | "AlisFaturaSatirlari"
+      ViewData["KalemFiyatTipi"]   : "satis" | "alis"   (stok seçilince gelecek fiyat)
+      ViewData["IlkKalemler"]      : doğrulama hatasında geri dönen kalemler
+                                     (new { stokId, miktar, birimFiyat, kdvOrani } listesi)
+    Controller'dan: ViewData["Stoklar"] : IEnumerable<StokKarti> (aktif stoklar)
+    Davranış: wwwroot/js/fatura-form.js
+*@
+@{
+    var koleksiyon = ViewData["KalemKoleksiyonu"] as string ?? "";
+    var fiyatTipi = ViewData["KalemFiyatTipi"] as string ?? "satis";
+    var stoklar = ViewData["Stoklar"] as IEnumerable<StokKarti> ?? Enumerable.Empty<StokKarti>();
+    var ilkKalemler = ViewData["IlkKalemler"] ?? Array.Empty<object>();
+
+    var inv = System.Globalization.CultureInfo.InvariantCulture;
+    var ondalik = System.Globalization.CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator;
+}
+
+<div class="table-card" data-fatura-kalemleri data-koleksiyon="@koleksiyon" data-fiyat="@fiyatTipi" data-ondalik="@ondalik">
+    <div class="card-header">Fatura kalemleri</div>
+
+    <div class="table-wrapper">
+        <table class="table kalem-tablo">
+            <thead>
+                <tr>
+                    <th style="width: 44px; text-align: center;">#</th>
+                    <th style="min-width: 250px;">Ürün</th>
+                    <th style="width: 150px;">Miktar</th>
+                    <th style="width: 140px;">Birim fiyat</th>
+                    <th style="width: 90px;">KDV %</th>
+                    <th style="width: 130px;" class="cell-number">Tutar (TL)</th>
+                    <th style="width: 50px;"></th>
+                </tr>
+            </thead>
+            <tbody data-kalem-govde></tbody>
+        </table>
+    </div>
+
+    <template data-kalem-sablon>
+        <tr>
+            <td class="satir-no"></td>
+            <td>
+                <select class="form-select" data-alan="StokId">
+                    <option value="">Ürün seçin...</option>
+                    @foreach (var s in stoklar)
+                    {
+                        <option value="@s.Id"
+                                data-satis="@s.SatisFiyati.ToString(inv)"
+                                data-alis="@s.AlisFiyati.ToString(inv)"
+                                data-kdv="@s.KdvOrani.ToString(inv)"
+                                data-birim="@s.Birim">@s.StokKodu — @s.StokAdi</option>
+                    }
+                </select>
+            </td>
+            <td>
+                <div class="d-flex align-items-center gap-2">
+                    <input type="text" inputmode="decimal" class="form-control text-end" data-alan="Miktar" placeholder="0" autocomplete="off" />
+                    <span class="satir-birim cell-muted" style="font-size: .75rem; min-width: 34px;"></span>
+                </div>
+            </td>
+            <td>
+                <input type="text" inputmode="decimal" class="form-control text-end" data-alan="BirimFiyat" placeholder="0,00" autocomplete="off" />
+            </td>
+            <td>
+                <input type="text" inputmode="decimal" class="form-control text-end" data-alan="KdvOrani" placeholder="20" autocomplete="off" />
+            </td>
+            <td class="satir-tutar">0,00</td>
+            <td>
+                <button type="button" class="btn btn-sm btn-ghost" data-kalem-sil title="Satırı sil" aria-label="Satırı sil">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /><path d="M10 11v6" /><path d="M14 11v6" /></svg>
+                </button>
+            </td>
+        </tr>
+    </template>
+
+    <div class="kalem-ekle d-flex flex-wrap gap-3 align-items-start">
+        <div>
+            <button type="button" class="btn btn-sm btn-outline-secondary" data-kalem-ekle>+ Kalem ekle</button>
+            <span class="field-validation-error" data-kalem-uyari hidden></span>
+            <span class="form-hint">Ondalıklı değerleri virgülle yazın. Tabloda Enter'a basmak yeni satır açar.</span>
+        </div>
+
+        <div class="toplamlar">
+            <div class="toplamlar-satir">
+                <span>Ara toplam (KDV hariç)</span>
+                <span data-toplam="ara">0,00 TL</span>
+            </div>
+            <div class="toplamlar-satir">
+                <span>KDV toplamı</span>
+                <span data-toplam="kdv">0,00 TL</span>
+            </div>
+            <div class="toplamlar-satir genel">
+                <span>Genel toplam</span>
+                <span data-toplam="genel">0,00 TL</span>
+            </div>
+        </div>
+    </div>
+
+    <script type="application/json" data-ilk-kalemler>@Json.Serialize(ilkKalemler)</script>
+</div>

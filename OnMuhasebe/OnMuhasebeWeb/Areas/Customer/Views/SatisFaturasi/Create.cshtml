@@ -1,0 +1,93 @@
+@*
+    YENİ SATIŞ FATURASI (başlık + kalem tablosu) — SatisFaturasiController
+    GET  Create()
+         ViewData["Cariler"]         : IEnumerable<Cari>          — aktif müşteriler (CariTipi 1 veya 3)
+         ViewData["SatisElemanlari"] : IEnumerable<SatisElemani>  — aktif satış elemanları
+         ViewData["Stoklar"]         : IEnumerable<StokKarti>     — aktif stoklar
+         ViewData["YeniFaturaNo"]    : string (isteğe bağlı)      — ör. "SAT-2026-0003" önizleme
+    POST Create(SatisFaturasi satisFaturasi)
+         Kalemler satisFaturasi.SatisFaturaSatirlari içinde gelir (StokId, Miktar, BirimFiyat, KdvOrani).
+         Backend'de yapılacaklar (tek transaction):
+           - SatirTutari, AraToplam, KdvToplam, GenelToplam SUNUCUDA hesaplanır (formdan gelmez)
+           - FaturaNo, KullaniciId, OlusturmaTarihi atanır
+           - Her kalem için StokHareket (HareketTipi="Satis", Yon="Cikis")
+           - Müşteriye CariHareket (IslemTipi="Satis", Borc=GenelToplam)
+           - Hata olursa View(satisFaturasi) + ViewData listeleri yeniden doldurulur
+*@
+@model SatisFaturasi
+@{
+    ViewData["Title"] = "Yeni Satış Faturası";
+
+    var cariler = ViewData["Cariler"] as IEnumerable<Cari> ?? Enumerable.Empty<Cari>();
+    var elemanlar = ViewData["SatisElemanlari"] as IEnumerable<SatisElemani> ?? Enumerable.Empty<SatisElemani>();
+    var yeniNo = ViewData["YeniFaturaNo"] as string;
+    var tarih = (Model == null || Model.Tarih == default) ? DateTime.Today : Model.Tarih;
+
+    ViewData["KalemKoleksiyonu"] = "SatisFaturaSatirlari";
+    ViewData["KalemFiyatTipi"] = "satis";
+    ViewData["IlkKalemler"] = Model?.SatisFaturaSatirlari
+        .Select(k => new { stokId = k.StokId, miktar = k.Miktar, birimFiyat = k.BirimFiyat, kdvOrani = k.KdvOrani })
+        .ToList();
+}
+
+<div class="page-header">
+    <div>
+        <h1>Yeni Satış Faturası</h1>
+        <p class="page-subtitle">Kayıtta stok çıkışı yapılır ve müşteri borçlandırılır.</p>
+    </div>
+    <a asp-action="Index" class="btn btn-outline-secondary">← Satış faturaları</a>
+</div>
+
+<form asp-action="Create" method="post">
+    <div asp-validation-summary="All"></div>
+
+    <div class="card mb-3">
+        <div class="card-header">Fatura bilgileri</div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-12 col-md-4 col-xl-3">
+                    <label class="form-label" for="faturaNo">Fatura no</label>
+                    <input id="faturaNo" class="form-control text-mono" value="@(yeniNo ?? "Otomatik atanacak")" readonly tabindex="-1" />
+                </div>
+                <div class="col-12 col-md-4 col-xl-3">
+                    <label for="Tarih" class="form-label">Tarih <span class="zorunlu">*</span></label>
+                    <input id="Tarih" name="Tarih" type="date" class="form-control" value="@tarih.ToString("yyyy-MM-dd")" required />
+                </div>
+                <div class="col-12 col-md-4 col-xl-6"></div>
+
+                <div class="col-12 col-md-6">
+                    <label asp-for="CariId" class="form-label">Müşteri <span class="zorunlu">*</span></label>
+                    <select asp-for="CariId" class="form-select" required
+                            asp-items="@cariler.Select(c => new SelectListItem($"{c.CariKodu} — {c.Unvan}", c.Id.ToString()))">
+                        <option value="">Müşteri seçin...</option>
+                    </select>
+                    <span asp-validation-for="CariId"></span>
+                </div>
+                <div class="col-12 col-md-6">
+                    <label asp-for="SatisElemaniId" class="form-label">Satış elemanı <span class="zorunlu">*</span></label>
+                    <select asp-for="SatisElemaniId" class="form-select" required
+                            asp-items="@elemanlar.Select(e => new SelectListItem(e.AdSoyad, e.Id.ToString()))">
+                        <option value="">Satış elemanı seçin...</option>
+                    </select>
+                    <span asp-validation-for="SatisElemaniId"></span>
+                </div>
+
+                <div class="col-12">
+                    <label asp-for="Aciklama" class="form-label">Açıklama</label>
+                    <input asp-for="Aciklama" class="form-control" maxlength="250" placeholder="İsteğe bağlı not" />
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <partial name="_FaturaKalemleri" />
+
+    <div class="d-flex gap-2 mt-3">
+        <button type="submit" class="btn btn-primary" style="padding: 10px 22px;">Faturayı Kaydet</button>
+        <a asp-action="Index" class="btn btn-outline-secondary" style="padding: 10px 18px;">Vazgeç</a>
+    </div>
+</form>
+
+@section Scripts {
+    <script src="~/js/fatura-form.js" asp-append-version="true"></script>
+}

@@ -1,0 +1,4 @@
+/* Layout'a özel (scoped) stiller.
+   Genel tasarım wwwroot/css/site.css içinde tanımlıdır.
+   Buraya yazılan kurallar yalnızca _Layout.cshtml içindeki elemanlara uygulanır
+   ve site.css'ten sonra yüklendiği için onu geçersiz kılabilir — dikkatli kullanın. */

@@ -1,0 +1,89 @@
+@*
+    RAPORLAR ANA SAYFASI — RaporController
+    GET Index() → View()
+*@
+@{
+    ViewData["Title"] = "Raporlar";
+}
+
+<div class="page-header">
+    <div>
+        <h1>Raporlar</h1>
+        <p class="page-subtitle">Tüm raporlar hareket tablolarından hesaplanır ve yazdırılabilir.</p>
+    </div>
+</div>
+
+<div class="form-section-title">Cari</div>
+<div class="row g-3 mb-4">
+    <div class="col-12 col-sm-6 col-lg-4">
+        <a class="module-card" asp-action="CariBakiye">
+            <div class="module-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></svg></div>
+            <h3>Cari Bakiye Listesi</h3>
+            <p>Tüm carilerin toplam borç, alacak ve güncel bakiyeleri.</p>
+        </a>
+    </div>
+    <div class="col-12 col-sm-6 col-lg-4">
+        <a class="module-card" asp-controller="Cari" asp-action="Ekstre">
+            <div class="module-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><path d="M14 2v6h6" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /></svg></div>
+            <h3>Cari Ekstre</h3>
+            <p>Tek cari için tarih aralığındaki hareket dökümü ve yürüyen bakiye.</p>
+        </a>
+    </div>
+    <div class="col-12 col-sm-6 col-lg-4">
+        <a class="module-card" asp-controller="TahsilatOdeme" asp-action="Index">
+            <div class="module-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2" /><path d="M2 10h20" /></svg></div>
+            <h3>Tahsilat / Ödeme Listesi</h3>
+            <p>Dönem içindeki tahsilat ve ödemeler, ödeme türüne göre.</p>
+        </a>
+    </div>
+</div>
+
+<div class="form-section-title">Stok</div>
+<div class="row g-3 mb-4">
+    <div class="col-12 col-sm-6 col-lg-4">
+        <a class="module-card" asp-action="StokDurum">
+            <div class="module-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" /></svg></div>
+            <h3>Stok Durum Listesi</h3>
+            <p>Ürün bazında giriş, çıkış, mevcut miktar ve stok değeri.</p>
+        </a>
+    </div>
+    <div class="col-12 col-sm-6 col-lg-4">
+        <a class="module-card" asp-action="KritikStok">
+            <div class="module-card-icon" style="background: var(--warning-light); color: var(--warning);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg></div>
+            <h3>Kritik Stok Listesi</h3>
+            <p>Kritik seviyeye düşmüş ürünler ve eksik miktarları.</p>
+        </a>
+    </div>
+    <div class="col-12 col-sm-6 col-lg-4">
+        <a class="module-card" asp-controller="StokHareket" asp-action="Index">
+            <div class="module-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m17 2 4 4-4 4" /><path d="M3 11v-1a4 4 0 0 1 4-4h14" /><path d="m7 22-4-4 4-4" /><path d="M21 13v1a4 4 0 0 1-4 4H3" /></svg></div>
+            <h3>Stok Hareketleri Listesi</h3>
+            <p>Satış, alış ve sayım fişlerinden oluşan tüm hareketler.</p>
+        </a>
+    </div>
+</div>
+
+<div class="form-section-title">Satış ve alış</div>
+<div class="row g-3">
+    <div class="col-12 col-sm-6 col-lg-4">
+        <a class="module-card" asp-controller="SatisFaturasi" asp-action="Index">
+            <div class="module-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><path d="M14 2v6h6" /><path d="M12 18v-6" /><path d="m9 15 3-3 3 3" /></svg></div>
+            <h3>Satış Faturası Listesi</h3>
+            <p>Dönem içindeki satış faturaları ve toplamları.</p>
+        </a>
+    </div>
+    <div class="col-12 col-sm-6 col-lg-4">
+        <a class="module-card" asp-controller="AlisFaturasi" asp-action="Index">
+            <div class="module-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><path d="M14 2v6h6" /><path d="M12 12v6" /><path d="m15 15-3 3-3-3" /></svg></div>
+            <h3>Alış Faturası Listesi</h3>
+            <p>Dönem içindeki alış faturaları ve toplamları.</p>
+        </a>
+    </div>
+    <div class="col-12 col-sm-6 col-lg-4">
+        <a class="module-card" asp-action="SatisElemaniSatis">
+            <div class="module-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg></div>
+            <h3>Satış Elemanına Göre Satış</h3>
+            <p>Satış elemanı bazında fatura sayısı, ciro ve pay.</p>
+        </a>
+    </div>
+</div>

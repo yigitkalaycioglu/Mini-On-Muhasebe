@@ -1,0 +1,129 @@
+@*
+    SATIŞ FATURASI DETAYI — SatisFaturasiController
+    GET  Detay(int id) → View(satisFaturasi)
+         .Include(f => f.Cari).Include(f => f.SatisElemani).Include(f => f.Kullanici)
+         .Include(f => f.SatisFaturaSatirlari).ThenInclude(k => k.StokKarti)
+    POST Delete(int id)
+         → Faturaya ait StokHareket ve CariHareket kayıtları da geri alınmalı (BelgeNo ile), tek transaction
+         → RedirectToAction("Index")
+*@
+@model SatisFaturasi
+@{
+    ViewData["Title"] = "Satış Faturası " + Model.FaturaNo;
+    var mesaj = TempData["Mesaj"] as string;
+}
+
+<div class="page-header">
+    <div>
+        <h1>Satış Faturası <span class="text-mono" style="font-size: 1.2rem;">@Model.FaturaNo</span></h1>
+        <p class="page-subtitle">@Model.Tarih.ToString("dd MMMM yyyy") · @Model.Cari?.Unvan</p>
+    </div>
+    <div class="d-flex gap-2 flex-wrap no-print">
+        <button type="button" class="btn btn-outline-secondary" data-yazdir>Yazdır</button>
+        <form asp-action="Delete" asp-route-id="@Model.Id" method="post" class="m-0"
+              data-onay="@Model.FaturaNo numaralı fatura silinsin mi? Stok çıkışları ve müşteri borcu geri alınacak.">
+            <button type="submit" class="btn btn-danger-soft">Faturayı Sil</button>
+        </form>
+        <a asp-action="Index" class="btn btn-outline-secondary">← Listeye dön</a>
+    </div>
+</div>
+
+@if (!string.IsNullOrEmpty(mesaj))
+{
+    <div class="info-box no-print">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><path d="M22 4 12 14.01l-3-3" /></svg>
+        <span>@mesaj</span>
+    </div>
+}
+
+<div class="card mb-3">
+    <div class="card-body">
+        <dl class="detail-grid">
+            <div>
+                <dt>Müşteri</dt>
+                <dd>
+                    <a asp-controller="Cari" asp-action="Ekstre" asp-route-id="@Model.CariId">@Model.Cari?.Unvan</a>
+                    <span class="d-block cell-muted text-mono" style="font-size: .78rem;">@Model.Cari?.CariKodu</span>
+                </dd>
+            </div>
+            <div>
+                <dt>Vergi dairesi / no</dt>
+                <dd>@(string.IsNullOrEmpty(Model.Cari?.VergiNo) ? "—" : $"{Model.Cari?.VergiDairesi} / {Model.Cari?.VergiNo}")</dd>
+            </div>
+            <div>
+                <dt>Fatura tarihi</dt>
+                <dd>@Model.Tarih.ToString("dd.MM.yyyy")</dd>
+            </div>
+            <div>
+                <dt>Satış elemanı</dt>
+                <dd>@(Model.SatisElemani?.AdSoyad ?? "—")</dd>
+            </div>
+            <div>
+                <dt>Oluşturan</dt>
+                <dd>@(Model.Kullanici?.AdSoyad ?? "—")</dd>
+            </div>
+            <div>
+                <dt>Oluşturma zamanı</dt>
+                <dd>@Model.OlusturmaTarihi.ToString("dd.MM.yyyy HH:mm")</dd>
+            </div>
+            @if (!string.IsNullOrEmpty(Model.Aciklama))
+            {
+                <div style="grid-column: 1 / -1;">
+                    <dt>Açıklama</dt>
+                    <dd>@Model.Aciklama</dd>
+                </div>
+            }
+        </dl>
+    </div>
+</div>
+
+<div class="table-card">
+    <div class="card-header">Kalemler</div>
+    <div class="table-wrapper">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th style="width: 44px;">#</th>
+                    <th style="width: 110px;">Kod</th>
+                    <th>Ürün</th>
+                    <th class="cell-number">Miktar</th>
+                    <th class="cell-number">Birim Fiyat</th>
+                    <th class="cell-number">KDV</th>
+                    <th class="cell-number">Tutar (TL)</th>
+                </tr>
+            </thead>
+            <tbody>
+                @{ var sira = 0; }
+                @foreach (var k in Model.SatisFaturaSatirlari)
+                {
+                    sira++;
+                    <tr>
+                        <td class="cell-muted">@sira</td>
+                        <td class="text-mono">@k.StokKarti?.StokKodu</td>
+                        <td class="cell-strong">@k.StokKarti?.StokAdi</td>
+                        <td class="cell-number">@k.Miktar.ToString("N2") <span class="cell-muted">@k.StokKarti?.Birim</span></td>
+                        <td class="cell-number">@k.BirimFiyat.ToString("N2")</td>
+                        <td class="cell-number cell-muted">%@k.KdvOrani.ToString("0.##")</td>
+                        <td class="cell-number cell-strong">@k.SatirTutari.ToString("N2")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <div class="kalem-ekle">
+        <div class="toplamlar">
+            <div class="toplamlar-satir">
+                <span>Ara toplam (KDV hariç)</span>
+                <span>@Model.AraToplam.ToString("N2") TL</span>
+            </div>
+            <div class="toplamlar-satir">
+                <span>KDV toplamı</span>
+                <span>@Model.KdvToplam.ToString("N2") TL</span>
+            </div>
+            <div class="toplamlar-satir genel">
+                <span>Genel toplam</span>
+                <span>@Model.GenelToplam.ToString("N2") TL</span>
+            </div>
+        </div>
+    </div>
+</div>

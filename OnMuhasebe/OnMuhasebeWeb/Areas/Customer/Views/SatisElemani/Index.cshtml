@@ -1,0 +1,109 @@
+@*
+    SATIŞ ELEMANI LİSTESİ — SatisElemaniController
+    GET Index() → View(List<SatisElemani>)
+    POST Delete(int id) → satış elemanını sil, RedirectToAction("Index")
+        (varsa bağlı SatisFaturalari kontrolü controller'da yapılmalı: FK kaydı korumak için silme reddedilebilir
+        ya da yalnızca Aktif = false yapılabilir)
+*@
+@model List<SatisElemani>
+@{
+    ViewData["Title"] = "Satış Elemanları";
+    var mesaj = TempData["Mesaj"] as string;
+}
+
+<div class="page-header">
+    <div>
+        <h1>Satış Elemanları</h1>
+        <p class="page-subtitle">Satış faturalarında seçilebilecek temsilcilerin listesi.</p>
+    </div>
+    <a asp-action="Create" class="btn btn-primary">+ Yeni Satış Elemanı</a>
+</div>
+
+@if (!string.IsNullOrEmpty(mesaj))
+{
+    <div class="info-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><path d="M22 4 12 14.01l-3-3" /></svg>
+        <span>@mesaj</span>
+    </div>
+}
+
+<div class="table-card">
+    @if (Model.Any())
+    {
+        <div class="filter-bar">
+            <div class="filter-item filter-search">
+                <label for="arama">Ara</label>
+                <input id="arama" type="search" class="form-control" placeholder="Ad soyad veya telefon..." data-tablo-arama="#tablo" />
+            </div>
+            <div class="filter-item">
+                <label for="durum">Durum</label>
+                <select id="durum" class="form-select" data-tablo-secim="#tablo" data-alan="durum">
+                    <option value="">Tümü</option>
+                    <option value="aktif">Aktif</option>
+                    <option value="pasif">Pasif</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="table-wrapper">
+            <table class="table" id="tablo">
+                <thead>
+                    <tr>
+                        <th style="width: 60px;">#</th>
+                        <th>Ad Soyad</th>
+                        <th>Telefon</th>
+                        <th style="width: 110px;">Durum</th>
+                        <th style="width: 100px;"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var s in Model)
+                    {
+                        <tr data-durum="@(s.Aktif ? "aktif" : "pasif")">
+                            <td class="cell-muted">@s.Id</td>
+                            <td class="cell-strong">@s.AdSoyad</td>
+                            <td>@s.Telefon</td>
+                            <td>
+                                @if (s.Aktif)
+                                {
+                                    <span class="badge-status badge-active">Aktif</span>
+                                }
+                                else
+                                {
+                                    <span class="badge-status badge-passive">Pasif</span>
+                                }
+                            </td>
+                            <td>
+                                <div class="row-actions">
+                                    <a asp-action="Edit" asp-route-id="@s.Id" class="btn btn-sm btn-ghost">Düzenle</a>
+                                    <form asp-action="Delete" asp-route-id="@s.Id" method="post" class="m-0"
+                                          data-onay="@s.AdSoyad silinsin mi?">
+                                        <button type="submit" class="btn btn-sm btn-ghost" title="Sil" aria-label="Sil">
+                                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /></svg>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="table-footer">
+            <span data-tablo-sayac="#tablo">@Model.Count</span> kayıt gösteriliyor ·
+            @Model.Count(x => x.Aktif) aktif, @Model.Count(x => !x.Aktif) pasif
+        </div>
+    }
+    else
+    {
+        <div class="empty-state">
+            <div class="empty-state-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
+            </div>
+            <h3>Henüz satış elemanı yok</h3>
+            <p>İlk satış elemanını ekleyerek başlayın.</p>
+            <a asp-action="Create" class="btn btn-primary mt-3">+ Yeni Satış Elemanı</a>
+        </div>
+    }
+</div>

@@ -1,0 +1,119 @@
+@*
+    RAPOR: CARİ BAKİYE LİSTESİ — RaporController
+    GET CariBakiye() → View(List<Cari>)  .Include(c => c.CariHareketleri)
+*@
+@model List<Cari>
+@{
+    ViewData["Title"] = "Cari Bakiye Listesi";
+
+    string TipAdi(byte tip) => tip switch { 1 => "Müşteri", 2 => "Tedarikçi", 3 => "Müşteri + Tedarikçi", _ => "-" };
+
+    var satirlar = Model
+        .Select(c => new { Cari = c, Borc = c.CariHareketleri.Sum(h => h.Borc), Alacak = c.CariHareketleri.Sum(h => h.Alacak) })
+        .Select(x => new { x.Cari, x.Borc, x.Alacak, Bakiye = x.Borc - x.Alacak })
+        .OrderBy(x => x.Cari.CariKodu)
+        .ToList();
+
+    var alacagimiz = satirlar.Where(x => x.Bakiye > 0).Sum(x => x.Bakiye);
+    var borcumuz = -satirlar.Where(x => x.Bakiye < 0).Sum(x => x.Bakiye);
+}
+
+<div class="page-header">
+    <div>
+        <h1>Cari Bakiye Listesi</h1>
+        <p class="page-subtitle">@DateTime.Now.ToString("dd.MM.yyyy HH:mm") itibarıyla · Bakiye = Σ Borç − Σ Alacak</p>
+    </div>
+    <div class="d-flex gap-2 no-print">
+        <button type="button" class="btn btn-outline-secondary" data-yazdir>Yazdır</button>
+        <a asp-action="Index" class="btn btn-outline-secondary">← Raporlar</a>
+    </div>
+</div>
+
+<div class="stat-grid">
+    <div class="stat">
+        <div class="stat-label">Alacağımız (borçlu cariler)</div>
+        <div class="stat-value">@alacagimiz.ToString("N2")</div>
+    </div>
+    <div class="stat">
+        <div class="stat-label">Borcumuz (alacaklı cariler)</div>
+        <div class="stat-value">@borcumuz.ToString("N2")</div>
+    </div>
+    <div class="stat">
+        <div class="stat-label">Net (TL)</div>
+        <div class="stat-value">@((alacagimiz - borcumuz).ToString("N2"))</div>
+    </div>
+</div>
+
+<div class="table-card">
+    <div class="filter-bar">
+        <div class="filter-item filter-search">
+            <label for="arama">Ara</label>
+            <input id="arama" type="search" class="form-control" placeholder="Kod veya unvan..." data-tablo-arama="#tablo" />
+        </div>
+        <div class="filter-item">
+            <label for="tip">Tip</label>
+            <select id="tip" class="form-select" data-tablo-secim="#tablo" data-alan="tip">
+                <option value="">Tümü</option>
+                <option value="1">Müşteri</option>
+                <option value="2">Tedarikçi</option>
+                <option value="3">Müşteri + Tedarikçi</option>
+            </select>
+        </div>
+        <div class="filter-item">
+            <label for="durum">Bakiye</label>
+            <select id="durum" class="form-select" data-tablo-secim="#tablo" data-alan="bakiye">
+                <option value="">Tümü</option>
+                <option value="borclu">Borçlu (B)</option>
+                <option value="alacakli">Alacaklı (A)</option>
+                <option value="sifir">Sıfır</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="table-wrapper">
+        <table class="table" id="tablo">
+            <thead>
+                <tr>
+                    <th style="width: 100px;">Kod</th>
+                    <th>Unvan</th>
+                    <th>Tip</th>
+                    <th class="cell-number">Toplam Borç</th>
+                    <th class="cell-number">Toplam Alacak</th>
+                    <th class="cell-number">Bakiye (TL)</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var x in satirlar)
+                {
+                    var durum = x.Bakiye > 0 ? "borclu" : x.Bakiye < 0 ? "alacakli" : "sifir";
+                    <tr data-tip="@x.Cari.CariTipi" data-bakiye="@durum">
+                        <td class="text-mono">@x.Cari.CariKodu</td>
+                        <td>
+                            <a asp-controller="Cari" asp-action="Ekstre" asp-route-id="@x.Cari.Id" class="cell-strong">@x.Cari.Unvan</a>
+                        </td>
+                        <td><span class="badge-soft">@TipAdi(x.Cari.CariTipi)</span></td>
+                        <td class="cell-number">@x.Borc.ToString("N2")</td>
+                        <td class="cell-number">@x.Alacak.ToString("N2")</td>
+                        <td class="cell-number cell-strong">
+                            @Math.Abs(x.Bakiye).ToString("N2")
+                            @if (x.Bakiye > 0) { <span class="bakiye-etiket">(B)</span> }
+                            else if (x.Bakiye < 0) { <span class="bakiye-etiket">(A)</span> }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="3">Genel toplam</td>
+                    <td class="cell-number">@satirlar.Sum(x => x.Borc).ToString("N2")</td>
+                    <td class="cell-number">@satirlar.Sum(x => x.Alacak).ToString("N2")</td>
+                    <td class="cell-number">@((alacagimiz - borcumuz).ToString("N2"))</td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+    <div class="table-footer">
+        <span data-tablo-sayac="#tablo">@satirlar.Count</span> cari ·
+        <strong>(B)</strong> cari bize borçlu, <strong>(A)</strong> biz cariye borçluyuz
+    </div>
+</div>

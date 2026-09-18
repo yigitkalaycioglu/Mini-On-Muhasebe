@@ -1,0 +1,43 @@
+@*
+    SATIŞ ELEMANI KARTI (DÜZENLE) — SatisElemaniController
+    GET Edit(int id) → View(satisElemani)
+    POST Edit(int id, SatisElemani satisElemani) → başarılıysa RedirectToAction("Index")
+    Pasife alma: "Aktif" anahtarı kapatılarak kaydedilir.
+*@
+@model SatisElemani
+@{
+    ViewData["Title"] = "Satış Elemanı Kartı";
+}
+
+<div class="page-header">
+    <div>
+        <h1>@Model.AdSoyad</h1>
+        <p class="page-subtitle">Satış elemanı bilgilerini güncelleyin.</p>
+    </div>
+    <a asp-action="Index" class="btn btn-outline-secondary">← Listeye dön</a>
+</div>
+
+<div class="row">
+    <div class="col-12 col-lg-7 col-xl-6">
+        <div class="card">
+            <div class="card-header">Satış elemanı bilgileri</div>
+            <div class="card-body">
+                <form asp-action="Edit" asp-route-id="@Model.Id" method="post">
+                    <div asp-validation-summary="ModelOnly"></div>
+                    <input type="hidden" asp-for="Id" />
+
+                    <partial name="_Form" model="Model" />
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Değişiklikleri Kaydet</button>
+                        <a asp-action="Index" class="btn btn-outline-secondary">Vazgeç</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

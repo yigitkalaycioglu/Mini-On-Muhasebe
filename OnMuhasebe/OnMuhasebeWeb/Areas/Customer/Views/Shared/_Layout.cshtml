@@ -1,0 +1,172 @@
+@{
+    var aktifController = ViewContext.RouteData.Values["controller"]?.ToString();
+    var aktifAction = ViewContext.RouteData.Values["action"]?.ToString();
+
+    string Aktif(bool kosul) => kosul ? "active" : "";
+
+    var girisYapildi = User.Identity?.IsAuthenticated == true;
+    var yoneticiMi = User.IsInRole("Yönetici");
+
+    // Rol bazlı menü: "Yönetim" bölümü (Kullanıcılar, Parametreler) yalnızca Yönetici rolüne görünür.
+    // Giriş sistemi henüz yazılmadığı için, oturum yokken de görünmesine izin veriliyor.
+    // Tüm sayfalar [Authorize] ile korunduğunda oturumsuz durum yalnızca Login sayfasında
+    // oluşur (o sayfa _AuthLayout kullanır), yani bu istisna zararsız hale gelir.
+    var yonetimGorunsun = !girisYapildi || yoneticiMi;
+
+    var kullaniciAdi = User.Identity?.Name ?? "";
+    var basHarf = kullaniciAdi.Length > 0 ? kullaniciAdi.Substring(0, 1).ToUpper() : "?";
+}
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] · Mini Ön Muhasebe</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/OnMuhasebeWeb.styles.css" asp-append-version="true" />
+</head>
+<body>
+    @* Mesajlar sayfaların kendi "info-box" bloklarında gösteriliyor; burada tekrar edilmiyor. *@
+
+    <div class="app">
+
+        <!-- ===== Kenar menü ===== -->
+        <aside class="sidebar" id="sidebar">
+            <a class="sidebar-brand" asp-controller="Home" asp-action="Index">
+                <span class="sidebar-brand-logo">ÖM</span>
+                <span class="sidebar-brand-text">
+                    <span class="sidebar-brand-title">Ön Muhasebe</span>
+                    <span class="sidebar-brand-sub">Mini Sürüm</span>
+                </span>
+            </a>
+
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">Genel</div>
+                    <a class="nav-item-link @Aktif(aktifController == "Home")" asp-controller="Home" asp-action="Index">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /></svg>
+                        Panel
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">Tanımlar</div>
+                    <a class="nav-item-link @Aktif(aktifController == "Cari")" asp-controller="Cari" asp-action="Index">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" /><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" /></svg>
+                        Cari Hesaplar
+                    </a>
+                    <a class="nav-item-link @Aktif(aktifController == "StokKarti")" asp-controller="StokKarti" asp-action="Index">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" /><path d="M3.27 6.96 12 12.01l8.73-5.05" /><path d="M12 22.08V12" /></svg>
+                        Stok Kartları
+                    </a>
+                    <a class="nav-item-link @Aktif(aktifController == "SatisElemani")" asp-controller="SatisElemani" asp-action="Index">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
+                        Satış Elemanları
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">Faturalar</div>
+                    <a class="nav-item-link @Aktif(aktifController == "SatisFaturasi")" asp-controller="SatisFaturasi" asp-action="Index">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><path d="M14 2v6h6" /><path d="M12 18v-6" /><path d="m9 15 3-3 3 3" /></svg>
+                        Satış Faturaları
+                    </a>
+                    <a class="nav-item-link @Aktif(aktifController == "AlisFaturasi")" asp-controller="AlisFaturasi" asp-action="Index">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><path d="M14 2v6h6" /><path d="M12 12v6" /><path d="m15 15-3 3-3-3" /></svg>
+                        Alış Faturaları
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">Stok ve Finans</div>
+                    <a class="nav-item-link @Aktif(aktifController == "StokHareket" && aktifAction != "SayimFisi")" asp-controller="StokHareket" asp-action="Index">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m17 2 4 4-4 4" /><path d="M3 11v-1a4 4 0 0 1 4-4h14" /><path d="m7 22-4-4 4-4" /><path d="M21 13v1a4 4 0 0 1-4 4H3" /></svg>
+                        Stok Hareketleri
+                    </a>
+                    <a class="nav-item-link @Aktif(aktifController == "StokHareket" && aktifAction == "SayimFisi")" asp-controller="StokHareket" asp-action="SayimFisi">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" /></svg>
+                        Sayım Fişi
+                    </a>
+                    <a class="nav-item-link @Aktif(aktifController == "TahsilatOdeme")" asp-controller="TahsilatOdeme" asp-action="Index">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2" /><path d="M2 10h20" /></svg>
+                        Tahsilat / Ödeme
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">Analiz</div>
+                    <a class="nav-item-link @Aktif(aktifController == "Rapor")" asp-controller="Rapor" asp-action="Index">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10" /><line x1="12" y1="20" x2="12" y2="4" /><line x1="6" y1="20" x2="6" y2="14" /></svg>
+                        Raporlar
+                    </a>
+                </div>
+
+                @if (yonetimGorunsun)
+                {
+                    <div class="nav-section">
+                        <div class="nav-section-title">Yönetim</div>
+                        <a class="nav-item-link @Aktif(aktifController == "Kullanici")" asp-controller="Kullanici" asp-action="Index">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>
+                            Kullanıcılar
+                        </a>
+                        <a class="nav-item-link @Aktif(aktifController == "Parametre")" asp-controller="Parametre" asp-action="Index">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14" /><line x1="4" y1="10" x2="4" y2="3" /><line x1="12" y1="21" x2="12" y2="12" /><line x1="12" y1="8" x2="12" y2="3" /><line x1="20" y1="21" x2="20" y2="16" /><line x1="20" y1="12" x2="20" y2="3" /><line x1="1" y1="14" x2="7" y2="14" /><line x1="9" y1="8" x2="15" y2="8" /><line x1="17" y1="16" x2="23" y2="16" /></svg>
+                            Parametreler
+                        </a>
+                    </div>
+                }
+            </nav>
+
+            <div class="sidebar-footer">
+                Mini Ön Muhasebe · Staj Projesi
+            </div>
+        </aside>
+
+        <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+        <!-- ===== Ana bölüm ===== -->
+        <div class="app-main">
+            <header class="topbar">
+                <button class="sidebar-toggle" id="sidebarToggle" type="button" aria-label="Menüyü aç/kapat">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="18" x2="21" y2="18" /></svg>
+                </button>
+                <h2 class="topbar-title">@ViewData["Title"]</h2>
+
+                <div class="topbar-user">
+                    @if (girisYapildi)
+                    {
+                        <span class="topbar-avatar">@basHarf</span>
+                        <span class="topbar-user-text">
+                            <span class="topbar-user-name">@kullaniciAdi</span>
+                            <span class="topbar-user-role">@(yoneticiMi ? "Yönetici" : "Standart")</span>
+                        </span>
+                        <form asp-controller="Account" asp-action="Logout" method="post" class="m-0">
+                            <button type="submit" class="btn btn-sm btn-outline-secondary">Çıkış</button>
+                        </form>
+                    }
+                    else
+                    {
+                        <a class="btn btn-sm btn-outline-secondary" asp-controller="Account" asp-action="Login">Giriş Yap</a>
+                    }
+                </div>
+            </header>
+
+            <main class="content" role="main">
+                @RenderBody()
+            </main>
+
+            <footer class="app-footer">
+                &copy; @DateTime.Now.Year · Mini Ön Muhasebe Uygulaması
+            </footer>
+        </div>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

@@ -1,0 +1,122 @@
+@*
+    ALIŞ FATURASI LİSTESİ — AlisFaturasiController
+    GET Index(DateTime? baslangic, DateTime? bitis)
+        → View(List<AlisFaturasi>)  tarih filtresi uygulanmış, yeniden eskiye sıralı
+        .Include(f => f.Cari).Include(f => f.Kullanici)
+    İsteğe bağlı: TempData["Mesaj"]
+*@
+@model List<AlisFaturasi>
+@{
+    ViewData["Title"] = "Alış Faturaları";
+
+    var baslangic = Context.Request.Query["baslangic"].ToString();
+    var bitis = Context.Request.Query["bitis"].ToString();
+    var mesaj = TempData["Mesaj"] as string;
+}
+
+<div class="page-header">
+    <div>
+        <h1>Alış Faturaları</h1>
+        <p class="page-subtitle">Tedarikçilerden gelen faturalar ve toplamları.</p>
+    </div>
+    <a asp-action="Create" class="btn btn-primary">+ Yeni Alış Faturası</a>
+</div>
+
+@if (!string.IsNullOrEmpty(mesaj))
+{
+    <div class="info-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><path d="M22 4 12 14.01l-3-3" /></svg>
+        <span>@mesaj</span>
+    </div>
+}
+
+<div class="stat-grid">
+    <div class="stat">
+        <div class="stat-label">Fatura sayısı</div>
+        <div class="stat-value">@Model.Count</div>
+    </div>
+    <div class="stat">
+        <div class="stat-label">Ara toplam</div>
+        <div class="stat-value">@Model.Sum(f => f.AraToplam).ToString("N2")</div>
+    </div>
+    <div class="stat">
+        <div class="stat-label">KDV toplamı</div>
+        <div class="stat-value">@Model.Sum(f => f.KdvToplam).ToString("N2")</div>
+    </div>
+    <div class="stat">
+        <div class="stat-label">Genel toplam (TL)</div>
+        <div class="stat-value">@Model.Sum(f => f.GenelToplam).ToString("N2")</div>
+    </div>
+</div>
+
+<div class="table-card">
+    <form asp-action="Index" method="get" class="filter-bar">
+        <div class="filter-item filter-search">
+            <label for="arama">Ara</label>
+            <input id="arama" type="search" class="form-control" placeholder="Fatura no, tedarikçi..." data-tablo-arama="#tablo" />
+        </div>
+        <div class="filter-item">
+            <label for="baslangic">Başlangıç</label>
+            <input id="baslangic" name="baslangic" type="date" class="form-control" value="@baslangic" />
+        </div>
+        <div class="filter-item">
+            <label for="bitis">Bitiş</label>
+            <input id="bitis" name="bitis" type="date" class="form-control" value="@bitis" />
+        </div>
+        <button type="submit" class="btn btn-primary">Filtrele</button>
+    </form>
+
+    @if (Model.Any())
+    {
+        <div class="table-wrapper">
+            <table class="table" id="tablo">
+                <thead>
+                    <tr>
+                        <th>Fatura No</th>
+                        <th>Tarih</th>
+                        <th>Tedarikçi</th>
+                        <th class="cell-number">Ara Toplam</th>
+                        <th class="cell-number">KDV</th>
+                        <th class="cell-number">Genel Toplam</th>
+                        <th>Oluşturan</th>
+                        <th style="width: 80px;"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var f in Model)
+                    {
+                        <tr>
+                            <td><a asp-action="Detay" asp-route-id="@f.Id" class="text-mono cell-strong">@f.FaturaNo</a></td>
+                            <td>@f.Tarih.ToString("dd.MM.yyyy")</td>
+                            <td class="cell-strong">@f.Cari?.Unvan</td>
+                            <td class="cell-number">@f.AraToplam.ToString("N2")</td>
+                            <td class="cell-number cell-muted">@f.KdvToplam.ToString("N2")</td>
+                            <td class="cell-number cell-strong">@f.GenelToplam.ToString("N2")</td>
+                            <td class="cell-muted">@f.Kullanici?.AdSoyad</td>
+                            <td>
+                                <div class="row-actions">
+                                    <a asp-action="Detay" asp-route-id="@f.Id" class="btn btn-sm btn-ghost">Detay</a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="table-footer">
+            <span data-tablo-sayac="#tablo">@Model.Count</span> fatura gösteriliyor · Tutarlar TL
+        </div>
+    }
+    else
+    {
+        <div class="empty-state">
+            <div class="empty-state-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><path d="M14 2v6h6" /></svg>
+            </div>
+            <h3>Alış faturası bulunamadı</h3>
+            <p>Seçilen dönemde fatura yok veya henüz alış faturası girilmedi.</p>
+            <a asp-action="Create" class="btn btn-primary mt-3">+ Yeni Alış Faturası</a>
+        </div>
+    }
+</div>

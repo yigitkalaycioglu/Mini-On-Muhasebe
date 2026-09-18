@@ -1,0 +1,142 @@
+@*
+    STOK HAREKETLERİ LİSTESİ — StokHareketController
+    GET Index(int? stokId, DateTime? baslangic, DateTime? bitis)
+        → View(List<StokHareket>)  filtreler uygulanmış, tarihe göre sıralı
+        .Include(h => h.StokKarti).Include(h => h.Kullanici)
+    Satış, alış ve sayım fişleri bu tabloya yazar; bu ekran tüm giriş/çıkışları listeler.
+*@
+@model List<StokHareket>
+@{
+    ViewData["Title"] = "Stok Hareketleri";
+
+    var baslangic = Context.Request.Query["baslangic"].ToString();
+    var bitis = Context.Request.Query["bitis"].ToString();
+    var stokId = Context.Request.Query["stokId"].ToString();
+    var filtreliStok = string.IsNullOrEmpty(stokId) ? null : Model.FirstOrDefault()?.StokKarti;
+
+    (string Ad, string Sinif) Tip(string t) => t switch
+    {
+        "Alis" => ("Alış", "badge-success"),
+        "Satis" => ("Satış", "badge-brand"),
+        "SayimFazlasi" => ("Sayım Fazlası", "badge-warning"),
+        "SayimEksigi" => ("Sayım Eksiği", "badge-danger"),
+        _ => (t, "")
+    };
+
+    var toplamGiris = Model.Where(h => h.Yon == "Giris").Sum(h => h.Miktar);
+    var toplamCikis = Model.Where(h => h.Yon == "Cikis").Sum(h => h.Miktar);
+}
+
+<div class="page-header">
+    <div>
+        <h1>Stok Hareketleri</h1>
+        <p class="page-subtitle">
+            @if (filtreliStok != null)
+            {
+                <span class="text-mono">@filtreliStok.StokKodu</span> <text>·</text> @filtreliStok.StokAdi
+                <a asp-action="Index" class="ms-2">(filtreyi kaldır)</a>
+            }
+            else
+            {
+                <text>Satış, alış ve sayım fişlerinden oluşan tüm stok giriş/çıkışları.</text>
+            }
+        </p>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+        <a asp-action="SayimFisi" asp-route-tip="SayimFazlasi" class="btn btn-outline-secondary">+ Sayım Fazlası Fişi</a>
+        <a asp-action="SayimFisi" asp-route-tip="SayimEksigi" class="btn btn-outline-secondary">− Sayım Eksiği Fişi</a>
+    </div>
+</div>
+
+<div class="table-card">
+    <form asp-action="Index" method="get" class="filter-bar">
+        @if (!string.IsNullOrEmpty(stokId))
+        {
+            <input type="hidden" name="stokId" value="@stokId" />
+        }
+        <div class="filter-item filter-search">
+            <label for="arama">Ara</label>
+            <input id="arama" type="search" class="form-control" placeholder="Belge no, stok, açıklama..." data-tablo-arama="#tablo" />
+        </div>
+        <div class="filter-item">
+            <label for="tip">Hareket tipi</label>
+            <select id="tip" class="form-select" data-tablo-secim="#tablo" data-alan="tip">
+                <option value="">Tümü</option>
+                <option value="Alis">Alış</option>
+                <option value="Satis">Satış</option>
+                <option value="SayimFazlasi">Sayım Fazlası</option>
+                <option value="SayimEksigi">Sayım Eksiği</option>
+            </select>
+        </div>
+        <div class="filter-item">
+            <label for="baslangic">Başlangıç</label>
+            <input id="baslangic" name="baslangic" type="date" class="form-control" value="@baslangic" />
+        </div>
+        <div class="filter-item">
+            <label for="bitis">Bitiş</label>
+            <input id="bitis" name="bitis" type="date" class="form-control" value="@bitis" />
+        </div>
+        <button type="submit" class="btn btn-primary">Filtrele</button>
+    </form>
+
+    @if (Model.Any())
+    {
+        <div class="table-wrapper">
+            <table class="table" id="tablo">
+                <thead>
+                    <tr>
+                        <th style="width: 105px;">Tarih</th>
+                        <th style="width: 140px;">Belge No</th>
+                        <th>Stok</th>
+                        <th>Hareket</th>
+                        <th class="cell-number">Giriş</th>
+                        <th class="cell-number">Çıkış</th>
+                        <th>Açıklama</th>
+                        <th>Kullanıcı</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var h in Model)
+                    {
+                        var tip = Tip(h.HareketTipi);
+                        <tr data-tip="@h.HareketTipi">
+                            <td>@h.Tarih.ToString("dd.MM.yyyy")</td>
+                            <td class="text-mono">@h.BelgeNo</td>
+                            <td>
+                                <span class="cell-strong">@h.StokKarti?.StokAdi</span>
+                                <span class="d-block cell-muted text-mono" style="font-size: .75rem;">@h.StokKarti?.StokKodu</span>
+                            </td>
+                            <td><span class="badge-soft @tip.Sinif">@tip.Ad</span></td>
+                            <td class="cell-number tutar-alacak">@(h.Yon == "Giris" ? h.Miktar.ToString("N2") : "")</td>
+                            <td class="cell-number tutar-borc">@(h.Yon == "Cikis" ? h.Miktar.ToString("N2") : "")</td>
+                            <td class="cell-muted">@h.Aciklama</td>
+                            <td class="cell-muted">@h.Kullanici?.AdSoyad</td>
+                        </tr>
+                    }
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="4">Toplam</td>
+                        <td class="cell-number">@toplamGiris.ToString("N2")</td>
+                        <td class="cell-number">@toplamCikis.ToString("N2")</td>
+                        <td colspan="2"></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+
+        <div class="table-footer">
+            <span data-tablo-sayac="#tablo">@Model.Count</span> hareket gösteriliyor
+        </div>
+    }
+    else
+    {
+        <div class="empty-state">
+            <div class="empty-state-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m17 2 4 4-4 4" /><path d="M3 11v-1a4 4 0 0 1 4-4h14" /><path d="m7 22-4-4 4-4" /><path d="M21 13v1a4 4 0 0 1-4 4H3" /></svg>
+            </div>
+            <h3>Hareket bulunamadı</h3>
+            <p>Seçilen filtrelere uygun stok hareketi yok.</p>
+        </div>
+    }
+</div>

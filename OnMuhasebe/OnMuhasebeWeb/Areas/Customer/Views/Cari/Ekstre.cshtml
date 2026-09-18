@@ -1,0 +1,184 @@
+@*
+    CARİ EKSTRE — CariController
+    GET Ekstre(int? id, DateTime? baslangic, DateTime? bitis)
+        → View(cari)  (id yoksa View(null) → cari seçim ekranı gösterilir)
+        Model.CariHareketleri: seçilen tarih aralığına göre FİLTRELENMİŞ hareketler
+            ör. .Include(c => c.CariHareketleri.Where(h => h.Tarih >= bas && h.Tarih <= bit))
+        ViewData["Cariler"]     : IEnumerable<Cari>  — üstteki cari seçim listesi
+        ViewData["DevirBakiye"] : decimal (isteğe bağlı) — başlangıç tarihinden önceki bakiye
+*@
+@model Cari
+@{
+    ViewData["Title"] = "Cari Ekstre";
+
+    var cariler = ViewData["Cariler"] as IEnumerable<Cari> ?? Enumerable.Empty<Cari>();
+    var devir = ViewData["DevirBakiye"] as decimal? ?? 0m;
+    var baslangic = Context.Request.Query["baslangic"].ToString();
+    var bitis = Context.Request.Query["bitis"].ToString();
+
+    var hareketler = Model?.CariHareketleri.OrderBy(h => h.Tarih).ThenBy(h => h.Id).ToList() ?? new List<CariHareket>();
+    var toplamBorc = hareketler.Sum(h => h.Borc);
+    var toplamAlacak = hareketler.Sum(h => h.Alacak);
+    var sonBakiye = devir + toplamBorc - toplamAlacak;
+
+    string IslemAdi(string tip) => tip switch
+    {
+        "Satis" => "Satış Faturası",
+        "Alis" => "Alış Faturası",
+        "Tahsilat" => "Tahsilat",
+        "Odeme" => "Ödeme",
+        _ => tip
+    };
+}
+
+@functions {
+    // Bakiye tutarını "1.250,00 (B)" biçiminde gösterir
+    Microsoft.AspNetCore.Html.IHtmlContent BakiyeYaz(decimal tutar)
+    {
+        var etiket = tutar > 0 ? " <span class=\"bakiye-etiket\">(B)</span>" : tutar < 0 ? " <span class=\"bakiye-etiket\">(A)</span>" : "";
+        return new Microsoft.AspNetCore.Html.HtmlString(Math.Abs(tutar).ToString("N2") + etiket);
+    }
+}
+
+<div class="page-header">
+    <div>
+        <h1>Cari Ekstre</h1>
+        <p class="page-subtitle">
+            @if (Model != null)
+            {
+                <span class="text-mono">@Model.CariKodu</span> <text>·</text> @Model.Unvan
+            }
+            else
+            {
+                <text>Hareket dökümünü görmek istediğiniz cariyi seçin.</text>
+            }
+        </p>
+    </div>
+    @if (Model != null)
+    {
+        <button type="button" class="btn btn-outline-secondary no-print" data-yazdir>Yazdır</button>
+    }
+</div>
+
+<div class="table-card mb-4 no-print">
+    <form asp-action="Ekstre" method="get" class="filter-bar" style="border-bottom: none;">
+        <div class="filter-item filter-search">
+            <label for="id">Cari</label>
+            <select id="id" name="id" class="form-select"
+                    asp-items="@cariler.Select(c => new SelectListItem($"{c.CariKodu} — {c.Unvan}", c.Id.ToString(), c.Id == Model?.Id))">
+                <option value="">Cari seçin...</option>
+            </select>
+        </div>
+        <div class="filter-item">
+            <label for="baslangic">Başlangıç</label>
+            <input id="baslangic" name="baslangic" type="date" class="form-control" value="@baslangic" />
+        </div>
+        <div class="filter-item">
+            <label for="bitis">Bitiş</label>
+            <input id="bitis" name="bitis" type="date" class="form-control" value="@bitis" />
+        </div>
+        <button type="submit" class="btn btn-primary">Göster</button>
+    </form>
+</div>
+
+@if (Model == null)
+{
+    <div class="table-card">
+        <div class="empty-state">
+            <div class="empty-state-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><path d="M14 2v6h6" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /></svg>
+            </div>
+            <h3>Cari seçilmedi</h3>
+            <p>Yukarıdan bir cari ve isteğe bağlı tarih aralığı seçip "Göster"e basın.</p>
+        </div>
+    </div>
+}
+else
+{
+    <div class="stat-grid">
+        <div class="stat">
+            <div class="stat-label">Devir bakiye</div>
+            <div class="stat-value">@BakiyeYaz(devir)</div>
+        </div>
+        <div class="stat">
+            <div class="stat-label">Dönem borç</div>
+            <div class="stat-value">@toplamBorc.ToString("N2")</div>
+        </div>
+        <div class="stat">
+            <div class="stat-label">Dönem alacak</div>
+            <div class="stat-value">@toplamAlacak.ToString("N2")</div>
+        </div>
+        <div class="stat">
+            <div class="stat-label">Güncel bakiye</div>
+            <div class="stat-value">@BakiyeYaz(sonBakiye)</div>
+        </div>
+    </div>
+
+    <div class="table-card">
+        <div class="table-wrapper">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th style="width: 110px;">Tarih</th>
+                        <th style="width: 140px;">Belge No</th>
+                        <th>İşlem</th>
+                        <th>Açıklama</th>
+                        <th class="cell-number">Borç</th>
+                        <th class="cell-number">Alacak</th>
+                        <th class="cell-number">Bakiye</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!string.IsNullOrEmpty(baslangic) || devir != 0)
+                    {
+                        <tr>
+                            <td class="cell-muted">@(string.IsNullOrEmpty(baslangic) ? "" : DateTime.Parse(baslangic).ToString("dd.MM.yyyy"))</td>
+                            <td></td>
+                            <td class="cell-strong" colspan="4">Devir</td>
+                            <td class="cell-number cell-strong">@BakiyeYaz(devir)</td>
+                        </tr>
+                    }
+
+                    @{ var yuruyen = devir; }
+                    @foreach (var h in hareketler)
+                    {
+                        yuruyen += h.Borc - h.Alacak;
+                        <tr>
+                            <td>@h.Tarih.ToString("dd.MM.yyyy")</td>
+                            <td class="text-mono">@h.BelgeNo</td>
+                            <td>
+                                @IslemAdi(h.IslemTipi)
+                                @if (!string.IsNullOrEmpty(h.OdemeTuru))
+                                {
+                                    <span class="badge-soft ms-1">@h.OdemeTuru</span>
+                                }
+                            </td>
+                            <td class="cell-muted">@h.Aciklama</td>
+                            <td class="cell-number">@(h.Borc != 0 ? h.Borc.ToString("N2") : "")</td>
+                            <td class="cell-number">@(h.Alacak != 0 ? h.Alacak.ToString("N2") : "")</td>
+                            <td class="cell-number cell-strong">@BakiyeYaz(yuruyen)</td>
+                        </tr>
+                    }
+
+                    @if (!hareketler.Any())
+                    {
+                        <tr>
+                            <td colspan="7" class="text-center cell-muted" style="padding: 32px;">Seçilen dönemde hareket yok.</td>
+                        </tr>
+                    }
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="4">Dönem toplamı</td>
+                        <td class="cell-number">@toplamBorc.ToString("N2")</td>
+                        <td class="cell-number">@toplamAlacak.ToString("N2")</td>
+                        <td class="cell-number">@BakiyeYaz(sonBakiye)</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+        <div class="table-footer">
+            <strong>(B)</strong> cari bize borçlu, <strong>(A)</strong> biz cariye borçluyuz · Bakiye = Σ Borç − Σ Alacak
+        </div>
+    </div>
+}

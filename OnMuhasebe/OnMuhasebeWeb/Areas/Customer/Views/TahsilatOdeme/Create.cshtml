@@ -1,0 +1,160 @@
+@*
+    TAHSİLAT / ÖDEME GİRİŞİ — TahsilatOdemeController
+    GET  Create(string? tip)   tip: "Tahsilat" | "Odeme"  (varsayılan: Tahsilat)
+         ViewData["Cariler"] : IEnumerable<Cari>  — TÜM aktif cariler
+                               (liste, seçilen işleme göre ekranda süzülür:
+                                Tahsilat → Müşteri/Her ikisi, Ödeme → Tedarikçi/Her ikisi)
+    POST Create(CariHareket cariHareket, decimal tutar)
+         → Tahsilat: Alacak = tutar, Borc = 0   (müşterinin borcu azalır)
+         → Ödeme   : Borc = tutar,   Alacak = 0 (tedarikçiye borcumuz azalır)
+         → BelgeNo, KullaniciId backend'de atanır
+         → Cari ve Kullanici formdan gelmediği için ModelState.Remove(...) gerekebilir
+*@
+@model CariHareket
+@{
+    ViewData["Title"] = "Tahsilat / Ödeme Girişi";
+
+    var cariler = ViewData["Cariler"] as IEnumerable<Cari> ?? Enumerable.Empty<Cari>();
+
+    var tip = Model?.IslemTipi ?? Context.Request.Query["tip"].ToString();
+    if (tip != "Odeme") tip = "Tahsilat";
+
+    var odemeTuru = Model?.OdemeTuru ?? "Nakit";
+    var tarih = (Model == null || Model.Tarih == default) ? DateTime.Today : Model.Tarih;
+    var tutar = Context.Request.HasFormContentType ? Context.Request.Form["tutar"].ToString() : "";
+
+    // Cari tipi: 1=Müşteri, 2=Tedarikçi, 3=Her ikisi
+    string Uygunluk(byte cariTipi) => cariTipi switch { 1 => "Tahsilat", 2 => "Odeme", _ => "Tahsilat Odeme" };
+}
+
+<div class="page-header">
+    <div>
+        <h1>Tahsilat / Ödeme Girişi</h1>
+        <p class="page-subtitle">Cari hesaba nakit, havale veya çek hareketi işleyin.</p>
+    </div>
+    <a asp-action="Index" class="btn btn-outline-secondary">← Listeye dön</a>
+</div>
+
+<div class="row">
+    <div class="col-12 col-lg-8 col-xl-7">
+        <div class="card">
+            <div class="card-body">
+                <form asp-action="Create" method="post">
+                    <div asp-validation-summary="All"></div>
+
+                    <div class="mb-3">
+                        <div class="form-label">İşlem</div>
+                        <div class="segmented">
+                            <input type="radio" id="tipTahsilat" name="IslemTipi" value="Tahsilat" checked="@(tip == "Tahsilat")" />
+                            <label for="tipTahsilat">Tahsilat</label>
+                            <input type="radio" id="tipOdeme" name="IslemTipi" value="Odeme" checked="@(tip == "Odeme")" />
+                            <label for="tipOdeme">Ödeme</label>
+                        </div>
+                    </div>
+
+                    <div class="info-box" id="tipAciklama">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><line x1="12" y1="16" x2="12" y2="12" /><line x1="12" y1="8" x2="12.01" y2="8" /></svg>
+                        <span></span>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-12 col-md-4">
+                            <label for="Tarih" class="form-label">Tarih <span class="zorunlu">*</span></label>
+                            <input id="Tarih" name="Tarih" type="date" class="form-control" value="@tarih.ToString("yyyy-MM-dd")" required />
+                        </div>
+                        <div class="col-12 col-md-8">
+                            <label asp-for="CariId" class="form-label"><span id="cariEtiket">Müşteri</span> <span class="zorunlu">*</span></label>
+                            <select asp-for="CariId" class="form-select" required>
+                                <option value="">Cari seçin...</option>
+                                @foreach (var c in cariler)
+                                {
+                                    <option value="@c.Id" data-uygun="@Uygunluk(c.CariTipi)">@c.CariKodu — @c.Unvan</option>
+                                }
+                            </select>
+                            <span asp-validation-for="CariId"></span>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-12 col-md-4">
+                            <label for="tutar" class="form-label">Tutar (TL) <span class="zorunlu">*</span></label>
+                            <input id="tutar" name="tutar" type="text" inputmode="decimal" class="form-control text-end"
+                                   style="font-size: 1.05rem; font-weight: 600;" placeholder="0,00" value="@tutar" autocomplete="off" required />
+                        </div>
+                        <div class="col-12 col-md-8">
+                            <div class="form-label">Ödeme türü <span class="zorunlu">*</span></div>
+                            <div class="segmented">
+                                <input type="radio" id="turNakit" name="OdemeTuru" value="Nakit" checked="@(odemeTuru == "Nakit")" />
+                                <label for="turNakit">Nakit</label>
+                                <input type="radio" id="turHavale" name="OdemeTuru" value="Havale" checked="@(odemeTuru == "Havale")" />
+                                <label for="turHavale">Havale</label>
+                                <input type="radio" id="turCek" name="OdemeTuru" value="Çek" checked="@(odemeTuru == "Çek")" />
+                                <label for="turCek">Çek</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-2">
+                        <label asp-for="Aciklama" class="form-label">Açıklama</label>
+                        <input asp-for="Aciklama" class="form-control" maxlength="250" placeholder="Örn: Eylül ayı kısmi ödeme" />
+                    </div>
+                    <span class="form-hint">Belge numarası kayıt sırasında otomatik verilir.</span>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary" id="kaydetButonu">Kaydet</button>
+                        <a asp-action="Index" class="btn btn-outline-secondary">Vazgeç</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            const cariSecimi = document.getElementById('CariId');
+            const cariEtiket = document.getElementById('cariEtiket');
+            const aciklama = document.querySelector('#tipAciklama span');
+            const kaydet = document.getElementById('kaydetButonu');
+            const tutar = document.getElementById('tutar');
+
+            const seciliTip = () => document.querySelector('input[name="IslemTipi"]:checked').value;
+
+            function guncelle() {
+                const tip = seciliTip();
+                const tahsilat = tip === 'Tahsilat';
+
+                cariEtiket.textContent = tahsilat ? 'Müşteri' : 'Tedarikçi';
+                kaydet.textContent = tahsilat ? 'Tahsilatı Kaydet' : 'Ödemeyi Kaydet';
+                aciklama.textContent = tahsilat
+                    ? 'Müşteriden alınan tutar cari hesaba ALACAK olarak işlenir; müşterinin borcu azalır.'
+                    : 'Tedarikçiye ödenen tutar cari hesaba BORÇ olarak işlenir; tedarikçiye olan borcumuz azalır.';
+
+                // Seçilen işleme uygun olmayan carileri gizle
+                Array.from(cariSecimi.options).forEach(function (secenek) {
+                    if (!secenek.value) return;
+                    const uygun = secenek.dataset.uygun.split(' ').includes(tip);
+                    secenek.hidden = !uygun;
+                    secenek.disabled = !uygun;
+                });
+
+                const secili = cariSecimi.selectedOptions[0];
+                if (secili && secili.disabled) cariSecimi.value = '';
+            }
+
+            // Tutarı sunucu biçimine (virgüllü) getir: "1250.5" → "1250,50"
+            tutar.addEventListener('focusout', function () {
+                let s = tutar.value.replace(/\s/g, '');
+                if (!s) return;
+                if (s.includes(',') && s.includes('.')) s = s.replace(/\./g, '').replace(',', '.');
+                else s = s.replace(',', '.');
+                const n = parseFloat(s);
+                if (!isNaN(n)) tutar.value = n.toFixed(2).replace('.', ',');
+            });
+
+            document.querySelectorAll('input[name="IslemTipi"]').forEach(r => r.addEventListener('change', guncelle));
+            guncelle();
+        })();
+    </script>
+}

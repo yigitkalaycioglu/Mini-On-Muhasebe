@@ -1,0 +1,151 @@
+@*
+    TAHSİLAT / ÖDEME LİSTESİ — TahsilatOdemeController
+    GET  Index(DateTime? baslangic, DateTime? bitis)
+         → View(List<CariHareket>)  yalnızca IslemTipi "Tahsilat" veya "Odeme" olanlar, yeniden eskiye
+         .Include(h => h.Cari).Include(h => h.Kullanici)
+    POST Delete(int id) → RedirectToAction("Index")
+    İsteğe bağlı: TempData["Mesaj"]
+*@
+@model List<CariHareket>
+@{
+    ViewData["Title"] = "Tahsilat / Ödeme";
+
+    var baslangic = Context.Request.Query["baslangic"].ToString();
+    var bitis = Context.Request.Query["bitis"].ToString();
+    var mesaj = TempData["Mesaj"] as string;
+
+    var toplamTahsilat = Model.Where(h => h.IslemTipi == "Tahsilat").Sum(h => h.Alacak);
+    var toplamOdeme = Model.Where(h => h.IslemTipi == "Odeme").Sum(h => h.Borc);
+}
+
+<div class="page-header">
+    <div>
+        <h1>Tahsilat / Ödeme</h1>
+        <p class="page-subtitle">Müşterilerden tahsilatlar ve tedarikçilere yapılan ödemeler.</p>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+        <a asp-action="Create" asp-route-tip="Tahsilat" class="btn btn-primary">+ Tahsilat</a>
+        <a asp-action="Create" asp-route-tip="Odeme" class="btn btn-outline-secondary">+ Ödeme</a>
+    </div>
+</div>
+
+@if (!string.IsNullOrEmpty(mesaj))
+{
+    <div class="info-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><path d="M22 4 12 14.01l-3-3" /></svg>
+        <span>@mesaj</span>
+    </div>
+}
+
+<div class="stat-grid">
+    <div class="stat">
+        <div class="stat-label">Toplam tahsilat</div>
+        <div class="stat-value tutar-alacak">@toplamTahsilat.ToString("N2")</div>
+    </div>
+    <div class="stat">
+        <div class="stat-label">Toplam ödeme</div>
+        <div class="stat-value tutar-borc">@toplamOdeme.ToString("N2")</div>
+    </div>
+    <div class="stat">
+        <div class="stat-label">Net (TL)</div>
+        <div class="stat-value">@((toplamTahsilat - toplamOdeme).ToString("N2"))</div>
+    </div>
+</div>
+
+<div class="table-card">
+    <form asp-action="Index" method="get" class="filter-bar">
+        <div class="filter-item filter-search">
+            <label for="arama">Ara</label>
+            <input id="arama" type="search" class="form-control" placeholder="Cari, belge no, açıklama..." data-tablo-arama="#tablo" />
+        </div>
+        <div class="filter-item">
+            <label for="tip">İşlem</label>
+            <select id="tip" class="form-select" data-tablo-secim="#tablo" data-alan="tip">
+                <option value="">Tümü</option>
+                <option value="Tahsilat">Tahsilat</option>
+                <option value="Odeme">Ödeme</option>
+            </select>
+        </div>
+        <div class="filter-item">
+            <label for="tur">Ödeme türü</label>
+            <select id="tur" class="form-select" data-tablo-secim="#tablo" data-alan="tur">
+                <option value="">Tümü</option>
+                <option value="Nakit">Nakit</option>
+                <option value="Havale">Havale</option>
+                <option value="Çek">Çek</option>
+            </select>
+        </div>
+        <div class="filter-item">
+            <label for="baslangic">Başlangıç</label>
+            <input id="baslangic" name="baslangic" type="date" class="form-control" value="@baslangic" />
+        </div>
+        <div class="filter-item">
+            <label for="bitis">Bitiş</label>
+            <input id="bitis" name="bitis" type="date" class="form-control" value="@bitis" />
+        </div>
+        <button type="submit" class="btn btn-primary">Filtrele</button>
+    </form>
+
+    @if (Model.Any())
+    {
+        <div class="table-wrapper">
+            <table class="table" id="tablo">
+                <thead>
+                    <tr>
+                        <th style="width: 105px;">Tarih</th>
+                        <th>Belge No</th>
+                        <th>Cari</th>
+                        <th>İşlem</th>
+                        <th>Tür</th>
+                        <th class="cell-number">Tutar (TL)</th>
+                        <th>Açıklama</th>
+                        <th>Kullanıcı</th>
+                        <th style="width: 60px;"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var h in Model)
+                    {
+                        var tahsilat = h.IslemTipi == "Tahsilat";
+                        <tr data-tip="@h.IslemTipi" data-tur="@h.OdemeTuru">
+                            <td>@h.Tarih.ToString("dd.MM.yyyy")</td>
+                            <td class="text-mono">@h.BelgeNo</td>
+                            <td class="cell-strong">@h.Cari?.Unvan</td>
+                            <td>
+                                <span class="badge-soft @(tahsilat ? "badge-success" : "badge-danger")">@(tahsilat ? "Tahsilat" : "Ödeme")</span>
+                            </td>
+                            <td class="cell-muted">@h.OdemeTuru</td>
+                            <td class="cell-number cell-strong @(tahsilat ? "tutar-alacak" : "tutar-borc")">
+                                @((tahsilat ? h.Alacak : h.Borc).ToString("N2"))
+                            </td>
+                            <td class="cell-muted">@h.Aciklama</td>
+                            <td class="cell-muted">@h.Kullanici?.AdSoyad</td>
+                            <td>
+                                <form asp-action="Delete" asp-route-id="@h.Id" method="post" class="m-0 row-actions"
+                                      data-onay="@(tahsilat ? "Tahsilat" : "Ödeme") kaydı silinsin mi? Cari bakiye güncellenecek.">
+                                    <button type="submit" class="btn btn-sm btn-ghost" title="Sil" aria-label="Sil">
+                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /></svg>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="table-footer">
+            <span data-tablo-sayac="#tablo">@Model.Count</span> kayıt gösteriliyor
+        </div>
+    }
+    else
+    {
+        <div class="empty-state">
+            <div class="empty-state-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2" /><path d="M2 10h20" /></svg>
+            </div>
+            <h3>Kayıt bulunamadı</h3>
+            <p>Seçilen dönemde tahsilat veya ödeme yok.</p>
+        </div>
+    }
+</div>

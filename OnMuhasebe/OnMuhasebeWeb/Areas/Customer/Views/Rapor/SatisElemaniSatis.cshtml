@@ -1,0 +1,110 @@
+@*
+    RAPOR: SATIŞ ELEMANINA GÖRE SATIŞ — RaporController
+    GET SatisElemaniSatis(DateTime? baslangic, DateTime? bitis)
+        → View(List<SatisElemani>)
+          .Include(e => e.SatisFaturalari.Where(f => f.Tarih >= bas && f.Tarih <= bit))  (tarih filtreli)
+*@
+@model List<SatisElemani>
+@{
+    ViewData["Title"] = "Satış Elemanına Göre Satış";
+
+    var baslangic = Context.Request.Query["baslangic"].ToString();
+    var bitis = Context.Request.Query["bitis"].ToString();
+
+    var satirlar = Model
+        .Select(e => new
+        {
+            Eleman = e,
+            Adet = e.SatisFaturalari.Count,
+            Ara = e.SatisFaturalari.Sum(f => f.AraToplam),
+            Kdv = e.SatisFaturalari.Sum(f => f.KdvToplam),
+            Genel = e.SatisFaturalari.Sum(f => f.GenelToplam)
+        })
+        .OrderByDescending(x => x.Genel)
+        .ToList();
+
+    var toplamGenel = satirlar.Sum(x => x.Genel);
+}
+
+<div class="page-header">
+    <div>
+        <h1>Satış Elemanına Göre Satış</h1>
+        <p class="page-subtitle">Satış elemanı bazında fatura sayısı ve ciro.</p>
+    </div>
+    <div class="d-flex gap-2 no-print">
+        <button type="button" class="btn btn-outline-secondary" data-yazdir>Yazdır</button>
+        <a asp-action="Index" class="btn btn-outline-secondary">← Raporlar</a>
+    </div>
+</div>
+
+<div class="table-card">
+    <form asp-action="SatisElemaniSatis" method="get" class="filter-bar">
+        <div class="filter-item">
+            <label for="baslangic">Başlangıç</label>
+            <input id="baslangic" name="baslangic" type="date" class="form-control" value="@baslangic" />
+        </div>
+        <div class="filter-item">
+            <label for="bitis">Bitiş</label>
+            <input id="bitis" name="bitis" type="date" class="form-control" value="@bitis" />
+        </div>
+        <button type="submit" class="btn btn-primary">Uygula</button>
+    </form>
+
+    @if (!satirlar.Any())
+    {
+        <div class="empty-state">
+            <h3>Satış elemanı yok</h3>
+            <p>Satış elemanı tanımlandığında rapor burada oluşur.</p>
+        </div>
+    }
+    else
+    {
+        <div class="table-wrapper">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Satış Elemanı</th>
+                        <th class="cell-number">Fatura</th>
+                        <th class="cell-number">Ara Toplam</th>
+                        <th class="cell-number">KDV</th>
+                        <th class="cell-number">Genel Toplam (TL)</th>
+                        <th style="width: 200px;">Pay</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var x in satirlar)
+                    {
+                        var pay = toplamGenel > 0 ? x.Genel / toplamGenel * 100 : 0;
+                        <tr>
+                            <td>
+                                <span class="cell-strong">@x.Eleman.AdSoyad</span>
+                                @if (!x.Eleman.Aktif) { <span class="badge-status badge-passive ms-1">Pasif</span> }
+                            </td>
+                            <td class="cell-number">@x.Adet</td>
+                            <td class="cell-number">@x.Ara.ToString("N2")</td>
+                            <td class="cell-number cell-muted">@x.Kdv.ToString("N2")</td>
+                            <td class="cell-number cell-strong">@x.Genel.ToString("N2")</td>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="oran-bar flex-grow-1"><span style="width: @pay.ToString("0.#", System.Globalization.CultureInfo.InvariantCulture)%;"></span></div>
+                                    <span class="cell-muted" style="font-size: .78rem; min-width: 42px; text-align: right;">%@pay.ToString("0.#")</span>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td>Toplam</td>
+                        <td class="cell-number">@satirlar.Sum(x => x.Adet)</td>
+                        <td class="cell-number">@satirlar.Sum(x => x.Ara).ToString("N2")</td>
+                        <td class="cell-number">@satirlar.Sum(x => x.Kdv).ToString("N2")</td>
+                        <td class="cell-number">@toplamGenel.ToString("N2")</td>
+                        <td></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+        <div class="table-footer">Pay = satış elemanının genel toplamı / tüm satışların genel toplamı</div>
+    }
+</div>

@@ -1,0 +1,27 @@
+@* Giriş gibi oturum açılmadan görülen sayfalar için sade (menüsüz) düzen *@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] · Mini Ön Muhasebe</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+    @if (TempData["Mesaj"] is string mesaj && !string.IsNullOrWhiteSpace(mesaj))
+    {
+        <div class="d-none" data-toast-message="@mesaj" data-toast-type="@(TempData["MesajTipi"]?.ToString() ?? "success")"></div>
+    }
+
+    <main class="auth-page">
+        @RenderBody()
+    </main>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

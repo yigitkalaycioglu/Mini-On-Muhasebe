@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="OnMuhasebe.Business/OnMuhasebe.Business.csproj" Id="94f37f1d-18c1-4fd8-bb6d-59fca7efc428" />
+  <Project Path="OnMuhasebe.DataAccess/OnMuhasebe.DataAccess.csproj" Id="bd487351-fa4a-4d56-9cae-4ec1df623290" />
+  <Project Path="OnMuhasebe.Models/OnMuhasebe.Models.csproj" Id="ed0cc20b-ae5d-483e-aaa2-e3f58a6e348a" />
+  <Project Path="OnMuhasebe.Utility/OnMuhasebe.Utility.csproj" Id="b873f0ac-3b6f-4eb7-bf02-9480d2dde1b2" />
+  <Project Path="OnMuhasebeWeb/OnMuhasebeWeb.csproj" />
+</Solution>

@@ -1,0 +1,45 @@
+@*
+    GİRİŞ EKRANI — AccountController
+    GET  Login(string? returnUrl)
+    POST Login(string kullaniciAdi, string sifre, string? returnUrl)
+         Hatalı giriş / pasif kullanıcı için: ModelState.AddModelError("", "mesaj") ve View() döndürün.
+*@
+@{
+    ViewData["Title"] = "Giriş";
+    Layout = "_AuthLayout";
+
+    var returnUrl = Context.Request.Query["returnUrl"].ToString();
+    var girilenAd = Context.Request.HasFormContentType ? Context.Request.Form["kullaniciAdi"].ToString() : "";
+}
+
+<div class="auth-card">
+    <div class="auth-brand">
+        <span class="sidebar-brand-logo">ÖM</span>
+        <h1>Mini Ön Muhasebe</h1>
+        <p>Devam etmek için hesabınızla giriş yapın.</p>
+    </div>
+
+    <form asp-controller="Account" asp-action="Login" method="post">
+        <div asp-validation-summary="All"></div>
+
+        <input type="hidden" name="returnUrl" value="@returnUrl" />
+
+        <div class="mb-3">
+            <label for="kullaniciAdi" class="form-label">Kullanıcı adı</label>
+            <input id="kullaniciAdi" name="kullaniciAdi" type="text" class="form-control"
+                   value="@girilenAd" autocomplete="username" autofocus required />
+        </div>
+
+        <div class="mb-4">
+            <label for="sifre" class="form-label">Şifre</label>
+            <input id="sifre" name="sifre" type="password" class="form-control"
+                   autocomplete="current-password" required />
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100" style="padding: 10px;">Giriş Yap</button>
+    </form>
+
+    <div class="auth-footer">
+        Hesabınız yoksa veya şifrenizi unuttuysanız yöneticinize başvurun.
+    </div>
+</div>

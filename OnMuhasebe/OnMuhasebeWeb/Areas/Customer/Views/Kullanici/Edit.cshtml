@@ -1,0 +1,96 @@
+@*
+    KULLANICI KARTI (DÜZENLE) — KullaniciController  [Yalnızca Yönetici]
+    GET  Edit(int id)                               → View(kullanici)
+    POST Edit(int id, Kullanici kullanici)          → SifreHash'e dokunulmamalı (ModelState.Remove("SifreHash"))
+    POST SifreSifirla(int id, string yeniSifre, string yeniSifreTekrar) → RedirectToAction("Edit", new { id })
+    İsteğe bağlı: TempData["Mesaj"] ile başarı mesajı gösterilir.
+*@
+@model Kullanici
+@{
+    ViewData["Title"] = "Kullanıcı Kartı";
+    var mesaj = TempData["Mesaj"] as string;
+}
+
+<div class="page-header">
+    <div>
+        <h1>@Model.AdSoyad</h1>
+        <p class="page-subtitle"><span class="text-mono">@Model.KullaniciAdi</span> · @Model.Rol</p>
+    </div>
+    <a asp-action="Index" class="btn btn-outline-secondary">← Listeye dön</a>
+</div>
+
+@if (!string.IsNullOrEmpty(mesaj))
+{
+    <div class="info-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><path d="M22 4 12 14.01l-3-3" /></svg>
+        <span>@mesaj</span>
+    </div>
+}
+
+<div class="row g-3">
+    <div class="col-12 col-lg-7">
+        <div class="card">
+            <div class="card-header">Kullanıcı bilgileri</div>
+            <div class="card-body">
+                <form asp-action="Edit" asp-route-id="@Model.Id" method="post">
+                    <div asp-validation-summary="ModelOnly"></div>
+                    <input type="hidden" asp-for="Id" />
+
+                    <partial name="_Form" model="Model" />
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Değişiklikleri Kaydet</button>
+                        <a asp-action="Index" class="btn btn-outline-secondary">Vazgeç</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-lg-5">
+        <div class="card">
+            <div class="card-header">Şifre sıfırlama</div>
+            <div class="card-body">
+                <p class="form-hint mt-0 mb-3">Kullanıcıya yeni bir şifre belirleyin. Mevcut şifre geçersiz olur.</p>
+                <form asp-action="SifreSifirla" asp-route-id="@Model.Id" method="post" id="sifreForm"
+                      data-onay="Bu kullanıcının şifresi sıfırlansın mı?">
+                    <div class="mb-3">
+                        <label for="yeniSifre" class="form-label">Yeni şifre</label>
+                        <input id="yeniSifre" name="yeniSifre" type="password" class="form-control" minlength="6" autocomplete="new-password" required />
+                    </div>
+                    <div class="mb-3">
+                        <label for="yeniSifreTekrar" class="form-label">Yeni şifre (tekrar)</label>
+                        <input id="yeniSifreTekrar" name="yeniSifreTekrar" type="password" class="form-control" minlength="6" autocomplete="new-password" required />
+                        <span class="field-validation-error" id="sifreUyari" hidden>Şifreler eşleşmiyor.</span>
+                    </div>
+                    <button type="submit" class="btn btn-danger-soft w-100">Şifreyi Sıfırla</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            const form = document.getElementById('sifreForm');
+            const sifre = document.getElementById('yeniSifre');
+            const tekrar = document.getElementById('yeniSifreTekrar');
+            const uyari = document.getElementById('sifreUyari');
+
+            function kontrol() {
+                const eslesmiyor = tekrar.value.length > 0 && sifre.value !== tekrar.value;
+                uyari.hidden = !eslesmiyor;
+                return !eslesmiyor;
+            }
+
+            tekrar.addEventListener('input', kontrol);
+            sifre.addEventListener('input', kontrol);
+            // Eşleşmiyorsa onay penceresi açılmadan gönderimi durdur
+            form.addEventListener('submit', function (e) {
+                if (!kontrol()) e.stopImmediatePropagation(), e.preventDefault();
+            }, true);
+        })();
+    </script>
+}

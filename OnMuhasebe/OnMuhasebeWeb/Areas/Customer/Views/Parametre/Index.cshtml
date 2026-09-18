@@ -1,0 +1,146 @@
+@*
+    PARAMETRELER — ParametreController  [Yalnızca Yönetici]
+    GET  Index() → View(List<Parametre>)
+    POST Index(List<Parametre> parametreler)
+         Form alanları: [i].Id, [i].ParametreKodu, [i].ParametreDegeri
+         → Id'ye göre kayıtları bulup yalnızca ParametreDegeri güncellenmeli
+         → RedirectToAction("Index") + TempData["Mesaj"] = "Parametreler kaydedildi."
+    Bilinen parametre kodları ekranda gruplanır; tanınmayan kodlar "Diğer" bölümünde düz metin olarak çıkar.
+*@
+@model List<Parametre>
+@{
+    ViewData["Title"] = "Parametreler";
+    var mesaj = TempData["Mesaj"] as string;
+
+    // Kod → (Grup, Etiket, Tür, İpucu).  Tür: metin | sayi | anahtar | format
+    var tanimlar = new Dictionary<string, (string Grup, string Etiket, string Tur, string Ipucu)>
+    {
+        ["FirmaUnvani"] = ("Firma bilgileri", "Firma unvanı", "metin", "Rapor ve fatura başlıklarında görünür."),
+        ["VergiDairesiNo"] = ("Firma bilgileri", "Vergi dairesi / no", "metin", "Örn: Sakarya / 1234567890"),
+        ["VarsayilanKdvOrani"] = ("Genel", "Varsayılan KDV oranı (%)", "sayi", "Yeni stok kartında ve yeni fatura satırında öntanımlı gelir."),
+        ["ParaBirimi"] = ("Genel", "Para birimi", "metin", "Tutarların yanında gösterilen birim."),
+        ["OndalikBasamak"] = ("Genel", "Ondalık basamak", "sayi", "Tutar hassasiyeti."),
+        ["NegatifStokKontrolu"] = ("Stok", "Negatif stok kontrolü", "anahtar", "Açıkken stok yetersizse satış faturası ve sayım eksiği kaydedilmez."),
+        ["KritikStokUyarisi"] = ("Stok", "Kritik stok uyarısı", "anahtar", "Açıkken kritik seviyedeki ürünler için uyarı gösterilir."),
+        ["SatisFaturaNoFormati"] = ("Belge numaralandırma", "Satış faturası no formatı", "format", ""),
+        ["AlisFaturaNoFormati"] = ("Belge numaralandırma", "Alış faturası no formatı", "format", ""),
+        ["SayimFazlasiFisNoFormati"] = ("Belge numaralandırma", "Sayım fazlası fiş no formatı", "format", ""),
+        ["SayimEksigiFisNoFormati"] = ("Belge numaralandırma", "Sayım eksiği fiş no formatı", "format", ""),
+    };
+    var grupSirasi = new[] { "Firma bilgileri", "Genel", "Stok", "Belge numaralandırma", "Diğer" };
+
+    // Her parametreyi model içindeki indeksiyle birlikte gruba yerleştir (binding için indeks korunmalı)
+    var gruplar = Model
+        .Select((p, i) => new { P = p, I = i, T = tanimlar.TryGetValue(p.ParametreKodu, out var t) ? t : ("Diğer", p.ParametreKodu, "metin", p.Aciklama ?? "") })
+        .GroupBy(x => x.T.Item1)
+        .OrderBy(g => Array.IndexOf(grupSirasi, g.Key));
+}
+
+<div class="page-header">
+    <div>
+        <h1>Parametreler</h1>
+        <p class="page-subtitle">Firma bilgileri ve uygulamanın davranışını belirleyen ayarlar.</p>
+    </div>
+</div>
+
+@if (!string.IsNullOrEmpty(mesaj))
+{
+    <div class="info-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><path d="M22 4 12 14.01l-3-3" /></svg>
+        <span>@mesaj</span>
+    </div>
+}
+
+@if (!Model.Any())
+{
+    <div class="table-card">
+        <div class="empty-state">
+            <h3>Parametre bulunamadı</h3>
+            <p>Parametreler tablosuna kayıt eklendiğinde burada düzenlenebilir.</p>
+        </div>
+    </div>
+}
+else
+{
+    <form asp-action="Index" method="post">
+        <div asp-validation-summary="All"></div>
+
+        <div class="row g-3">
+            @foreach (var grup in gruplar)
+            {
+                <div class="col-12 col-xl-6">
+                    <div class="card h-100">
+                        <div class="card-header">@grup.Key</div>
+                        <div class="card-body">
+                            @foreach (var x in grup)
+                            {
+                                var alanId = "p" + x.I;
+                                <div class="mb-3">
+                                    <input type="hidden" name="[@x.I].Id" value="@x.P.Id" />
+                                    <input type="hidden" name="[@x.I].ParametreKodu" value="@x.P.ParametreKodu" />
+
+                                    @if (x.T.Item3 == "anahtar")
+                                    {
+                                        var acik = x.P.ParametreDegeri == "Acik";
+                                        <input type="hidden" id="@alanId" name="[@x.I].ParametreDegeri" value="@(acik ? "Acik" : "Kapali")" />
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" role="switch" id="@(alanId)k" checked="@acik"
+                                                   data-anahtar-hedef="#@alanId" data-acik="Acik" data-kapali="Kapali" />
+                                            <label class="form-check-label cell-strong" for="@(alanId)k">@x.T.Item2</label>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <label for="@alanId" class="form-label">@x.T.Item2</label>
+                                        <input id="@alanId" name="[@x.I].ParametreDegeri" value="@x.P.ParametreDegeri"
+                                               class="form-control @(x.T.Item3 == "format" ? "text-mono" : "")"
+                                               inputmode="@(x.T.Item3 == "sayi" ? "decimal" : "text")"
+                                               data-format-onizleme="@(x.T.Item3 == "format" ? "#" + alanId + "o" : null)"
+                                               maxlength="250" required />
+                                    }
+
+                                    @if (x.T.Item3 == "format")
+                                    {
+                                        <span class="form-hint">
+                                            Örnek: <strong class="text-mono" id="@(alanId)o"></strong> ·
+                                            <span class="text-mono">{yyyy}</span> yıl, <span class="text-mono">{0000}</span> sıra no
+                                        </span>
+                                    }
+                                    else if (!string.IsNullOrEmpty(x.T.Item4))
+                                    {
+                                        <span class="form-hint">@x.T.Item4</span>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="d-flex gap-2 mt-3">
+            <button type="submit" class="btn btn-primary" style="padding: 10px 22px;">Parametreleri Kaydet</button>
+        </div>
+    </form>
+}
+
+@section Scripts {
+    <script>
+        // Numara formatı önizlemesi: "SAT-{yyyy}-{0000}" → "SAT-2026-0001"
+        document.querySelectorAll('[data-format-onizleme]').forEach(function (girdi) {
+            const hedef = document.querySelector(girdi.dataset.formatOnizleme);
+            if (!hedef) return;
+
+            function goster() {
+                const yil = new Date().getFullYear();
+                hedef.textContent = girdi.value
+                    .replace(/\{yyyy\}/g, yil)
+                    .replace(/\{yy\}/g, String(yil).slice(-2))
+                    .replace(/\{(0+)\}/g, (_, sifirlar) => '1'.padStart(sifirlar.length, '0'));
+            }
+
+            girdi.addEventListener('input', goster);
+            goster();
+        });
+    </script>
+}

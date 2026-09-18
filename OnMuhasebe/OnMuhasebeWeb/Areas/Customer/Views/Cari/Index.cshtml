@@ -1,0 +1,129 @@
+@*
+    CARİ LİSTESİ — CariController
+    GET Index() → View(List<Cari>)
+    Bakiye sütunu için: _context.Cariler.Include(c => c.CariHareketleri)
+*@
+@model List<Cari>
+@{
+    ViewData["Title"] = "Cari Hesaplar";
+
+    string TipAdi(byte tip) => tip switch { 1 => "Müşteri", 2 => "Tedarikçi", 3 => "Müşteri + Tedarikçi", _ => "-" };
+    decimal Bakiye(Cari c) => c.CariHareketleri.Sum(h => h.Borc) - c.CariHareketleri.Sum(h => h.Alacak);
+    var mesaj = TempData["Mesaj"] as string;
+}
+
+<div class="page-header">
+    <div>
+        <h1>Cari Hesaplar</h1>
+        <p class="page-subtitle">Müşteri ve tedarikçi kartları ile güncel bakiyeleri.</p>
+    </div>
+    <a asp-action="Create" class="btn btn-primary">+ Yeni Cari</a>
+</div>
+
+@if (!string.IsNullOrEmpty(mesaj))
+{
+    <div class="info-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><path d="M22 4 12 14.01l-3-3" /></svg>
+        <span>@mesaj</span>
+    </div>
+}
+
+<div class="table-card">
+    @if (Model.Any())
+    {
+        <div class="filter-bar">
+            <div class="filter-item filter-search">
+                <label for="arama">Ara</label>
+                <input id="arama" type="search" class="form-control" placeholder="Kod, unvan, telefon..." data-tablo-arama="#tablo" />
+            </div>
+            <div class="filter-item">
+                <label for="tip">Tip</label>
+                <select id="tip" class="form-select" data-tablo-secim="#tablo" data-alan="tip">
+                    <option value="">Tümü</option>
+                    <option value="1">Müşteri</option>
+                    <option value="2">Tedarikçi</option>
+                    <option value="3">Müşteri + Tedarikçi</option>
+                </select>
+            </div>
+            <div class="filter-item">
+                <label for="durum">Durum</label>
+                <select id="durum" class="form-select" data-tablo-secim="#tablo" data-alan="durum">
+                    <option value="">Tümü</option>
+                    <option value="aktif">Aktif</option>
+                    <option value="pasif">Pasif</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="table-wrapper">
+            <table class="table" id="tablo">
+                <thead>
+                    <tr>
+                        <th style="width: 100px;">Kod</th>
+                        <th>Unvan</th>
+                        <th>Tip</th>
+                        <th>Telefon</th>
+                        <th class="cell-number">Bakiye (TL)</th>
+                        <th style="width: 100px;">Durum</th>
+                        <th style="width: 150px;"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var c in Model)
+                    {
+                        var bakiye = Bakiye(c);
+                        <tr data-tip="@c.CariTipi" data-durum="@(c.Aktif ? "aktif" : "pasif")">
+                            <td class="text-mono">@c.CariKodu</td>
+                            <td class="cell-strong">@c.Unvan</td>
+                            <td><span class="badge-soft">@TipAdi(c.CariTipi)</span></td>
+                            <td class="cell-muted">@c.Telefon</td>
+                            <td class="cell-number cell-strong">
+                                @Math.Abs(bakiye).ToString("N2")
+                                @if (bakiye > 0) { <span class="bakiye-etiket" title="Borçlu">(B)</span> }
+                                else if (bakiye < 0) { <span class="bakiye-etiket" title="Alacaklı">(A)</span> }
+                            </td>
+                            <td>
+                                @if (c.Aktif)
+                                {
+                                    <span class="badge-status badge-active">Aktif</span>
+                                }
+                                else
+                                {
+                                    <span class="badge-status badge-passive">Pasif</span>
+                                }
+                            </td>
+                            <td>
+                                <div class="row-actions">
+                                    <a asp-action="Ekstre" asp-route-id="@c.Id" class="btn btn-sm btn-ghost">Ekstre</a>
+                                    <a asp-action="Edit" asp-route-id="@c.Id" class="btn btn-sm btn-ghost">Düzenle</a>
+                                    <form asp-action="Delete" asp-route-id="@c.Id" method="post" class="m-0"
+                                          data-onay="@c.Unvan silinsin mi?">
+                                        <button type="submit" class="btn btn-sm btn-ghost" title="Sil" aria-label="Sil">
+                                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /></svg>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="table-footer">
+            <span data-tablo-sayac="#tablo">@Model.Count</span> kayıt gösteriliyor ·
+            <strong>(B)</strong> cari bize borçlu, <strong>(A)</strong> biz cariye borçluyuz
+        </div>
+    }
+    else
+    {
+        <div class="empty-state">
+            <div class="empty-state-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" /><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" /></svg>
+            </div>
+            <h3>Henüz cari hesap yok</h3>
+            <p>Müşteri veya tedarikçi kartı açarak başlayın.</p>
+            <a asp-action="Create" class="btn btn-primary mt-3">+ Yeni Cari</a>
+        </div>
+    }
+</div>

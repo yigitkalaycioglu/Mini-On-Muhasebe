@@ -1,0 +1,103 @@
+@*
+    RAPOR: KRİTİK STOK LİSTESİ — RaporController
+    GET KritikStok() → View(List<StokKarti>)  aktif stoklar, .Include(s => s.StokHareketleri)
+    Süzme (mevcut <= KritikStok) bu view'de yapılır; controller tüm aktif stokları gönderebilir.
+*@
+@model List<StokKarti>
+@{
+    ViewData["Title"] = "Kritik Stok Listesi";
+
+    var satirlar = Model
+        .Where(s => s.Aktif)
+        .Select(s => new { Stok = s, Mevcut = s.StokHareketleri.Sum(h => h.Yon == "Giris" ? h.Miktar : -h.Miktar) })
+        .Where(x => x.Mevcut <= x.Stok.KritikStok)
+        .Select(x => new { x.Stok, x.Mevcut, Eksik = x.Stok.KritikStok - x.Mevcut })
+        .Select(x => new { x.Stok, x.Mevcut, x.Eksik, Maliyet = x.Eksik * x.Stok.AlisFiyati })
+        .OrderBy(x => x.Mevcut - x.Stok.KritikStok)
+        .ToList();
+}
+
+<div class="page-header">
+    <div>
+        <h1>Kritik Stok Listesi</h1>
+        <p class="page-subtitle">Mevcut miktarı kritik seviyesine eşit veya altında olan aktif ürünler.</p>
+    </div>
+    <div class="d-flex gap-2 no-print">
+        <button type="button" class="btn btn-outline-secondary" data-yazdir>Yazdır</button>
+        <a asp-action="Index" class="btn btn-outline-secondary">← Raporlar</a>
+    </div>
+</div>
+
+@if (!satirlar.Any())
+{
+    <div class="table-card">
+        <div class="empty-state">
+            <div class="empty-state-icon" style="background: var(--success-light); color: var(--success);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><path d="M22 4 12 14.01l-3-3" /></svg>
+            </div>
+            <h3>Kritik seviyede ürün yok</h3>
+            <p>Tüm aktif ürünlerin stoğu kritik seviyenin üzerinde.</p>
+        </div>
+    </div>
+}
+else
+{
+    <div class="stat-grid">
+        <div class="stat">
+            <div class="stat-label">Kritik ürün</div>
+            <div class="stat-value">@satirlar.Count</div>
+        </div>
+        <div class="stat">
+            <div class="stat-label">Tükenmiş</div>
+            <div class="stat-value">@satirlar.Count(x => x.Mevcut <= 0)</div>
+        </div>
+        <div class="stat">
+            <div class="stat-label">Tamamlama maliyeti (TL)</div>
+            <div class="stat-value">@satirlar.Sum(x => x.Maliyet).ToString("N2")</div>
+        </div>
+    </div>
+
+    <div class="table-card">
+        <div class="table-wrapper">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th style="width: 100px;">Kod</th>
+                        <th>Stok Adı</th>
+                        <th class="cell-number">Mevcut</th>
+                        <th class="cell-number">Kritik Seviye</th>
+                        <th class="cell-number">Eksik</th>
+                        <th class="cell-number">Alış Fiyatı</th>
+                        <th class="cell-number">Tamamlama (TL)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var x in satirlar)
+                    {
+                        <tr>
+                            <td class="text-mono">@x.Stok.StokKodu</td>
+                            <td>
+                                <span class="cell-strong">@x.Stok.StokAdi</span>
+                                @if (x.Mevcut <= 0) { <span class="badge-soft badge-danger ms-1">Tükendi</span> }
+                            </td>
+                            <td class="cell-number cell-strong tutar-borc">@x.Mevcut.ToString("N2") <span class="cell-muted">@x.Stok.Birim</span></td>
+                            <td class="cell-number">@x.Stok.KritikStok.ToString("N2")</td>
+                            <td class="cell-number cell-strong">@x.Eksik.ToString("N2")</td>
+                            <td class="cell-number cell-muted">@x.Stok.AlisFiyati.ToString("N2")</td>
+                            <td class="cell-number">@x.Maliyet.ToString("N2")</td>
+                        </tr>
+                    }
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="6">Toplam tamamlama maliyeti</td>
+                        <td class="cell-number">@satirlar.Sum(x => x.Maliyet).ToString("N2")</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+        <div class="table-footer">
+            Eksik = kritik seviye − mevcut · Tamamlama = eksik × alış fiyatı (kritik seviyeye getirmek için)
+        </div>
+    </div>
+}

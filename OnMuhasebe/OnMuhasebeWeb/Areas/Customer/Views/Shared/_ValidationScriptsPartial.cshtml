@@ -1,0 +1,33 @@
+@{
+    // Model binding sunucu kültürüyle yapılır (tr-TR → ondalık ayırıcı virgül).
+    // İstemci doğrulaması da aynı ayırıcıyı beklesin diye kültürü buradan okuyoruz.
+    var sayiBicimi = System.Globalization.CultureInfo.CurrentCulture.NumberFormat;
+}
+<script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+<script src="~/lib/jquery-validation-unobtrusive/dist/jquery.validate.unobtrusive.min.js"></script>
+<script>
+    (function ($) {
+        if (!$ || !$.validator) return;
+
+        const ondalik = '@sayiBicimi.NumberDecimalSeparator';
+        const binlik = '@sayiBicimi.NumberGroupSeparator';
+        const kacis = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+        // Binlik ayırıcıları (yalnızca ardından 3 rakam geliyorsa) temizleyip sayıyı döndürür
+        function sayiyaCevir(deger) {
+            let s = String(deger).replace(/\s/g, '');
+            s = s.replace(new RegExp(kacis(binlik) + '(?=\\d{3}(\\D|$))', 'g'), '');
+            if (!new RegExp('^-?\\d+(' + kacis(ondalik) + '\\d+)?$').test(s)) return NaN;
+            return parseFloat(s.replace(ondalik, '.'));
+        }
+
+        $.validator.methods.number = function (value, element) {
+            return this.optional(element) || !isNaN(sayiyaCevir(value));
+        };
+
+        $.validator.methods.range = function (value, element, param) {
+            const sayi = sayiyaCevir(value);
+            return this.optional(element) || (sayi >= param[0] && sayi <= param[1]);
+        };
+    })(window.jQuery);
+</script>

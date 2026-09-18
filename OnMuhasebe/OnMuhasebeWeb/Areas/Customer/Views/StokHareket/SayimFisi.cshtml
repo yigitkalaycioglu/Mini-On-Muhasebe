@@ -1,0 +1,153 @@
+@*
+    SAYIM FAZLASI / SAYIM EKSİĞİ FİŞİ — StokHareketController
+    GET  SayimFisi(string? tip)   tip: "SayimFazlasi" | "SayimEksigi"  (varsayılan: SayimFazlasi)
+         ViewData["Stoklar"] : IEnumerable<StokKarti>  — aktif stoklar
+                               (mevcut miktarı göstermek için .Include(s => s.StokHareketleri))
+    POST SayimFisi(StokHareket stokHareket)
+         → HareketTipi formdan gelir; Yon backend'de belirlenir (Fazlası=Giris, Eksiği=Cikis)
+         → BelgeNo parametredeki formata göre otomatik üretilir (SF-2026-0001 / SE-2026-0001)
+         → StokKarti ve Kullanici formdan gelmediği için ModelState.Remove(...) gerekebilir
+    Sayım fişleri YALNIZCA stoğu etkiler, cari hesaba işlemez.
+*@
+@model StokHareket
+@{
+    ViewData["Title"] = "Sayım Fişi";
+
+    var stoklar = ViewData["Stoklar"] as IEnumerable<StokKarti> ?? Enumerable.Empty<StokKarti>();
+
+    var tip = Model?.HareketTipi ?? Context.Request.Query["tip"].ToString();
+    if (tip != "SayimEksigi") tip = "SayimFazlasi";
+
+    var tarih = (Model == null || Model.Tarih == default) ? DateTime.Today : Model.Tarih;
+    var inv = System.Globalization.CultureInfo.InvariantCulture;
+}
+
+<div class="page-header">
+    <div>
+        <h1>Sayım Fişi</h1>
+        <p class="page-subtitle">Fiziki sayım sonucu oluşan fark için stok düzeltmesi yapın.</p>
+    </div>
+    <a asp-action="Index" class="btn btn-outline-secondary">← Stok hareketleri</a>
+</div>
+
+<div class="row">
+    <div class="col-12 col-lg-8 col-xl-7">
+        <div class="card">
+            <div class="card-body">
+                <form asp-action="SayimFisi" method="post">
+                    <div asp-validation-summary="All"></div>
+
+                    <div class="mb-4">
+                        <div class="form-label">Fiş türü</div>
+                        <div class="segmented">
+                            <input type="radio" id="tipFazla" name="HareketTipi" value="SayimFazlasi" checked="@(tip == "SayimFazlasi")" />
+                            <label for="tipFazla">+ Sayım Fazlası</label>
+                            <input type="radio" id="tipEksik" name="HareketTipi" value="SayimEksigi" checked="@(tip == "SayimEksigi")" />
+                            <label for="tipEksik">− Sayım Eksiği</label>
+                        </div>
+                    </div>
+
+                    <div class="info-box" id="tipAciklama">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><line x1="12" y1="16" x2="12" y2="12" /><line x1="12" y1="8" x2="12.01" y2="8" /></svg>
+                        <span></span>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-12 col-md-4">
+                            <label for="Tarih" class="form-label">Tarih <span class="zorunlu">*</span></label>
+                            <input id="Tarih" name="Tarih" type="date" class="form-control" value="@tarih.ToString("yyyy-MM-dd")" required />
+                        </div>
+                        <div class="col-12 col-md-8">
+                            <label asp-for="StokId" class="form-label">Ürün <span class="zorunlu">*</span></label>
+                            <select asp-for="StokId" class="form-select" required>
+                                <option value="">Ürün seçin...</option>
+                                @foreach (var s in stoklar)
+                                {
+                                    var mevcut = s.StokHareketleri.Sum(h => h.Yon == "Giris" ? h.Miktar : -h.Miktar);
+                                    <option value="@s.Id" data-birim="@s.Birim" data-mevcut="@mevcut.ToString(inv)">@s.StokKodu — @s.StokAdi</option>
+                                }
+                            </select>
+                            <span asp-validation-for="StokId"></span>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-12 col-md-4">
+                            <label asp-for="Miktar" class="form-label">Fark miktarı <span class="zorunlu">*</span></label>
+                            <input asp-for="Miktar" type="text" inputmode="decimal" class="form-control" placeholder="0" required />
+                            <span asp-validation-for="Miktar"></span>
+                        </div>
+                        <div class="col-12 col-md-8">
+                            <div class="form-label">Stok etkisi</div>
+                            <div class="toplamlar" style="max-width: none;" id="etki">
+                                <div class="toplamlar-satir" style="padding: 4px 0;">
+                                    <span>Mevcut</span><span data-etki="mevcut">—</span>
+                                </div>
+                                <div class="toplamlar-satir" style="padding: 4px 0;">
+                                    <span>Sayım sonrası</span><strong data-etki="sonra">—</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-2">
+                        <label asp-for="Aciklama" class="form-label">Açıklama</label>
+                        <input asp-for="Aciklama" class="form-control" maxlength="250" placeholder="Örn: Yıl sonu sayımı" />
+                    </div>
+
+                    <span class="form-hint">Fiş numarası kayıt sırasında otomatik verilir. Sayım fişleri cari hesaba işlemez.</span>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Fişi Kaydet</button>
+                        <a asp-action="Index" class="btn btn-outline-secondary">Vazgeç</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            const aciklama = document.querySelector('#tipAciklama span');
+            const radyolar = document.querySelectorAll('input[name="HareketTipi"]');
+            const stok = document.getElementById('StokId');
+            const miktar = document.getElementById('Miktar');
+            const mevcutAlan = document.querySelector('[data-etki="mevcut"]');
+            const sonraAlan = document.querySelector('[data-etki="sonra"]');
+            const bicim = new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+            const fazlaMi = () => document.getElementById('tipFazla').checked;
+            const sayi = (s) => parseFloat(String(s).replace(/\s/g, '').replace(/\.(?=\d{3}(\D|$))/g, '').replace(',', '.')) || 0;
+
+            function guncelle() {
+                aciklama.textContent = fazlaMi()
+                    ? 'Sayımda fazla çıkan miktar kadar stok ARTIRILIR (giriş hareketi).'
+                    : 'Sayımda eksik çıkan miktar kadar stok AZALTILIR (çıkış hareketi).';
+
+                const secenek = stok.options[stok.selectedIndex];
+                if (!secenek || !secenek.value) {
+                    mevcutAlan.textContent = '—';
+                    sonraAlan.textContent = '—';
+                    return;
+                }
+
+                const birim = secenek.dataset.birim || '';
+                const mevcut = parseFloat(secenek.dataset.mevcut) || 0;
+                const fark = sayi(miktar.value);
+                const sonra = fazlaMi() ? mevcut + fark : mevcut - fark;
+
+                mevcutAlan.textContent = bicim.format(mevcut) + ' ' + birim;
+                sonraAlan.textContent = bicim.format(sonra) + ' ' + birim;
+                sonraAlan.style.color = sonra < 0 ? 'var(--danger)' : '';
+            }
+
+            radyolar.forEach(r => r.addEventListener('change', guncelle));
+            stok.addEventListener('change', guncelle);
+            miktar.addEventListener('input', guncelle);
+            guncelle();
+        })();
+    </script>
+}

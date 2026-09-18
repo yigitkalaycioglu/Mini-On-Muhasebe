@@ -1,0 +1,142 @@
+@*
+    STOK LİSTESİ — StokKartiController
+    GET Index() → View(List<StokKarti>)
+    Mevcut miktar sütunu için: _context.StokKartlari.Include(s => s.StokHareketleri)
+*@
+@model List<StokKarti>
+@{
+    ViewData["Title"] = "Stok Kartları";
+
+    decimal Mevcut(StokKarti s) => s.StokHareketleri.Sum(h => h.Yon == "Giris" ? h.Miktar : -h.Miktar);
+    var kritikSayisi = Model.Count(s => s.Aktif && Mevcut(s) <= s.KritikStok);
+    var mesaj = TempData["Mesaj"] as string;
+}
+
+<div class="page-header">
+    <div>
+        <h1>Stok Kartları</h1>
+        <p class="page-subtitle">Ürün tanımları, fiyatlar ve mevcut stok miktarları.</p>
+    </div>
+    <a asp-action="Create" class="btn btn-primary">+ Yeni Stok Kartı</a>
+</div>
+
+@if (!string.IsNullOrEmpty(mesaj))
+{
+    <div class="info-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><path d="M22 4 12 14.01l-3-3" /></svg>
+        <span>@mesaj</span>
+    </div>
+}
+
+@if (kritikSayisi > 0)
+{
+    <div class="info-box is-warning">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>
+        <span><strong>@kritikSayisi ürün</strong> kritik stok seviyesinde veya altında.</span>
+    </div>
+}
+
+<div class="table-card">
+    @if (Model.Any())
+    {
+        <div class="filter-bar">
+            <div class="filter-item filter-search">
+                <label for="arama">Ara</label>
+                <input id="arama" type="search" class="form-control" placeholder="Stok kodu veya adı..." data-tablo-arama="#tablo" />
+            </div>
+            <div class="filter-item">
+                <label for="seviye">Stok seviyesi</label>
+                <select id="seviye" class="form-select" data-tablo-secim="#tablo" data-alan="seviye">
+                    <option value="">Tümü</option>
+                    <option value="kritik">Kritik</option>
+                    <option value="normal">Yeterli</option>
+                </select>
+            </div>
+            <div class="filter-item">
+                <label for="durum">Durum</label>
+                <select id="durum" class="form-select" data-tablo-secim="#tablo" data-alan="durum">
+                    <option value="">Tümü</option>
+                    <option value="aktif">Aktif</option>
+                    <option value="pasif">Pasif</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="table-wrapper">
+            <table class="table" id="tablo">
+                <thead>
+                    <tr>
+                        <th style="width: 100px;">Kod</th>
+                        <th>Stok Adı</th>
+                        <th>Birim</th>
+                        <th class="cell-number">Alış (TL)</th>
+                        <th class="cell-number">Satış (TL)</th>
+                        <th class="cell-number">KDV</th>
+                        <th class="cell-number">Mevcut</th>
+                        <th style="width: 100px;">Durum</th>
+                        <th style="width: 170px;"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var s in Model)
+                    {
+                        var mevcut = Mevcut(s);
+                        var kritik = mevcut <= s.KritikStok;
+                        <tr data-seviye="@(kritik ? "kritik" : "normal")" data-durum="@(s.Aktif ? "aktif" : "pasif")">
+                            <td class="text-mono">@s.StokKodu</td>
+                            <td class="cell-strong">@s.StokAdi</td>
+                            <td class="cell-muted">@s.Birim</td>
+                            <td class="cell-number">@s.AlisFiyati.ToString("N2")</td>
+                            <td class="cell-number">@s.SatisFiyati.ToString("N2")</td>
+                            <td class="cell-number cell-muted">%@s.KdvOrani.ToString("0.##")</td>
+                            <td class="cell-number">
+                                <span class="cell-strong">@mevcut.ToString("N2")</span>
+                                @if (kritik)
+                                {
+                                    <span class="badge-soft badge-warning ms-1" title="Kritik seviye: @s.KritikStok.ToString("N2")">Kritik</span>
+                                }
+                            </td>
+                            <td>
+                                @if (s.Aktif)
+                                {
+                                    <span class="badge-status badge-active">Aktif</span>
+                                }
+                                else
+                                {
+                                    <span class="badge-status badge-passive">Pasif</span>
+                                }
+                            </td>
+                            <td>
+                                <div class="row-actions">
+                                    <a asp-controller="StokHareket" asp-action="Index" asp-route-stokId="@s.Id" class="btn btn-sm btn-ghost">Hareketler</a>
+                                    <a asp-action="Edit" asp-route-id="@s.Id" class="btn btn-sm btn-ghost">Düzenle</a>
+                                    <form asp-action="Delete" asp-route-id="@s.Id" method="post" class="m-0"
+                                          data-onay="@s.StokAdi silinsin mi?">
+                                        <button type="submit" class="btn btn-sm btn-ghost" title="Sil" aria-label="Sil">
+                                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /></svg>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="table-footer">
+            <span data-tablo-sayac="#tablo">@Model.Count</span> kayıt gösteriliyor · Mevcut miktar stok hareketlerinden hesaplanır
+        </div>
+    }
+    else
+    {
+        <div class="empty-state">
+            <div class="empty-state-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" /></svg>
+            </div>
+            <h3>Henüz stok kartı yok</h3>
+            <p>İlk ürününüzü tanımlayarak başlayın.</p>
+            <a asp-action="Create" class="btn btn-primary mt-3">+ Yeni Stok Kartı</a>
+        </div>
+    }
+</div>
