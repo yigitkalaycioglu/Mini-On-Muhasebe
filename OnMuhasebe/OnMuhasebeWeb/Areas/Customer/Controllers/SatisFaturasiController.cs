@@ -1,10 +1,13 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using OnMuhasebe.Business.Services.IServices;
 using OnMuhasebe.Models;
+using System.Security.Claims;
 
 namespace OnMuhasebeWeb.Areas.Customer.Controllers
 {
     [Area("Customer")]
+    [Authorize]
     public class SatisFaturasiController : Controller
     {
         private readonly ISatisFaturasiService _satisFaturasiService;
@@ -38,12 +41,27 @@ namespace OnMuhasebeWeb.Areas.Customer.Controllers
         [ActionName("Create")]
         public async Task<IActionResult> CreatePost(SatisFaturasi satisFaturasi)
         {
+            // Formdan gelmeyen alanlar nullable yüzünden örtük [Required] sayılır; doğrulamadan çıkar.
+            ModelState.Remove(nameof(SatisFaturasi.FaturaNo));
+            ModelState.Remove(nameof(SatisFaturasi.Cari));
+            ModelState.Remove(nameof(SatisFaturasi.SatisElemani));
+            ModelState.Remove(nameof(SatisFaturasi.Kullanici));
+            for (var i = 0; i < satisFaturasi.SatisFaturaSatirlari.Count; i++)
+            {
+                ModelState.Remove($"SatisFaturaSatirlari[{i}].SatisFaturasi");
+                ModelState.Remove($"SatisFaturaSatirlari[{i}].StokKarti");
+            }
+
+            if (satisFaturasi.SatisFaturaSatirlari.Count == 0)
+            {
+                ModelState.AddModelError(string.Empty, "Faturaya en az bir kalem ekleyin.");
+            }
+
             if (ModelState.IsValid)
             {
                 try
                 {
-                    // TODO: Login sistemi kurulunca oturumdaki kullanıcıdan alınacak.
-                    int kullaniciId = 1;
+                    int kullaniciId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
                     await _satisFaturasiService.CreateSatisFaturasiAsync(satisFaturasi, kullaniciId);
                     TempData["Mesaj"] = $"{satisFaturasi.FaturaNo} numaralı fatura kaydedildi.";

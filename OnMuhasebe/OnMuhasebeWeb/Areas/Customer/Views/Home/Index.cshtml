@@ -6,8 +6,7 @@
 @{
     ViewData["Title"] = "Panel";
 
-    var girisYapildi = User.Identity?.IsAuthenticated == true;
-    var yonetimGorunsun = !girisYapildi || User.IsInRole("Yönetici");
+    var yonetimGorunsun = User.IsInRole("Yönetici");
     var adSoyad = User.Identity?.Name;
     var kritikStokSayisi = ViewData["KritikStokSayisi"] as int? ?? 0;
 }

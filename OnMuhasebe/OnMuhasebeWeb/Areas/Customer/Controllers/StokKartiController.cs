@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using OnMuhasebe.Business.Services.IServices;
 using OnMuhasebe.Models;
@@ -5,6 +6,7 @@ using OnMuhasebe.Models;
 namespace OnMuhasebeWeb.Areas.Customer.Controllers
 {
     [Area("Customer")]
+    [Authorize]
     public class StokKartiController : Controller
     {
         private readonly IStokKartiService _stokKartiService;

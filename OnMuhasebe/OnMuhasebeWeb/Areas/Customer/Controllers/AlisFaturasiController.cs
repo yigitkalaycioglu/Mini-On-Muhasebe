@@ -1,3 +1,5 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using OnMuhasebe.Business.Services.IServices;
 using OnMuhasebe.Models;
@@ -5,6 +7,7 @@ using OnMuhasebe.Models;
 namespace OnMuhasebeWeb.Areas.Customer.Controllers
 {
     [Area("Customer")]
+    [Authorize]
     public class AlisFaturasiController : Controller
     {
         private readonly IAlisFaturasiService _alisFaturasiService;
@@ -36,12 +39,26 @@ namespace OnMuhasebeWeb.Areas.Customer.Controllers
         [ActionName("Create")]
         public async Task<IActionResult> CreatePost(AlisFaturasi alisFaturasi)
         {
+            // Formdan gelmeyen alanlar nullable yüzünden örtük [Required] sayılır; doğrulamadan çıkar.
+            ModelState.Remove(nameof(AlisFaturasi.FaturaNo));
+            ModelState.Remove(nameof(AlisFaturasi.Cari));
+            ModelState.Remove(nameof(AlisFaturasi.Kullanici));
+            for (var i = 0; i < alisFaturasi.AlisFaturaSatirlari.Count; i++)
+            {
+                ModelState.Remove($"AlisFaturaSatirlari[{i}].AlisFaturasi");
+                ModelState.Remove($"AlisFaturaSatirlari[{i}].StokKarti");
+            }
+
+            if (alisFaturasi.AlisFaturaSatirlari.Count == 0)
+            {
+                ModelState.AddModelError(string.Empty, "Faturaya en az bir kalem ekleyin.");
+            }
+
             if (ModelState.IsValid)
             {
                 try
                 {
-                    // TODO: Login sistemi kurulunca oturumdaki kullanıcıdan alınacak.
-                    int kullaniciId = 1;
+                    int kullaniciId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
                     await _alisFaturasiService.CreateAlisFaturasiAsync(alisFaturasi, kullaniciId);
                     TempData["Mesaj"] = $"{alisFaturasi.FaturaNo} numaralı fatura kaydedildi.";

@@ -13,6 +13,7 @@
   <ItemGroup>
     <ProjectReference Include="..\OnMuhasebe.DataAccess\OnMuhasebe.DataAccess.csproj" />
     <ProjectReference Include="..\OnMuhasebe.Models\OnMuhasebe.Models.csproj" />
+    <ProjectReference Include="..\OnMuhasebe.Utility\OnMuhasebe.Utility.csproj" />
   </ItemGroup>
 
 </Project>

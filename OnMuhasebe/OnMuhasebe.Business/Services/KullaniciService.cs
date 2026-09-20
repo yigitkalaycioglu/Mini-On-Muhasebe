@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using OnMuhasebe.Business.Services.IServices;
 using OnMuhasebe.DataAccess;
 using OnMuhasebe.Models;
+using OnMuhasebe.Utility;
 
 namespace OnMuhasebe.Business.Services
 {
@@ -23,19 +24,33 @@ namespace OnMuhasebe.Business.Services
             return await _context.Kullanicilar.FindAsync(id);
         }
 
+        public async Task<Kullanici?> DogrulaAsync(string kullaniciAdi, string sifre)
+        {
+            var kullanici = await _context.Kullanicilar
+                .FirstOrDefaultAsync(k => k.KullaniciAdi == kullaniciAdi);
+
+            if (kullanici == null || !kullanici.Aktif)
+            {
+                return null;
+            }
+
+            return SifreYardimcisi.Dogrula(sifre, kullanici.SifreHash) ? kullanici : null;
+        }
+
         public async Task<bool> IsKullaniciNameUniqueAsync(string kullaniciAdi, int? excludeId = null)
         {
             var normalizedName = kullaniciAdi.ToLower();
             return !await _context.Kullanicilar.AnyAsync(k => k.KullaniciAdi.ToLower() == normalizedName && (!excludeId.HasValue || k.Id != excludeId.Value));
         }
 
-        public async Task<Kullanici> CreateKullaniciAsync(Kullanici kullanici)
+        public async Task<Kullanici> CreateKullaniciAsync(Kullanici kullanici, string sifre)
         {
             if (!await IsKullaniciNameUniqueAsync(kullanici.KullaniciAdi))
             {
                 throw new InvalidOperationException("Bu kullanıcı adı zaten kayıtlı.");
             }
 
+            kullanici.SifreHash = SifreYardimcisi.HashOlustur(sifre);
             _context.Kullanicilar.Add(kullanici);
             await _context.SaveChangesAsync();
             return kullanici;
@@ -58,12 +73,6 @@ namespace OnMuhasebe.Business.Services
             existingKullanici.AdSoyad = kullanici.AdSoyad;
             existingKullanici.Rol = kullanici.Rol;
             existingKullanici.Aktif = kullanici.Aktif;
-
-            // Şifre formdan gelmez; yalnızca controller yeni bir hash atadıysa güncellenir.
-            if (!string.IsNullOrEmpty(kullanici.SifreHash))
-            {
-                existingKullanici.SifreHash = kullanici.SifreHash;
-            }
 
             await _context.SaveChangesAsync();
         }
@@ -92,5 +101,17 @@ namespace OnMuhasebe.Business.Services
 
             await _context.SaveChangesAsync();
         }
+
+        public async Task SifreSifirlaAsync(int id, string yeniSifre)
+        {
+            var kullanici = await _context.Kullanicilar.FindAsync(id);
+            if (kullanici == null)
+            {
+                throw new KeyNotFoundException("Kullanıcı bulunamadı.");
+            }
+            kullanici.SifreHash = SifreYardimcisi.HashOlustur(yeniSifre);
+            await _context.SaveChangesAsync();
+        }
+
     }
 }

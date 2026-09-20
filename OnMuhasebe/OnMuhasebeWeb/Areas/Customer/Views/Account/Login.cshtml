@@ -8,7 +8,9 @@
     ViewData["Title"] = "Giriş";
     Layout = "_AuthLayout";
 
-    var returnUrl = Context.Request.Query["returnUrl"].ToString();
+    var returnUrl = Context.Request.HasFormContentType
+        ? Context.Request.Form["returnUrl"].ToString()
+        : Context.Request.Query["returnUrl"].ToString();
     var girilenAd = Context.Request.HasFormContentType ? Context.Request.Form["kullaniciAdi"].ToString() : "";
 }
 

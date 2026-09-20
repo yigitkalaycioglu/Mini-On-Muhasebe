@@ -1,11 +1,12 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using OnMuhasebe.Business.Services.IServices;
 using OnMuhasebe.Models;
-using System.Collections.Generic;
 
 namespace OnMuhasebeWeb.Areas.Customer.Controllers
 {
     [Area("Customer")]
+    [Authorize]
     public class SatisElemaniController : Controller
     {
         private readonly ISatisElemaniService _satisElemaniService;

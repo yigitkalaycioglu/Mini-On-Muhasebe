@@ -8,10 +8,7 @@
     var yoneticiMi = User.IsInRole("Yönetici");
 
     // Rol bazlı menü: "Yönetim" bölümü (Kullanıcılar, Parametreler) yalnızca Yönetici rolüne görünür.
-    // Giriş sistemi henüz yazılmadığı için, oturum yokken de görünmesine izin veriliyor.
-    // Tüm sayfalar [Authorize] ile korunduğunda oturumsuz durum yalnızca Login sayfasında
-    // oluşur (o sayfa _AuthLayout kullanır), yani bu istisna zararsız hale gelir.
-    var yonetimGorunsun = !girisYapildi || yoneticiMi;
+    var yonetimGorunsun = yoneticiMi;
 
     var kullaniciAdi = User.Identity?.Name ?? "";
     var basHarf = kullaniciAdi.Length > 0 ? kullaniciAdi.Substring(0, 1).ToUpper() : "?";

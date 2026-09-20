@@ -15,13 +15,14 @@ GO
 
 -- ------------------------------------------------------------
 -- Kullanicilar
--- Not: Şifreler örnek/test amaçlıdır (düz metin "123456"in SHA256 hex'i).
--- Gerçek üretimde salt'lı hash (PBKDF2 / Rfc2898DeriveBytes) kullanılmalı.
+-- Not: Şifreler örnek/test amaçlıdır; her iki kullanıcının şifresi "123456".
+-- Biçim: iterasyon.salt(Base64).hash(Base64) — PBKDF2-SHA256, OnMuhasebe.Utility/SifreYardimcisi.
+-- Salt her kullanıcı için rastgele üretildiğinden aynı şifre farklı hash verir.
 -- ------------------------------------------------------------
 SET IDENTITY_INSERT Kullanicilar ON;
 INSERT INTO Kullanicilar (Id, KullaniciAdi, SifreHash, AdSoyad, Rol, Aktif) VALUES
-(1, N'admin',       N'8D969EEF6ECAD3C29A3A629280E686CF0C3F5D5A86AFF3CA12020C923ADC6C92', N'Admin Kullanıcı', N'Yönetici', 1),
-(2, N'ayse.yilmaz',  N'8D969EEF6ECAD3C29A3A629280E686CF0C3F5D5A86AFF3CA12020C923ADC6C92', N'Ayşe Yılmaz',      N'Standart', 1);
+(1, N'admin',       N'600000.Y3kSZaRgetUjROpcqMWOCA==.JfqchpyJXoV3yzqv7aq38r4LGaZhVMTVUDXUw3N1ydA=', N'Admin Kullanıcı', N'Yönetici', 1),
+(2, N'ayse.yilmaz',  N'600000.+BbnhzAi+jdxyEh8d2NtjQ==.ItcYaPC8rzjvUSiwpFWVLoHskAsBUh09Du2iryjJywA=', N'Ayşe Yılmaz',      N'Standart', 1);
 SET IDENTITY_INSERT Kullanicilar OFF;
 
 -- ------------------------------------------------------------

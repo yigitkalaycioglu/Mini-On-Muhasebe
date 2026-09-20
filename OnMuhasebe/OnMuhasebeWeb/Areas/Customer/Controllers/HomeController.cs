@@ -1,10 +1,10 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using OnMuhasebe.Models;
-using System.Diagnostics;
 
 namespace OnMuhasebeWeb.Areas.Customer.Controllers
 {
     [Area("Customer")]
+    [Authorize]
     public class HomeController : Controller
     {
         public IActionResult Index()
@@ -16,6 +16,5 @@ namespace OnMuhasebeWeb.Areas.Customer.Controllers
         {
             return View();
         }
-
     }
 }
