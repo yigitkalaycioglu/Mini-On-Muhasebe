@@ -121,7 +121,8 @@ INSERT INTO StokHareketler (Id, StokId, Tarih, HareketTipi, Yon, Miktar, BelgeNo
 (2, 1, '2026-09-01', N'Satis',        N'Cikis',  2, N'SAT-2026-0001', N'Satış faturası çıkışı', 1),
 (3, 4, '2026-09-05', N'Satis',        N'Cikis',  2, N'SAT-2026-0002', N'Satış faturası çıkışı', 2),
 (4, 5, '2026-09-03', N'Alis',         N'Giris', 50, N'ALS-2026-0002', N'Alış faturası girişi', 1),
-(5, 3, '2026-09-06', N'SayimFazlasi', N'Giris',  5, N'SF-2026-0001',  N'Sayımda fazla çıktı',  1);
+(5, 3, '2026-09-06', N'SayimFazlasi', N'Giris',  5, N'SF-2026-0001',  N'Sayımda fazla çıktı',  1),
+(6, 4, '2026-09-04', N'SayimFazlasi', N'Giris',  6, N'SF-2026-0002',  N'Sayımda fazla çıktı',  1);
 SET IDENTITY_INSERT StokHareketler OFF;
 
 -- ------------------------------------------------------------
