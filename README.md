@@ -164,27 +164,7 @@ formatındaydı, dolayısıyla PBKDF2'ye geçince kimse giriş yapamaz oldu. Öz
 `SifreYardimcisi` çalıştırılarak yeniden üretildi; hem seed dosyası hem canlı veritabanı
 güncellendi.
 
-## 6. Yanlış rol adı yüzünden kilitlenen ekranlar
-
-**Sorun:** Fatura ekranlarında `[Authorize(Roles = "Yönetici, SatisElemani")]` yazıyordu.
-`SatisElemani` bir **rol değil**, ayrı bir tablo (satış temsilcisi kaydı). Sistemde yalnızca
-iki rol var: `Yönetici` ve `Standart`. Sonuç olarak Standart kullanıcılar fatura kesemiyordu.
-
-**Çözüm:** Attribute sade `[Authorize]` yapıldı. Rol adları artık elle yazılmıyor,
-`Sabitler.RolYonetici` / `Sabitler.RolStandart` sabitlerinden okunuyor.
-
-## 7. Katman ihlalleri
-
-Servis dosyalarına zaman zaman controller kodu (`ModelState`, `TempData`,
-`RedirectToAction`) yazıldı. Kural netleştirildi:
-
-- **Servis** iş kuralını doğrular, ihlalde `InvalidOperationException` fırlatır — HTTP'yi bilmez.
-- **Controller** bu exception'ı yakalar, `ModelState.AddModelError` ile ekrana çevirir.
-
-Benzer şekilde senkron `Find` kullanımları `FindAsync` ile değiştirilip tüm servis metotları
-async hale getirildi.
-
-## 8. Örnek veride negatif stok (−2)
+## 6. Örnek veride negatif stok (−2)
 
 **Sorun:** `seed_data.sql` yüklendiğinde bir ürünün stoğu −2 çıkıyordu.
 
@@ -195,24 +175,12 @@ servis katmanındaki stok yeterlilik kontrolü, **aynı üründen birden fazla s
 faturaları da doğru hesaplaması için `GroupBy` ile yeniden yazıldı — aksi halde iki satırın
 her biri tek tek yeterli görünüp toplamda stok eksiye düşebiliyordu.
 
-## 9. Fatura silindiğinde stok ve cari geri alınmıyordu
+## 7. Fatura silindiğinde stok ve cari geri alınmıyordu
 
 **Çözüm:** Fatura silinirken `BelgeNo` üzerinden ilgili `StokHareket` ve `CariHareket`
 kayıtları bulunup siliniyor. Fatura ve hareketler tek bir `SaveChangesAsync()` çağrısında
 kaydediliyor; EF Core bunu **tek transaction** olarak çalıştırdığı için ya hepsi yazılıyor
 ya hiçbiri. Yarım kalmış fatura oluşamıyor.
-
-## 10. Rapor kısayollarının yanlış sayfaya gitmesi
-
-Raporlar sayfasındaki bazı kısayollar, henüz yazılmamış rapor action'ları yerine fatura
-oluşturma ekranına yönlendiriyordu. Yanıltıcı olmaması için bu kısayollar "yakında"
-etiketiyle devre dışı bırakıldı.
-
-## 11. Tutarsız isimlendirme
-
-`GetAllKullanicarAsync` gibi yazım hataları ve metot adı tutarsızlıkları vardı. Proje
-genelinde tarandı; tüm servis metotları `Get/Create/Update/Delete + Varlık + Async`
-kalıbına oturtuldu.
 
 ---
 
