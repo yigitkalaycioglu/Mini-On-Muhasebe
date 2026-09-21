@@ -20,7 +20,7 @@
         <p class="page-subtitle"><span class="text-mono">@Model.StokKodu</span> · @Model.Birim</p>
     </div>
     <div class="d-flex gap-2">
-        <a asp-controller="StokHareket" asp-action="Index" asp-route-stokId="@Model.Id" class="btn btn-outline-secondary">Hareketler</a>
+        <button type="button" class="btn btn-outline-secondary" disabled title="Hazırlanıyor">Hareketler</button>
         <a asp-action="Index" class="btn btn-outline-secondary">← Listeye dön</a>
     </div>
 </div>

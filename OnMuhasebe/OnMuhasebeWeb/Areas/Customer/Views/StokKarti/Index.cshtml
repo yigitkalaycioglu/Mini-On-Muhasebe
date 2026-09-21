@@ -108,7 +108,7 @@
                             </td>
                             <td>
                                 <div class="row-actions">
-                                    <a asp-controller="StokHareket" asp-action="Index" asp-route-stokId="@s.Id" class="btn btn-sm btn-ghost">Hareketler</a>
+                                    <button type="button" class="btn btn-sm btn-ghost" disabled title="Hazırlanıyor">Hareketler</button>
                                     <a asp-action="Edit" asp-route-id="@s.Id" class="btn btn-sm btn-ghost">Düzenle</a>
                                     <form asp-action="Delete" asp-route-id="@s.Id" method="post" class="m-0"
                                           data-onay="@s.StokAdi silinsin mi?">
