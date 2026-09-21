@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using OnMuhasebe.Business.Services.IServices;
 using OnMuhasebe.Models;
+using OnMuhasebeWeb.ViewModels;
 
 namespace OnMuhasebeWeb.Areas.Customer.Controllers
 {
@@ -18,7 +19,19 @@ namespace OnMuhasebeWeb.Areas.Customer.Controllers
         public async Task<IActionResult> Index()
         {
             var stokKartlari = await _stokKartiService.GetAllStokKartlariAsync();
-            return View(stokKartlari);
+
+            var model = new StokListesiViewModel
+            {
+                Satirlar = stokKartlari.Select(s => new StokSatiriViewModel
+                {
+                    Stok = s,
+                    Mevcut = _stokKartiService.MevcutMiktar(s),
+                    Kritik = _stokKartiService.KritikSeviyede(s)
+                }).ToList()
+            };
+            model.KritikSayisi = model.Satirlar.Count(x => x.Stok.Aktif && x.Kritik);
+
+            return View(model);
         }
 
         public IActionResult Create()
@@ -33,6 +46,8 @@ namespace OnMuhasebeWeb.Areas.Customer.Controllers
             {
                 return NotFound();
             }
+
+            ViewData["Ozet"] = StokOzetiHazirla(stokKarti);
             return View(stokKarti);
         }
 
@@ -97,8 +112,20 @@ namespace OnMuhasebeWeb.Areas.Customer.Controllers
                     return NotFound();
                 }
             }
+
+            // Formdan gelen nesnede hareket listesi boştur; stok özeti kayıtlı karttan hesaplanır.
+            var kayitli = await _stokKartiService.GetStokKartiByIdAsync(id);
+            ViewData["Ozet"] = kayitli == null ? new StokOzetiViewModel() : StokOzetiHazirla(kayitli);
             return View("Edit", stokKarti);
         }
+
+        private StokOzetiViewModel StokOzetiHazirla(StokKarti stokKarti) => new()
+        {
+            ToplamGiris = _stokKartiService.ToplamGiris(stokKarti),
+            ToplamCikis = _stokKartiService.ToplamCikis(stokKarti),
+            Mevcut = _stokKartiService.MevcutMiktar(stokKarti),
+            Kritik = _stokKartiService.KritikSeviyede(stokKarti)
+        };
 
         [HttpPost]
         [ValidateAntiForgeryToken]

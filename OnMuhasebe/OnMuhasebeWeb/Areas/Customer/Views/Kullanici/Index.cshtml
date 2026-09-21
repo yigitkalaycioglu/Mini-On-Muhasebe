@@ -39,8 +39,8 @@
                 <label for="rol">Rol</label>
                 <select id="rol" class="form-select" data-tablo-secim="#tablo" data-alan="rol">
                     <option value="">Tümü</option>
-                    <option value="Yönetici">Yönetici</option>
-                    <option value="Standart">Standart</option>
+                    <option value="@Sabitler.RolYonetici">@Sabitler.RolYonetici</option>
+                    <option value="@Sabitler.RolStandart">@Sabitler.RolStandart</option>
                 </select>
             </div>
             <div class="filter-item">
@@ -71,7 +71,7 @@
                             <td class="text-mono">@k.KullaniciAdi</td>
                             <td class="cell-strong">@k.AdSoyad</td>
                             <td>
-                                <span class="badge-soft @(k.Rol == "Yönetici" ? "badge-brand" : "")">@k.Rol</span>
+                                <span class="badge-soft @(k.Rol == Sabitler.RolYonetici ? "badge-brand" : "")">@k.Rol</span>
                             </td>
                             <td>
                                 @if (k.Aktif)
@@ -102,7 +102,7 @@
 
         <div class="table-footer">
             <span data-tablo-sayac="#tablo">@Model.Count</span> kayıt gösteriliyor ·
-            @Model.Count(x => x.Rol == "Yönetici") yönetici, @Model.Count(x => x.Rol != "Yönetici") standart
+            @Model.Count(x => x.Rol == Sabitler.RolYonetici) yönetici, @Model.Count(x => x.Rol != Sabitler.RolYonetici) standart
         </div>
     }
     else

@@ -14,17 +14,16 @@
 @{
     ViewData["Title"] = "Tahsilat / Ödeme Girişi";
 
-    var cariler = ViewData["Cariler"] as IEnumerable<Cari> ?? Enumerable.Empty<Cari>();
+    // Hangi carinin hangi işleme uygun olduğu controller'da belirlenir.
+    var cariler = ViewData["Cariler"] as IEnumerable<TahsilatOdemeCariViewModel> ?? Enumerable.Empty<TahsilatOdemeCariViewModel>();
 
     var tip = Model?.IslemTipi ?? Context.Request.Query["tip"].ToString();
-    if (tip != "Odeme") tip = "Tahsilat";
+    if (tip != Sabitler.IslemOdeme) tip = Sabitler.IslemTahsilat;
 
     var odemeTuru = Model?.OdemeTuru ?? "Nakit";
     var tarih = (Model == null || Model.Tarih == default) ? DateTime.Today : Model.Tarih;
     var tutar = Context.Request.HasFormContentType ? Context.Request.Form["tutar"].ToString() : "";
 
-    // Cari tipi: 1=Müşteri, 2=Tedarikçi, 3=Her ikisi
-    string Uygunluk(byte cariTipi) => cariTipi switch { 1 => "Tahsilat", 2 => "Odeme", _ => "Tahsilat Odeme" };
 }
 
 <div class="page-header">
@@ -45,9 +44,9 @@
                     <div class="mb-3">
                         <div class="form-label">İşlem</div>
                         <div class="segmented">
-                            <input type="radio" id="tipTahsilat" name="IslemTipi" value="Tahsilat" checked="@(tip == "Tahsilat")" />
+                            <input type="radio" id="tipTahsilat" name="IslemTipi" value="@Sabitler.IslemTahsilat" checked="@(tip == Sabitler.IslemTahsilat)" />
                             <label for="tipTahsilat">Tahsilat</label>
-                            <input type="radio" id="tipOdeme" name="IslemTipi" value="Odeme" checked="@(tip == "Odeme")" />
+                            <input type="radio" id="tipOdeme" name="IslemTipi" value="@Sabitler.IslemOdeme" checked="@(tip == Sabitler.IslemOdeme)" />
                             <label for="tipOdeme">Ödeme</label>
                         </div>
                     </div>
@@ -66,9 +65,9 @@
                             <label asp-for="CariId" class="form-label"><span id="cariEtiket">Müşteri</span> <span class="zorunlu">*</span></label>
                             <select asp-for="CariId" class="form-select" required>
                                 <option value="">Cari seçin...</option>
-                                @foreach (var c in cariler)
+                                @foreach (var satir in cariler)
                                 {
-                                    <option value="@c.Id" data-uygun="@Uygunluk(c.CariTipi)">@c.CariKodu — @c.Unvan</option>
+                                    <option value="@satir.Cari.Id" data-uygun="@satir.UygunIslemler">@satir.Cari.CariKodu — @satir.Cari.Unvan</option>
                                 }
                             </select>
                             <span asp-validation-for="CariId"></span>

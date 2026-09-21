@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using OnMuhasebe.Business.Services.IServices;
 using OnMuhasebe.DataAccess;
@@ -13,6 +14,39 @@ namespace OnMuhasebe.Business.Services
             _context = context;
         }
 
+        // ---------------------------------------------------------------
+        // Stok hesaplamaları
+        // Miktar hiçbir yerde saklanmaz, her zaman StokHareketler'den hesaplanır.
+        // Hesabın tek tanımı burasıdır; controller'lar ViewModel kurarken buradan alır.
+        // ---------------------------------------------------------------
+
+        /// <summary>Tek hareketin stoğa etkisi: giriş artı, çıkış eksi. EF Core bunu SQL'e çevirir.</summary>
+        public static readonly Expression<Func<StokHareket, decimal>> Etki =
+            h => h.Yon == Sabitler.YonGiris ? h.Miktar : -h.Miktar;
+
+        private static readonly Func<StokHareket, decimal> EtkiFonksiyonu = Etki.Compile();
+
+        /// <summary>Stok kartının mevcut miktarı. StokHareketleri yüklenmemişse 0 döner.</summary>
+        public decimal MevcutMiktar(StokKarti stokKarti) => stokKarti.StokHareketleri.Sum(EtkiFonksiyonu);
+
+        public decimal ToplamGiris(StokKarti stokKarti) =>
+            stokKarti.StokHareketleri.Where(h => h.Yon == Sabitler.YonGiris).Sum(h => h.Miktar);
+
+        public decimal ToplamCikis(StokKarti stokKarti) =>
+            stokKarti.StokHareketleri.Where(h => h.Yon == Sabitler.YonCikis).Sum(h => h.Miktar);
+
+        /// <summary>Mevcut miktar kritik seviyeye eşit ya da altındaysa uyarı verilir.</summary>
+        public bool KritikSeviyede(StokKarti stokKarti) => MevcutMiktar(stokKarti) <= stokKarti.KritikStok;
+
+        public string HareketTipiAdi(string hareketTipi) => hareketTipi switch
+        {
+            Sabitler.HareketSatis => "Satış",
+            Sabitler.HareketAlis => "Alış",
+            Sabitler.HareketSayimFazlasi => "Sayım Fazlası",
+            Sabitler.HareketSayimEksigi => "Sayım Eksiği",
+            _ => hareketTipi
+        };
+
         public async Task<List<StokKarti>> GetAllStokKartlariAsync()
         {
             return await _context.StokKartlari
@@ -22,7 +56,9 @@ namespace OnMuhasebe.Business.Services
 
         public async Task<StokKarti?> GetStokKartiByIdAsync(int id)
         {
-            return await _context.StokKartlari.FindAsync(id);
+            return await _context.StokKartlari
+                .Include(s => s.StokHareketleri)
+                .FirstOrDefaultAsync(s => s.Id == id);
         }
 
         public async Task<StokKarti> CreateStokKartiAsync(StokKarti stokKarti)

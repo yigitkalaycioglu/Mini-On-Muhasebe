@@ -21,8 +21,8 @@
 <div class="mb-3">
     <label asp-for="Rol" class="form-label">Rol <span class="zorunlu">*</span></label>
     <select asp-for="Rol" class="form-select" required>
-        <option value="Standart">Standart</option>
-        <option value="Yönetici">Yönetici</option>
+        <option value="@Sabitler.RolStandart">@Sabitler.RolStandart</option>
+        <option value="@Sabitler.RolYonetici">@Sabitler.RolYonetici</option>
     </select>
     <span asp-validation-for="Rol"></span>
     <span class="form-hint">

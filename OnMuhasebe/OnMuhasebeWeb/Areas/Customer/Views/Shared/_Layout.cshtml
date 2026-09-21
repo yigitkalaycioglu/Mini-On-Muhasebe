@@ -5,7 +5,7 @@
     string Aktif(bool kosul) => kosul ? "active" : "";
 
     var girisYapildi = User.Identity?.IsAuthenticated == true;
-    var yoneticiMi = User.IsInRole("Yönetici");
+    var yoneticiMi = User.IsInRole(Sabitler.RolYonetici);
 
     // Rol bazlı menü: "Yönetim" bölümü (Kullanıcılar, Parametreler) yalnızca Yönetici rolüne görünür.
     var yonetimGorunsun = yoneticiMi;
@@ -137,7 +137,7 @@
                         <span class="topbar-avatar">@basHarf</span>
                         <span class="topbar-user-text">
                             <span class="topbar-user-name">@kullaniciAdi</span>
-                            <span class="topbar-user-role">@(yoneticiMi ? "Yönetici" : "Standart")</span>
+                            <span class="topbar-user-role">@(yoneticiMi ? Sabitler.RolYonetici : Sabitler.RolStandart)</span>
                         </span>
                         <form asp-controller="Account" asp-action="Logout" method="post" class="m-0">
                             <button type="submit" class="btn btn-sm btn-outline-secondary">Çıkış</button>

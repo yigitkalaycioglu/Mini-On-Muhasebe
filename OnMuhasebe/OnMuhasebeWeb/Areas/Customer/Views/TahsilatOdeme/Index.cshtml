@@ -1,12 +1,12 @@
 @*
     TAHSİLAT / ÖDEME LİSTESİ — TahsilatOdemeController
     GET  Index(DateTime? baslangic, DateTime? bitis)
-         → View(List<CariHareket>)  yalnızca IslemTipi "Tahsilat" veya "Odeme" olanlar, yeniden eskiye
+         → View(TahsilatOdemeListesiViewModel)  yalnızca IslemTipi "Tahsilat" veya "Odeme" olanlar, yeniden eskiye
          .Include(h => h.Cari).Include(h => h.Kullanici)
     POST Delete(int id) → RedirectToAction("Index")
     İsteğe bağlı: TempData["Mesaj"]
 *@
-@model List<CariHareket>
+@model TahsilatOdemeListesiViewModel
 @{
     ViewData["Title"] = "Tahsilat / Ödeme";
 
@@ -14,8 +14,8 @@
     var bitis = Context.Request.Query["bitis"].ToString();
     var mesaj = TempData["Mesaj"] as string;
 
-    var toplamTahsilat = Model.Where(h => h.IslemTipi == "Tahsilat").Sum(h => h.Alacak);
-    var toplamOdeme = Model.Where(h => h.IslemTipi == "Odeme").Sum(h => h.Borc);
+    var toplamTahsilat = Model.ToplamTahsilat;
+    var toplamOdeme = Model.ToplamOdeme;
 }
 
 <div class="page-header">
@@ -24,8 +24,8 @@
         <p class="page-subtitle">Müşterilerden tahsilatlar ve tedarikçilere yapılan ödemeler.</p>
     </div>
     <div class="d-flex gap-2 flex-wrap">
-        <a asp-action="Create" asp-route-tip="Tahsilat" class="btn btn-primary">+ Tahsilat</a>
-        <a asp-action="Create" asp-route-tip="Odeme" class="btn btn-outline-secondary">+ Ödeme</a>
+        <a asp-action="Create" asp-route-tip="@Sabitler.IslemTahsilat" class="btn btn-primary">+ Tahsilat</a>
+        <a asp-action="Create" asp-route-tip="@Sabitler.IslemOdeme" class="btn btn-outline-secondary">+ Ödeme</a>
     </div>
 </div>
 
@@ -48,7 +48,7 @@
     </div>
     <div class="stat">
         <div class="stat-label">Net (TL)</div>
-        <div class="stat-value">@((toplamTahsilat - toplamOdeme).ToString("N2"))</div>
+        <div class="stat-value">@Model.Net.ToString("N2")</div>
     </div>
 </div>
 
@@ -62,8 +62,8 @@
             <label for="tip">İşlem</label>
             <select id="tip" class="form-select" data-tablo-secim="#tablo" data-alan="tip">
                 <option value="">Tümü</option>
-                <option value="Tahsilat">Tahsilat</option>
-                <option value="Odeme">Ödeme</option>
+                <option value="@Sabitler.IslemTahsilat">Tahsilat</option>
+                <option value="@Sabitler.IslemOdeme">Ödeme</option>
             </select>
         </div>
         <div class="filter-item">
@@ -86,7 +86,7 @@
         <button type="submit" class="btn btn-primary">Filtrele</button>
     </form>
 
-    @if (Model.Any())
+    @if (Model.Satirlar.Any())
     {
         <div class="table-wrapper">
             <table class="table" id="tablo">
@@ -104,25 +104,26 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var h in Model)
+                    @foreach (var satir in Model.Satirlar)
                     {
-                        var tahsilat = h.IslemTipi == "Tahsilat";
+                        var h = satir.Hareket;
+                        var tahsilat = satir.Tahsilat;
                         <tr data-tip="@h.IslemTipi" data-tur="@h.OdemeTuru">
                             <td>@h.Tarih.ToString("dd.MM.yyyy")</td>
                             <td class="text-mono">@h.BelgeNo</td>
                             <td class="cell-strong">@h.Cari?.Unvan</td>
                             <td>
-                                <span class="badge-soft @(tahsilat ? "badge-success" : "badge-danger")">@(tahsilat ? "Tahsilat" : "Ödeme")</span>
+                                <span class="badge-soft @(tahsilat ? "badge-success" : "badge-danger")">@satir.IslemAdi</span>
                             </td>
                             <td class="cell-muted">@h.OdemeTuru</td>
                             <td class="cell-number cell-strong @(tahsilat ? "tutar-alacak" : "tutar-borc")">
-                                @((tahsilat ? h.Alacak : h.Borc).ToString("N2"))
+                                @satir.Tutar.ToString("N2")
                             </td>
                             <td class="cell-muted">@h.Aciklama</td>
                             <td class="cell-muted">@h.Kullanici?.AdSoyad</td>
                             <td>
                                 <form asp-action="Delete" asp-route-id="@h.Id" method="post" class="m-0 row-actions"
-                                      data-onay="@(tahsilat ? "Tahsilat" : "Ödeme") kaydı silinsin mi? Cari bakiye güncellenecek.">
+                                      data-onay="@satir.IslemAdi kaydı silinsin mi? Cari bakiye güncellenecek.">
                                     <button type="submit" class="btn btn-sm btn-ghost" title="Sil" aria-label="Sil">
                                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /></svg>
                                     </button>
@@ -135,7 +136,7 @@
         </div>
 
         <div class="table-footer">
-            <span data-tablo-sayac="#tablo">@Model.Count</span> kayıt gösteriliyor
+            <span data-tablo-sayac="#tablo">@Model.Satirlar.Count</span> kayıt gösteriliyor
         </div>
     }
     else

@@ -1,5 +1,6 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using OnMuhasebe.Business.Services;
 using OnMuhasebe.Business.Services.IServices;
 using OnMuhasebe.Models;
 using System.Security.Claims;
@@ -110,7 +111,7 @@ namespace OnMuhasebeWeb.Areas.Customer.Controllers
         private async Task DropdownListeleriniDoldurAsync()
         {
             var tumCariler = await _cariService.GetAllCarilerAsync();
-            ViewData["Cariler"] = tumCariler.Where(c => c.Aktif && (c.CariTipi == 1 || c.CariTipi == 3));
+            ViewData["Cariler"] = tumCariler.Where(c => c.Aktif && _cariService.MusteriMi(c));
 
             var tumSatisElemanlari = await _satisElemaniService.GetAllSatisElemanlariAsync();
             ViewData["SatisElemanlari"] = tumSatisElemanlari.Where(e => e.Aktif);

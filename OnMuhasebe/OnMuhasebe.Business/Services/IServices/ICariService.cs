@@ -11,5 +11,15 @@ namespace OnMuhasebe.Business.Services.IServices
         Task<Cari> CreateCariAsync(Cari cari);
         Task UpdateCariAsync(Cari cari);
         Task DeleteCariAsync(int id);
+
+        // Cari bakiye hiçbir yerde saklanmaz; CariHareketler'den hesaplanır.
+        decimal Bakiye(Cari cari);
+        decimal HareketEtkisi(CariHareket hareket);
+        decimal ToplamBorc(Cari cari);
+        decimal ToplamAlacak(Cari cari);
+        bool MusteriMi(Cari cari);
+        bool TedarikciMi(Cari cari);
+        string CariTipiAdi(byte cariTipi);
+        string IslemTipiAdi(string islemTipi);
     }
 }

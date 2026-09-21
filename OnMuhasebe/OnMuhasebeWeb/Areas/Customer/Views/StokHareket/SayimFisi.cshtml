@@ -13,10 +13,11 @@
 @{
     ViewData["Title"] = "Sayım Fişi";
 
-    var stoklar = ViewData["Stoklar"] as IEnumerable<StokKarti> ?? Enumerable.Empty<StokKarti>();
+    // Mevcut miktarlar controller'da hesaplanıp hazır gelir.
+    var stoklar = ViewData["Stoklar"] as IEnumerable<SayimFisiStokViewModel> ?? Enumerable.Empty<SayimFisiStokViewModel>();
 
     var tip = Model?.HareketTipi ?? Context.Request.Query["tip"].ToString();
-    if (tip != "SayimEksigi") tip = "SayimFazlasi";
+    if (tip != Sabitler.HareketSayimEksigi) tip = Sabitler.HareketSayimFazlasi;
 
     var tarih = (Model == null || Model.Tarih == default) ? DateTime.Today : Model.Tarih;
     var inv = System.Globalization.CultureInfo.InvariantCulture;
@@ -40,9 +41,9 @@
                     <div class="mb-4">
                         <div class="form-label">Fiş türü</div>
                         <div class="segmented">
-                            <input type="radio" id="tipFazla" name="HareketTipi" value="SayimFazlasi" checked="@(tip == "SayimFazlasi")" />
+                            <input type="radio" id="tipFazla" name="HareketTipi" value="@Sabitler.HareketSayimFazlasi" checked="@(tip == Sabitler.HareketSayimFazlasi)" />
                             <label for="tipFazla">+ Sayım Fazlası</label>
-                            <input type="radio" id="tipEksik" name="HareketTipi" value="SayimEksigi" checked="@(tip == "SayimEksigi")" />
+                            <input type="radio" id="tipEksik" name="HareketTipi" value="@Sabitler.HareketSayimEksigi" checked="@(tip == Sabitler.HareketSayimEksigi)" />
                             <label for="tipEksik">− Sayım Eksiği</label>
                         </div>
                     </div>
@@ -61,10 +62,9 @@
                             <label asp-for="StokId" class="form-label">Ürün <span class="zorunlu">*</span></label>
                             <select asp-for="StokId" class="form-select" required>
                                 <option value="">Ürün seçin...</option>
-                                @foreach (var s in stoklar)
+                                @foreach (var satir in stoklar)
                                 {
-                                    var mevcut = s.StokHareketleri.Sum(h => h.Yon == "Giris" ? h.Miktar : -h.Miktar);
-                                    <option value="@s.Id" data-birim="@s.Birim" data-mevcut="@mevcut.ToString(inv)">@s.StokKodu — @s.StokAdi</option>
+                                    <option value="@satir.Stok.Id" data-birim="@satir.Stok.Birim" data-mevcut="@satir.Mevcut.ToString(inv)">@satir.Stok.StokKodu — @satir.Stok.StokAdi</option>
                                 }
                             </select>
                             <span asp-validation-for="StokId"></span>

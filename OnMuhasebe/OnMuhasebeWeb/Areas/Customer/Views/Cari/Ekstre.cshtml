@@ -1,34 +1,20 @@
 @*
     CARİ EKSTRE — CariController
-    GET Ekstre(int? id, DateTime? baslangic, DateTime? bitis)
-        → View(cari)  (id yoksa View(null) → cari seçim ekranı gösterilir)
-        Model.CariHareketleri: seçilen tarih aralığına göre FİLTRELENMİŞ hareketler
-            ör. .Include(c => c.CariHareketleri.Where(h => h.Tarih >= bas && h.Tarih <= bit))
-        ViewData["Cariler"]     : IEnumerable<Cari>  — üstteki cari seçim listesi
-        ViewData["DevirBakiye"] : decimal (isteğe bağlı) — başlangıç tarihinden önceki bakiye
+    GET Ekstre(int? id, DateTime? baslangic, DateTime? bitis) → View(CariEkstreViewModel)
+    Yürüyen bakiye, dönem toplamları ve devir bakiye controller'da hesaplanır.
 *@
-@model Cari
+@model CariEkstreViewModel
 @{
     ViewData["Title"] = "Cari Ekstre";
 
-    var cariler = ViewData["Cariler"] as IEnumerable<Cari> ?? Enumerable.Empty<Cari>();
-    var devir = ViewData["DevirBakiye"] as decimal? ?? 0m;
+    var cariler = Model.Cariler;
+    var devir = Model.DevirBakiye;
     var baslangic = Context.Request.Query["baslangic"].ToString();
     var bitis = Context.Request.Query["bitis"].ToString();
 
-    var hareketler = Model?.CariHareketleri.OrderBy(h => h.Tarih).ThenBy(h => h.Id).ToList() ?? new List<CariHareket>();
-    var toplamBorc = hareketler.Sum(h => h.Borc);
-    var toplamAlacak = hareketler.Sum(h => h.Alacak);
-    var sonBakiye = devir + toplamBorc - toplamAlacak;
-
-    string IslemAdi(string tip) => tip switch
-    {
-        "Satis" => "Satış Faturası",
-        "Alis" => "Alış Faturası",
-        "Tahsilat" => "Tahsilat",
-        "Odeme" => "Ödeme",
-        _ => tip
-    };
+    var toplamBorc = Model.ToplamBorc;
+    var toplamAlacak = Model.ToplamAlacak;
+    var sonBakiye = Model.SonBakiye;
 }
 
 @functions {
@@ -44,9 +30,9 @@
     <div>
         <h1>Cari Ekstre</h1>
         <p class="page-subtitle">
-            @if (Model != null)
+            @if (Model.Cari != null)
             {
-                <span class="text-mono">@Model.CariKodu</span> <text>·</text> @Model.Unvan
+                <span class="text-mono">@Model.Cari.CariKodu</span> <text>·</text> @Model.Cari.Unvan
             }
             else
             {
@@ -54,7 +40,7 @@
             }
         </p>
     </div>
-    @if (Model != null)
+    @if (Model.Cari != null)
     {
         <button type="button" class="btn btn-outline-secondary no-print" data-yazdir>Yazdır</button>
     }
@@ -65,7 +51,7 @@
         <div class="filter-item filter-search">
             <label for="id">Cari</label>
             <select id="id" name="id" class="form-select"
-                    asp-items="@cariler.Select(c => new SelectListItem($"{c.CariKodu} — {c.Unvan}", c.Id.ToString(), c.Id == Model?.Id))">
+                    asp-items="@cariler.Select(c => new SelectListItem($"{c.CariKodu} — {c.Unvan}", c.Id.ToString(), c.Id == Model.Cari?.Id))">
                 <option value="">Cari seçin...</option>
             </select>
         </div>
@@ -81,7 +67,7 @@
     </form>
 </div>
 
-@if (Model == null)
+@if (Model.Cari == null)
 {
     <div class="table-card">
         <div class="empty-state">
@@ -139,15 +125,14 @@ else
                         </tr>
                     }
 
-                    @{ var yuruyen = devir; }
-                    @foreach (var h in hareketler)
+                    @foreach (var satir in Model.Satirlar)
                     {
-                        yuruyen += h.Borc - h.Alacak;
+                        var h = satir.Hareket;
                         <tr>
                             <td>@h.Tarih.ToString("dd.MM.yyyy")</td>
                             <td class="text-mono">@h.BelgeNo</td>
                             <td>
-                                @IslemAdi(h.IslemTipi)
+                                @satir.IslemAdi
                                 @if (!string.IsNullOrEmpty(h.OdemeTuru))
                                 {
                                     <span class="badge-soft ms-1">@h.OdemeTuru</span>
@@ -156,11 +141,11 @@ else
                             <td class="cell-muted">@h.Aciklama</td>
                             <td class="cell-number">@(h.Borc != 0 ? h.Borc.ToString("N2") : "")</td>
                             <td class="cell-number">@(h.Alacak != 0 ? h.Alacak.ToString("N2") : "")</td>
-                            <td class="cell-number cell-strong">@BakiyeYaz(yuruyen)</td>
+                            <td class="cell-number cell-strong">@BakiyeYaz(satir.YuruyenBakiye)</td>
                         </tr>
                     }
 
-                    @if (!hareketler.Any())
+                    @if (!Model.Satirlar.Any())
                     {
                         <tr>
                             <td colspan="7" class="text-center cell-muted" style="padding: 32px;">Seçilen dönemde hareket yok.</td>

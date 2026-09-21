@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using OnMuhasebe.Business.Services.IServices;
 using OnMuhasebe.DataAccess;
@@ -13,6 +14,55 @@ namespace OnMuhasebe.Business.Services
             _context = context;
         }
 
+        // ---------------------------------------------------------------
+        // Cari hesaplamaları
+        // Bakiye hiçbir yerde saklanmaz, her zaman CariHareketler'den hesaplanır.
+        // Hesabın tek tanımı burasıdır; controller'lar ViewModel kurarken buradan alır.
+        // ---------------------------------------------------------------
+
+        /// <summary>Tek hareketin bakiyeye etkisi: borç artı, alacak eksi. EF Core bunu SQL'e çevirir.</summary>
+        public static readonly Expression<Func<CariHareket, decimal>> Etki =
+            h => h.Borc - h.Alacak;
+
+        private static readonly Func<CariHareket, decimal> EtkiFonksiyonu = Etki.Compile();
+
+        /// <summary>Tek hareketin bakiyeye etkisi (ekstredeki yürüyen bakiye için).</summary>
+        public decimal HareketEtkisi(CariHareket hareket) => EtkiFonksiyonu(hareket);
+
+        /// <summary>
+        /// Carinin bakiyesi. Pozitif: cari bize borçlu, negatif: biz cariye borçluyuz.
+        /// CariHareketleri yüklenmemişse 0 döner.
+        /// </summary>
+        public decimal Bakiye(Cari cari) => cari.CariHareketleri.Sum(EtkiFonksiyonu);
+
+        public decimal ToplamBorc(Cari cari) => cari.CariHareketleri.Sum(h => h.Borc);
+
+        public decimal ToplamAlacak(Cari cari) => cari.CariHareketleri.Sum(h => h.Alacak);
+
+        // Satış faturası müşteriye, alış faturası tedarikçiye kesilir.
+        public bool MusteriMi(Cari cari) =>
+            cari.CariTipi == Sabitler.CariTipiMusteri || cari.CariTipi == Sabitler.CariTipiHerIkisi;
+
+        public bool TedarikciMi(Cari cari) =>
+            cari.CariTipi == Sabitler.CariTipiTedarikci || cari.CariTipi == Sabitler.CariTipiHerIkisi;
+
+        public string CariTipiAdi(byte cariTipi) => cariTipi switch
+        {
+            Sabitler.CariTipiMusteri => "Müşteri",
+            Sabitler.CariTipiTedarikci => "Tedarikçi",
+            Sabitler.CariTipiHerIkisi => "Müşteri + Tedarikçi",
+            _ => "-"
+        };
+
+        public string IslemTipiAdi(string islemTipi) => islemTipi switch
+        {
+            Sabitler.IslemSatis => "Satış Faturası",
+            Sabitler.IslemAlis => "Alış Faturası",
+            Sabitler.IslemTahsilat => "Tahsilat",
+            Sabitler.IslemOdeme => "Ödeme",
+            _ => islemTipi
+        };
+
         public async Task<List<Cari>> GetAllCarilerAsync()
         {
             return await _context.Cariler
@@ -22,7 +72,9 @@ namespace OnMuhasebe.Business.Services
 
         public async Task<Cari?> GetCariByIdAsync(int id)
         {
-            return await _context.Cariler.FindAsync(id);
+            return await _context.Cariler
+                .Include(c => c.CariHareketleri)
+                .FirstOrDefaultAsync(c => c.Id == id);
         }
 
         public async Task<Cari?> GetCariEkstresiAsync(int id, DateTime? baslangic, DateTime? bitis)
@@ -45,7 +97,7 @@ namespace OnMuhasebe.Business.Services
 
             return await _context.CariHareketler
                 .Where(h => h.CariId == cariId && h.Tarih < baslangic.Value)
-                .SumAsync(h => h.Borc - h.Alacak);
+                .SumAsync(Etki);
         }
 
         public async Task<Cari> CreateCariAsync(Cari cari)

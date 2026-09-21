@@ -1,30 +1,21 @@
 @*
     STOK HAREKETLERİ LİSTESİ — StokHareketController
     GET Index(int? stokId, DateTime? baslangic, DateTime? bitis)
-        → View(List<StokHareket>)  filtreler uygulanmış, tarihe göre sıralı
+        → View(StokHareketListesiViewModel)  filtreler uygulanmış, tarihe göre sıralı
         .Include(h => h.StokKarti).Include(h => h.Kullanici)
     Satış, alış ve sayım fişleri bu tabloya yazar; bu ekran tüm giriş/çıkışları listeler.
 *@
-@model List<StokHareket>
+@model StokHareketListesiViewModel
 @{
     ViewData["Title"] = "Stok Hareketleri";
 
     var baslangic = Context.Request.Query["baslangic"].ToString();
     var bitis = Context.Request.Query["bitis"].ToString();
     var stokId = Context.Request.Query["stokId"].ToString();
-    var filtreliStok = string.IsNullOrEmpty(stokId) ? null : Model.FirstOrDefault()?.StokKarti;
+    var filtreliStok = Model.FiltreliStok;
 
-    (string Ad, string Sinif) Tip(string t) => t switch
-    {
-        "Alis" => ("Alış", "badge-success"),
-        "Satis" => ("Satış", "badge-brand"),
-        "SayimFazlasi" => ("Sayım Fazlası", "badge-warning"),
-        "SayimEksigi" => ("Sayım Eksiği", "badge-danger"),
-        _ => (t, "")
-    };
-
-    var toplamGiris = Model.Where(h => h.Yon == "Giris").Sum(h => h.Miktar);
-    var toplamCikis = Model.Where(h => h.Yon == "Cikis").Sum(h => h.Miktar);
+    var toplamGiris = Model.ToplamGiris;
+    var toplamCikis = Model.ToplamCikis;
 }
 
 <div class="page-header">
@@ -43,8 +34,8 @@
         </p>
     </div>
     <div class="d-flex gap-2 flex-wrap">
-        <a asp-action="SayimFisi" asp-route-tip="SayimFazlasi" class="btn btn-outline-secondary">+ Sayım Fazlası Fişi</a>
-        <a asp-action="SayimFisi" asp-route-tip="SayimEksigi" class="btn btn-outline-secondary">− Sayım Eksiği Fişi</a>
+        <a asp-action="SayimFisi" asp-route-tip="@Sabitler.HareketSayimFazlasi" class="btn btn-outline-secondary">+ Sayım Fazlası Fişi</a>
+        <a asp-action="SayimFisi" asp-route-tip="@Sabitler.HareketSayimEksigi" class="btn btn-outline-secondary">− Sayım Eksiği Fişi</a>
     </div>
 </div>
 
@@ -62,10 +53,10 @@
             <label for="tip">Hareket tipi</label>
             <select id="tip" class="form-select" data-tablo-secim="#tablo" data-alan="tip">
                 <option value="">Tümü</option>
-                <option value="Alis">Alış</option>
-                <option value="Satis">Satış</option>
-                <option value="SayimFazlasi">Sayım Fazlası</option>
-                <option value="SayimEksigi">Sayım Eksiği</option>
+                <option value="@Sabitler.HareketAlis">Alış</option>
+                <option value="@Sabitler.HareketSatis">Satış</option>
+                <option value="@Sabitler.HareketSayimFazlasi">Sayım Fazlası</option>
+                <option value="@Sabitler.HareketSayimEksigi">Sayım Eksiği</option>
             </select>
         </div>
         <div class="filter-item">
@@ -79,7 +70,7 @@
         <button type="submit" class="btn btn-primary">Filtrele</button>
     </form>
 
-    @if (Model.Any())
+    @if (Model.Satirlar.Any())
     {
         <div class="table-wrapper">
             <table class="table" id="tablo">
@@ -96,9 +87,9 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var h in Model)
+                    @foreach (var satir in Model.Satirlar)
                     {
-                        var tip = Tip(h.HareketTipi);
+                        var h = satir.Hareket;
                         <tr data-tip="@h.HareketTipi">
                             <td>@h.Tarih.ToString("dd.MM.yyyy")</td>
                             <td class="text-mono">@h.BelgeNo</td>
@@ -106,9 +97,9 @@
                                 <span class="cell-strong">@h.StokKarti?.StokAdi</span>
                                 <span class="d-block cell-muted text-mono" style="font-size: .75rem;">@h.StokKarti?.StokKodu</span>
                             </td>
-                            <td><span class="badge-soft @tip.Sinif">@tip.Ad</span></td>
-                            <td class="cell-number tutar-alacak">@(h.Yon == "Giris" ? h.Miktar.ToString("N2") : "")</td>
-                            <td class="cell-number tutar-borc">@(h.Yon == "Cikis" ? h.Miktar.ToString("N2") : "")</td>
+                            <td><span class="badge-soft @satir.TipSinifi">@satir.TipAdi</span></td>
+                            <td class="cell-number tutar-alacak">@(satir.GirisMiktari?.ToString("N2") ?? "")</td>
+                            <td class="cell-number tutar-borc">@(satir.CikisMiktari?.ToString("N2") ?? "")</td>
                             <td class="cell-muted">@h.Aciklama</td>
                             <td class="cell-muted">@h.Kullanici?.AdSoyad</td>
                         </tr>
@@ -126,7 +117,7 @@
         </div>
 
         <div class="table-footer">
-            <span data-tablo-sayac="#tablo">@Model.Count</span> hareket gösteriliyor
+            <span data-tablo-sayac="#tablo">@Model.Satirlar.Count</span> hareket gösteriliyor
         </div>
     }
     else

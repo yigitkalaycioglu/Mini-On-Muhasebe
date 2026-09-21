@@ -1,20 +1,13 @@
 @*
     RAPOR: KRİTİK STOK LİSTESİ — RaporController
-    GET KritikStok() → View(List<StokKarti>)  aktif stoklar, .Include(s => s.StokHareketleri)
-    Süzme (mevcut <= KritikStok) bu view'de yapılır; controller tüm aktif stokları gönderebilir.
+    GET KritikStok() → View(KritikStokRaporViewModel)
+    Süzme (mevcut <= KritikStok) ve eksik/maliyet hesabı controller'da yapılır.
 *@
-@model List<StokKarti>
+@model KritikStokRaporViewModel
 @{
     ViewData["Title"] = "Kritik Stok Listesi";
 
-    var satirlar = Model
-        .Where(s => s.Aktif)
-        .Select(s => new { Stok = s, Mevcut = s.StokHareketleri.Sum(h => h.Yon == "Giris" ? h.Miktar : -h.Miktar) })
-        .Where(x => x.Mevcut <= x.Stok.KritikStok)
-        .Select(x => new { x.Stok, x.Mevcut, Eksik = x.Stok.KritikStok - x.Mevcut })
-        .Select(x => new { x.Stok, x.Mevcut, x.Eksik, Maliyet = x.Eksik * x.Stok.AlisFiyati })
-        .OrderBy(x => x.Mevcut - x.Stok.KritikStok)
-        .ToList();
+    var satirlar = Model.Satirlar;
 }
 
 <div class="page-header">

@@ -1,14 +1,12 @@
 @*
     CARİ LİSTESİ — CariController
-    GET Index() → View(List<Cari>)
-    Bakiye sütunu için: _context.Cariler.Include(c => c.CariHareketleri)
+    GET Index() → View(CariListesiViewModel)
+    Bakiye, toplam borç/alacak controller’da ICariService ile hesaplanır.
 *@
-@model List<Cari>
+@model CariListesiViewModel
 @{
     ViewData["Title"] = "Cari Hesaplar";
 
-    string TipAdi(byte tip) => tip switch { 1 => "Müşteri", 2 => "Tedarikçi", 3 => "Müşteri + Tedarikçi", _ => "-" };
-    decimal Bakiye(Cari c) => c.CariHareketleri.Sum(h => h.Borc) - c.CariHareketleri.Sum(h => h.Alacak);
     var mesaj = TempData["Mesaj"] as string;
 }
 
@@ -29,7 +27,7 @@
 }
 
 <div class="table-card">
-    @if (Model.Any())
+    @if (Model.Satirlar.Any())
     {
         <div class="filter-bar">
             <div class="filter-item filter-search">
@@ -69,13 +67,14 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var c in Model)
+                    @foreach (var satir in Model.Satirlar)
                     {
-                        var bakiye = Bakiye(c);
+                        var c = satir.Cari;
+                        var bakiye = satir.Bakiye;
                         <tr data-tip="@c.CariTipi" data-durum="@(c.Aktif ? "aktif" : "pasif")">
                             <td class="text-mono">@c.CariKodu</td>
                             <td class="cell-strong">@c.Unvan</td>
-                            <td><span class="badge-soft">@TipAdi(c.CariTipi)</span></td>
+                            <td><span class="badge-soft">@satir.TipAdi</span></td>
                             <td class="cell-muted">@c.Telefon</td>
                             <td class="cell-number cell-strong">
                                 @Math.Abs(bakiye).ToString("N2")
@@ -111,7 +110,7 @@
         </div>
 
         <div class="table-footer">
-            <span data-tablo-sayac="#tablo">@Model.Count</span> kayıt gösteriliyor ·
+            <span data-tablo-sayac="#tablo">@Model.Satirlar.Count</span> kayıt gösteriliyor ·
             <strong>(B)</strong> cari bize borçlu, <strong>(A)</strong> biz cariye borçluyuz
         </div>
     }

@@ -1,27 +1,13 @@
 @*
     RAPOR: STOK DURUM LİSTESİ — RaporController
-    GET StokDurum() → View(List<StokKarti>)  .Include(s => s.StokHareketleri)
+    GET StokDurum() → View(StokDurumRaporViewModel)
+    Giriş/çıkış/mevcut, stok değeri ve seviye controller'da hesaplanır.
 *@
-@model List<StokKarti>
+@model StokDurumRaporViewModel
 @{
     ViewData["Title"] = "Stok Durum Listesi";
 
-    var satirlar = Model
-        .Select(s => new
-        {
-            Stok = s,
-            Giris = s.StokHareketleri.Where(h => h.Yon == "Giris").Sum(h => h.Miktar),
-            Cikis = s.StokHareketleri.Where(h => h.Yon == "Cikis").Sum(h => h.Miktar)
-        })
-        .Select(x => new { x.Stok, x.Giris, x.Cikis, Mevcut = x.Giris - x.Cikis })
-        .Select(x => new
-        {
-            x.Stok, x.Giris, x.Cikis, x.Mevcut,
-            Deger = Math.Max(x.Mevcut, 0) * x.Stok.AlisFiyati,
-            Seviye = x.Mevcut <= 0 ? "tukendi" : x.Mevcut <= x.Stok.KritikStok ? "kritik" : "yeterli"
-        })
-        .OrderBy(x => x.Stok.StokKodu)
-        .ToList();
+    var satirlar = Model.Satirlar;
 }
 
 <div class="page-header">
@@ -42,11 +28,11 @@
     </div>
     <div class="stat">
         <div class="stat-label">Kritik / tükenen</div>
-        <div class="stat-value">@satirlar.Count(x => x.Seviye == "kritik") / @satirlar.Count(x => x.Seviye == "tukendi")</div>
+        <div class="stat-value">@Model.KritikSayisi / @Model.TukenenSayisi</div>
     </div>
     <div class="stat">
         <div class="stat-label">Stok değeri (alış, TL)</div>
-        <div class="stat-value">@satirlar.Sum(x => x.Deger).ToString("N2")</div>
+        <div class="stat-value">@Model.ToplamDeger.ToString("N2")</div>
     </div>
 </div>
 

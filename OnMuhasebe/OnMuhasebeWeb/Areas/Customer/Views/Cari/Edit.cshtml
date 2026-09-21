@@ -7,9 +7,10 @@
 @{
     ViewData["Title"] = "Cari Kartı";
 
-    var toplamBorc = Model.CariHareketleri.Sum(h => h.Borc);
-    var toplamAlacak = Model.CariHareketleri.Sum(h => h.Alacak);
-    var bakiye = toplamBorc - toplamAlacak;
+    var ozet = ViewData["Ozet"] as CariOzetiViewModel ?? new CariOzetiViewModel();
+    var toplamBorc = ozet.ToplamBorc;
+    var toplamAlacak = ozet.ToplamAlacak;
+    var bakiye = ozet.Bakiye;
 }
 
 <div class="page-header">

@@ -6,7 +6,7 @@
 @{
     ViewData["Title"] = "Panel";
 
-    var yonetimGorunsun = User.IsInRole("Yönetici");
+    var yonetimGorunsun = User.IsInRole(Sabitler.RolYonetici);
     var adSoyad = User.Identity?.Name;
     var kritikStokSayisi = ViewData["KritikStokSayisi"] as int? ?? 0;
 }
@@ -30,8 +30,8 @@
 <div class="d-flex flex-wrap gap-2 mb-4">
     <a asp-controller="SatisFaturasi" asp-action="Create" class="btn btn-primary">+ Satış Faturası</a>
     <a asp-controller="AlisFaturasi" asp-action="Create" class="btn btn-outline-secondary">+ Alış Faturası</a>
-    <a asp-controller="TahsilatOdeme" asp-action="Create" asp-route-tip="Tahsilat" class="btn btn-outline-secondary">+ Tahsilat</a>
-    <a asp-controller="TahsilatOdeme" asp-action="Create" asp-route-tip="Odeme" class="btn btn-outline-secondary">+ Ödeme</a>
+    <a asp-controller="TahsilatOdeme" asp-action="Create" asp-route-tip="@Sabitler.IslemTahsilat" class="btn btn-outline-secondary">+ Tahsilat</a>
+    <a asp-controller="TahsilatOdeme" asp-action="Create" asp-route-tip="@Sabitler.IslemOdeme" class="btn btn-outline-secondary">+ Ödeme</a>
     <a asp-controller="StokHareket" asp-action="SayimFisi" class="btn btn-outline-secondary">+ Sayım Fişi</a>
 </div>
 

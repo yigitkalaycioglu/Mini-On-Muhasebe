@@ -1,21 +1,15 @@
 @*
     RAPOR: CARİ BAKİYE LİSTESİ — RaporController
-    GET CariBakiye() → View(List<Cari>)  .Include(c => c.CariHareketleri)
+    GET CariBakiye() → View(CariBakiyeRaporViewModel)
+    Borç/alacak/bakiye toplamları controller'da hesaplanır.
 *@
-@model List<Cari>
+@model CariBakiyeRaporViewModel
 @{
     ViewData["Title"] = "Cari Bakiye Listesi";
 
-    string TipAdi(byte tip) => tip switch { 1 => "Müşteri", 2 => "Tedarikçi", 3 => "Müşteri + Tedarikçi", _ => "-" };
-
-    var satirlar = Model
-        .Select(c => new { Cari = c, Borc = c.CariHareketleri.Sum(h => h.Borc), Alacak = c.CariHareketleri.Sum(h => h.Alacak) })
-        .Select(x => new { x.Cari, x.Borc, x.Alacak, Bakiye = x.Borc - x.Alacak })
-        .OrderBy(x => x.Cari.CariKodu)
-        .ToList();
-
-    var alacagimiz = satirlar.Where(x => x.Bakiye > 0).Sum(x => x.Bakiye);
-    var borcumuz = -satirlar.Where(x => x.Bakiye < 0).Sum(x => x.Bakiye);
+    var satirlar = Model.Satirlar;
+    var alacagimiz = Model.Alacagimiz;
+    var borcumuz = Model.Borcumuz;
 }
 
 <div class="page-header">
@@ -91,7 +85,7 @@
                         <td>
                             <a asp-controller="Cari" asp-action="Ekstre" asp-route-id="@x.Cari.Id" class="cell-strong">@x.Cari.Unvan</a>
                         </td>
-                        <td><span class="badge-soft">@TipAdi(x.Cari.CariTipi)</span></td>
+                        <td><span class="badge-soft">@x.TipAdi</span></td>
                         <td class="cell-number">@x.Borc.ToString("N2")</td>
                         <td class="cell-number">@x.Alacak.ToString("N2")</td>
                         <td class="cell-number cell-strong">

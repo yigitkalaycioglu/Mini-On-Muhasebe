@@ -1,14 +1,13 @@
 @*
     STOK LİSTESİ — StokKartiController
-    GET Index() → View(List<StokKarti>)
-    Mevcut miktar sütunu için: _context.StokKartlari.Include(s => s.StokHareketleri)
+    GET Index() → View(StokListesiViewModel)
+    Mevcut miktar ve kritik uyarısı controller’da IStokKartiService ile hesaplanır.
 *@
-@model List<StokKarti>
+@model StokListesiViewModel
 @{
     ViewData["Title"] = "Stok Kartları";
 
-    decimal Mevcut(StokKarti s) => s.StokHareketleri.Sum(h => h.Yon == "Giris" ? h.Miktar : -h.Miktar);
-    var kritikSayisi = Model.Count(s => s.Aktif && Mevcut(s) <= s.KritikStok);
+    var kritikSayisi = Model.KritikSayisi;
     var mesaj = TempData["Mesaj"] as string;
 }
 
@@ -37,7 +36,7 @@
 }
 
 <div class="table-card">
-    @if (Model.Any())
+    @if (Model.Satirlar.Any())
     {
         <div class="filter-bar">
             <div class="filter-item filter-search">
@@ -78,10 +77,11 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var s in Model)
+                    @foreach (var satir in Model.Satirlar)
                     {
-                        var mevcut = Mevcut(s);
-                        var kritik = mevcut <= s.KritikStok;
+                        var s = satir.Stok;
+                        var mevcut = satir.Mevcut;
+                        var kritik = satir.Kritik;
                         <tr data-seviye="@(kritik ? "kritik" : "normal")" data-durum="@(s.Aktif ? "aktif" : "pasif")">
                             <td class="text-mono">@s.StokKodu</td>
                             <td class="cell-strong">@s.StokAdi</td>
@@ -125,7 +125,7 @@
         </div>
 
         <div class="table-footer">
-            <span data-tablo-sayac="#tablo">@Model.Count</span> kayıt gösteriliyor · Mevcut miktar stok hareketlerinden hesaplanır
+            <span data-tablo-sayac="#tablo">@Model.Satirlar.Count</span> kayıt gösteriliyor · Mevcut miktar stok hareketlerinden hesaplanır
         </div>
     }
     else

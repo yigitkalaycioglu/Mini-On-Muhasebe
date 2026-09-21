@@ -7,10 +7,11 @@
 @{
     ViewData["Title"] = "Stok Kartı";
 
-    var giris = Model.StokHareketleri.Where(h => h.Yon == "Giris").Sum(h => h.Miktar);
-    var cikis = Model.StokHareketleri.Where(h => h.Yon == "Cikis").Sum(h => h.Miktar);
-    var mevcut = giris - cikis;
-    var kritik = mevcut <= Model.KritikStok;
+    var ozet = ViewData["Ozet"] as StokOzetiViewModel ?? new StokOzetiViewModel();
+    var giris = ozet.ToplamGiris;
+    var cikis = ozet.ToplamCikis;
+    var mevcut = ozet.Mevcut;
+    var kritik = ozet.Kritik;
 }
 
 <div class="page-header">

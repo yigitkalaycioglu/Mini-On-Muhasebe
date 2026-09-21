@@ -40,8 +40,8 @@ namespace OnMuhasebe.Business.Services
                 {
                     StokId = kalem.StokId,
                     Tarih = alisFaturasi.Tarih,
-                    HareketTipi = "Alis",
-                    Yon = "Giris",
+                    HareketTipi = Sabitler.HareketAlis,
+                    Yon = Sabitler.YonGiris,
                     Miktar = kalem.Miktar,
                     BelgeNo = faturaNo,
                     Aciklama = $"{faturaNo} numaralı alış faturası",
@@ -55,7 +55,7 @@ namespace OnMuhasebe.Business.Services
             {
                 CariId = alisFaturasi.CariId,
                 Tarih = alisFaturasi.Tarih,
-                IslemTipi = "Alis",
+                IslemTipi = Sabitler.IslemAlis,
                 BelgeNo = faturaNo,
                 Aciklama = $"{faturaNo} numaralı alış faturası",
                 Borc = 0,

@@ -42,7 +42,7 @@ namespace OnMuhasebe.Business.Services
                 var istenenToplam = grup.Sum(k => k.Miktar);
                 var mevcutMiktar = await _context.StokHareketler
                     .Where(h => h.StokId == grup.Key)
-                    .SumAsync(h => h.Yon == "Giris" ? h.Miktar : -h.Miktar);
+                    .SumAsync(StokKartiService.Etki);
 
                 if (mevcutMiktar < istenenToplam)
                 {
@@ -61,8 +61,8 @@ namespace OnMuhasebe.Business.Services
                 {
                     StokId = kalem.StokId,
                     Tarih = satisFaturasi.Tarih,
-                    HareketTipi = "Satis",
-                    Yon = "Cikis",
+                    HareketTipi = Sabitler.HareketSatis,
+                    Yon = Sabitler.YonCikis,
                     Miktar = kalem.Miktar,
                     BelgeNo = faturaNo,
                     Aciklama = $"{faturaNo} numaralı satış faturası",
@@ -76,7 +76,7 @@ namespace OnMuhasebe.Business.Services
             {
                 CariId = satisFaturasi.CariId,
                 Tarih = satisFaturasi.Tarih,
-                IslemTipi = "Satis",
+                IslemTipi = Sabitler.IslemSatis,
                 BelgeNo = faturaNo,
                 Aciklama = $"{faturaNo} numaralı satış faturası",
                 Borc = satisFaturasi.GenelToplam,
