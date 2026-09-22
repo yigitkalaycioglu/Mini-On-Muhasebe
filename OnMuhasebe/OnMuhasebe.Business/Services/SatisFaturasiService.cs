@@ -8,9 +8,13 @@ namespace OnMuhasebe.Business.Services
     public class SatisFaturasiService : ISatisFaturasiService
     {
         private readonly ApplicationDbContext _context;
-        public SatisFaturasiService(ApplicationDbContext context)
+        private readonly IParametreService _parametreService;
+        private readonly IStokKartiService _stokKartiService;
+        public SatisFaturasiService(ApplicationDbContext context, IParametreService parametreService, IStokKartiService stokKartiService)
         {
             _context = context;
+            _parametreService = parametreService;
+            _stokKartiService = stokKartiService;
         }
 
         public async Task<SatisFaturasi> CreateSatisFaturasiAsync(SatisFaturasi satisFaturasi, int kullaniciId)
@@ -31,31 +35,36 @@ namespace OnMuhasebe.Business.Services
             satisFaturasi.AraToplam = 0;
             satisFaturasi.KdvToplam = 0;
 
-            // Aynı üründen birden fazla kalem girilmişse, stok kontrolü toplam miktar üzerinden yapılmalı.
-            var stokIdler = satisFaturasi.SatisFaturaSatirlari.Select(k => k.StokId).Distinct().ToList();
-            var stokKartlari = await _context.StokKartlari
-                .Where(s => stokIdler.Contains(s.Id))
-                .ToDictionaryAsync(s => s.Id, s => s.StokAdi);
-
-            foreach (var grup in satisFaturasi.SatisFaturaSatirlari.GroupBy(k => k.StokId))
+            // Negatif stok kontrolü parametreye bağlıdır (Bölüm 8). Açıksa stok yetersizse fatura kaydedilmez.
+            // Aynı üründen birden fazla kalem girilmişse kontrol toplam miktar üzerinden yapılır.
+            if (await _parametreService.AcikMiAsync(Sabitler.ParamNegatifStokKontrolu))
             {
-                var istenenToplam = grup.Sum(k => k.Miktar);
-                var mevcutMiktar = await _context.StokHareketler
-                    .Where(h => h.StokId == grup.Key)
-                    .SumAsync(StokKartiService.Etki);
+                var stokIdler = satisFaturasi.SatisFaturaSatirlari.Select(k => k.StokId).Distinct().ToList();
+                var stokAdlari = await _context.StokKartlari
+                    .Where(s => stokIdler.Contains(s.Id))
+                    .ToDictionaryAsync(s => s.Id, s => s.StokAdi);
 
-                if (mevcutMiktar < istenenToplam)
+                foreach (var grup in satisFaturasi.SatisFaturaSatirlari.GroupBy(k => k.StokId))
                 {
-                    var stokAdi = stokKartlari.TryGetValue(grup.Key, out var ad) ? ad : "Ürün";
-                    throw new InvalidOperationException($"{stokAdi} için yeterli stok yok. Mevcut: {mevcutMiktar}, istenen: {istenenToplam}");
+                    var istenenToplam = grup.Sum(k => k.Miktar);
+                    var mevcutMiktar = await _stokKartiService.GetMevcutMiktarAsync(grup.Key);
+
+                    if (mevcutMiktar < istenenToplam)
+                    {
+                        var stokAdi = stokAdlari.TryGetValue(grup.Key, out var ad) ? ad : "Ürün";
+                        throw new InvalidOperationException($"{stokAdi} için yeterli stok yok. Mevcut: {mevcutMiktar:N2}, istenen: {istenenToplam:N2}");
+                    }
                 }
             }
 
+            // Tutarlar "Ondalık Basamak" parametresine göre yuvarlanır.
+            var basamak = (int)await _parametreService.GetSayiAsync(Sabitler.ParamOndalikBasamak);
+
             foreach (var kalem in satisFaturasi.SatisFaturaSatirlari)
             {
-                kalem.SatirTutari = kalem.Miktar * kalem.BirimFiyat;
+                kalem.SatirTutari = Math.Round(kalem.Miktar * kalem.BirimFiyat, basamak);
                 satisFaturasi.AraToplam += kalem.SatirTutari;
-                satisFaturasi.KdvToplam += kalem.SatirTutari * kalem.KdvOrani / 100;
+                satisFaturasi.KdvToplam += Math.Round(kalem.SatirTutari * kalem.KdvOrani / 100, basamak);
 
                 var stokHareket = new StokHareket
                 {
@@ -147,24 +156,10 @@ namespace OnMuhasebe.Business.Services
 
         public async Task<string> GetYeniFaturaNoAsync()
         {
-            int dynamicYear = DateTime.Now.Year;
-            string prefix = $"SAT-{dynamicYear}-";
-
-            var faturaNolar = await _context.SatisFaturalari
-                .Where(f => f.FaturaNo.StartsWith(prefix))
-                .Select(f => f.FaturaNo)
-                .ToListAsync();
-
-            var sonSira = 0;
-            foreach (var no in faturaNolar)
-            {
-                if (int.TryParse(no.Substring(prefix.Length), out var sira) && sira > sonSira)
-                {
-                    sonSira = sira;
-                }
-            }
-
-            return $"{prefix}{(sonSira + 1):D4}";
+            // Format "Satış Fatura No Formatı" parametresinden gelir (ör. SAT-{yyyy}-{0000}).
+            return await _parametreService.YeniBelgeNoAsync(
+                Sabitler.ParamSatisFaturaNoFormati,
+                _context.SatisFaturalari.Select(f => (string?)f.FaturaNo));
         }
     }
 }

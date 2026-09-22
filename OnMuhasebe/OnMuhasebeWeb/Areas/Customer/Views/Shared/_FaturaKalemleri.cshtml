@@ -16,9 +16,12 @@
 
     var inv = System.Globalization.CultureInfo.InvariantCulture;
     var ondalik = System.Globalization.CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator;
+    var varsayilanKdv = ViewData["VarsayilanKdv"] as decimal? ?? 20m;
+    var paraBirimi = ViewData["ParaBirimi"] as string ?? "TL";
 }
 
-<div class="table-card" data-fatura-kalemleri data-koleksiyon="@koleksiyon" data-fiyat="@fiyatTipi" data-ondalik="@ondalik">
+<div class="table-card" data-fatura-kalemleri data-koleksiyon="@koleksiyon" data-fiyat="@fiyatTipi" data-ondalik="@ondalik"
+     data-varsayilan-kdv="@varsayilanKdv.ToString(inv)" data-para-birimi="@paraBirimi">
     <div class="card-header">Fatura kalemleri</div>
 
     <div class="table-wrapper">
@@ -30,7 +33,7 @@
                     <th style="width: 150px;">Miktar</th>
                     <th style="width: 140px;">Birim fiyat</th>
                     <th style="width: 90px;">KDV %</th>
-                    <th style="width: 130px;" class="cell-number">Tutar (TL)</th>
+                    <th style="width: 130px;" class="cell-number">Tutar (@paraBirimi)</th>
                     <th style="width: 50px;"></th>
                 </tr>
             </thead>
@@ -64,7 +67,7 @@
                 <input type="text" inputmode="decimal" class="form-control text-end" data-alan="BirimFiyat" placeholder="0,00" autocomplete="off" />
             </td>
             <td>
-                <input type="text" inputmode="decimal" class="form-control text-end" data-alan="KdvOrani" placeholder="20" autocomplete="off" />
+                <input type="text" inputmode="decimal" class="form-control text-end" data-alan="KdvOrani" placeholder="@varsayilanKdv.ToString("0.##")" autocomplete="off" />
             </td>
             <td class="satir-tutar">0,00</td>
             <td>
@@ -85,15 +88,15 @@
         <div class="toplamlar">
             <div class="toplamlar-satir">
                 <span>Ara toplam (KDV hariç)</span>
-                <span data-toplam="ara">0,00 TL</span>
+                <span data-toplam="ara">0,00 @paraBirimi</span>
             </div>
             <div class="toplamlar-satir">
                 <span>KDV toplamı</span>
-                <span data-toplam="kdv">0,00 TL</span>
+                <span data-toplam="kdv">0,00 @paraBirimi</span>
             </div>
             <div class="toplamlar-satir genel">
                 <span>Genel toplam</span>
-                <span data-toplam="genel">0,00 TL</span>
+                <span data-toplam="genel">0,00 @paraBirimi</span>
             </div>
         </div>
     </div>

@@ -47,7 +47,7 @@
         <div class="stat-value tutar-borc">@toplamOdeme.ToString("N2")</div>
     </div>
     <div class="stat">
-        <div class="stat-label">Net (TL)</div>
+        <div class="stat-label">Net (@ViewData["ParaBirimi"])</div>
         <div class="stat-value">@Model.Net.ToString("N2")</div>
     </div>
 </div>
@@ -97,7 +97,7 @@
                         <th>Cari</th>
                         <th>İşlem</th>
                         <th>Tür</th>
-                        <th class="cell-number">Tutar (TL)</th>
+                        <th class="cell-number">Tutar (@ViewData["ParaBirimi"])</th>
                         <th>Açıklama</th>
                         <th>Kullanıcı</th>
                         <th style="width: 60px;"></th>

@@ -9,6 +9,8 @@ namespace OnMuhasebe.Business.Services.IServices
         Task<StokKarti> CreateStokKartiAsync(StokKarti stokKarti);
         Task UpdateStokKartiAsync(StokKarti stokKarti);
         Task DeleteStokKartiAsync(int id);
+        Task<decimal> GetMevcutMiktarAsync(int stokId);
+        Task<int> GetKritikStokSayisiAsync();
 
         // Stok miktarı hiçbir yerde saklanmaz; StokHareketler'den hesaplanır.
         decimal MevcutMiktar(StokKarti stokKarti);

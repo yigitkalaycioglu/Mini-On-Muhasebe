@@ -85,7 +85,7 @@
                     <th class="cell-number">Miktar</th>
                     <th class="cell-number">Birim Fiyat</th>
                     <th class="cell-number">KDV</th>
-                    <th class="cell-number">Tutar (TL)</th>
+                    <th class="cell-number">Tutar (@ViewData["ParaBirimi"])</th>
                 </tr>
             </thead>
             <tbody>
@@ -110,15 +110,15 @@
         <div class="toplamlar">
             <div class="toplamlar-satir">
                 <span>Ara toplam (KDV hariç)</span>
-                <span>@Model.AraToplam.ToString("N2") TL</span>
+                <span>@Model.AraToplam.ToString("N2") @ViewData["ParaBirimi"]</span>
             </div>
             <div class="toplamlar-satir">
                 <span>KDV toplamı</span>
-                <span>@Model.KdvToplam.ToString("N2") TL</span>
+                <span>@Model.KdvToplam.ToString("N2") @ViewData["ParaBirimi"]</span>
             </div>
             <div class="toplamlar-satir genel">
                 <span>Genel toplam</span>
-                <span>@Model.GenelToplam.ToString("N2") TL</span>
+                <span>@Model.GenelToplam.ToString("N2") @ViewData["ParaBirimi"]</span>
             </div>
         </div>
     </div>

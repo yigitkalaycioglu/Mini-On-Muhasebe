@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using OnMuhasebe.Business;
 using OnMuhasebe.Business.Services.IServices;
 using OnMuhasebe.Models;
 using OnMuhasebeWeb.ViewModels;
@@ -11,14 +12,19 @@ namespace OnMuhasebeWeb.Areas.Customer.Controllers
     public class StokKartiController : Controller
     {
         private readonly IStokKartiService _stokKartiService;
-        public StokKartiController(IStokKartiService stokKartiService)
+        private readonly IParametreService _parametreService;
+        public StokKartiController(IStokKartiService stokKartiService, IParametreService parametreService)
         {
             _stokKartiService = stokKartiService;
+            _parametreService = parametreService;
         }
 
         public async Task<IActionResult> Index()
         {
             var stokKartlari = await _stokKartiService.GetAllStokKartlariAsync();
+
+            // "Kritik Stok Uyarısı" parametresi kapalıysa uyarı ve etiketler gösterilmez.
+            var uyariAcik = await _parametreService.AcikMiAsync(Sabitler.ParamKritikStokUyarisi);
 
             var model = new StokListesiViewModel
             {
@@ -26,7 +32,7 @@ namespace OnMuhasebeWeb.Areas.Customer.Controllers
                 {
                     Stok = s,
                     Mevcut = _stokKartiService.MevcutMiktar(s),
-                    Kritik = _stokKartiService.KritikSeviyede(s)
+                    Kritik = uyariAcik && _stokKartiService.KritikSeviyede(s)
                 }).ToList()
             };
             model.KritikSayisi = model.Satirlar.Count(x => x.Stok.Aktif && x.Kritik);
@@ -34,8 +40,11 @@ namespace OnMuhasebeWeb.Areas.Customer.Controllers
             return View(model);
         }
 
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
+            // Yeni kartta KDV oranı "Varsayılan KDV Oranı" parametresinden gelir.
+            var kdv = await _parametreService.GetSayiAsync(Sabitler.ParamVarsayilanKdvOrani);
+            ViewData["VarsayilanKdv"] = kdv.ToString("0.##");
             return View();
         }
 
@@ -47,7 +56,7 @@ namespace OnMuhasebeWeb.Areas.Customer.Controllers
                 return NotFound();
             }
 
-            ViewData["Ozet"] = StokOzetiHazirla(stokKarti);
+            ViewData["Ozet"] = await StokOzetiHazirlaAsync(stokKarti);
             return View(stokKarti);
         }
 
@@ -115,16 +124,17 @@ namespace OnMuhasebeWeb.Areas.Customer.Controllers
 
             // Formdan gelen nesnede hareket listesi boştur; stok özeti kayıtlı karttan hesaplanır.
             var kayitli = await _stokKartiService.GetStokKartiByIdAsync(id);
-            ViewData["Ozet"] = kayitli == null ? new StokOzetiViewModel() : StokOzetiHazirla(kayitli);
+            ViewData["Ozet"] = kayitli == null ? new StokOzetiViewModel() : await StokOzetiHazirlaAsync(kayitli);
             return View("Edit", stokKarti);
         }
 
-        private StokOzetiViewModel StokOzetiHazirla(StokKarti stokKarti) => new()
+        private async Task<StokOzetiViewModel> StokOzetiHazirlaAsync(StokKarti stokKarti) => new()
         {
             ToplamGiris = _stokKartiService.ToplamGiris(stokKarti),
             ToplamCikis = _stokKartiService.ToplamCikis(stokKarti),
             Mevcut = _stokKartiService.MevcutMiktar(stokKarti),
-            Kritik = _stokKartiService.KritikSeviyede(stokKarti)
+            Kritik = await _parametreService.AcikMiAsync(Sabitler.ParamKritikStokUyarisi)
+                && _stokKartiService.KritikSeviyede(stokKarti)
         };
 
         [HttpPost]

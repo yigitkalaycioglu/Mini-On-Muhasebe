@@ -3,11 +3,16 @@ using Microsoft.EntityFrameworkCore;
 using OnMuhasebe.Business.Services.IServices;
 using OnMuhasebe.DataAccess;
 using OnMuhasebe.Business.Services;
+using OnMuhasebeWeb.Filters;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddControllersWithViews();
+// Firma bilgisi ve para birimi her sayfada gerektiği için tek bir filtreyle ViewData'ya konur.
+builder.Services.AddControllersWithViews(options =>
+{
+    options.Filters.Add<GorunumParametreleriFilter>();
+});
 
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -31,6 +36,7 @@ builder.Services.AddScoped<IStokKartiService, StokKartiService>();
 builder.Services.AddScoped<IKullaniciService, KullaniciService>();
 builder.Services.AddScoped<ISatisFaturasiService, SatisFaturasiService>();
 builder.Services.AddScoped<IAlisFaturasiService, AlisFaturasiService>();
+builder.Services.AddScoped<IParametreService, ParametreService>();
 
 var app = builder.Build();
 

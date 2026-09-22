@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using OnMuhasebe.Business.Services;
+using OnMuhasebe.Business;
 using OnMuhasebe.Business.Services.IServices;
 using OnMuhasebe.Models;
 using System.Security.Claims;
@@ -15,12 +15,14 @@ namespace OnMuhasebeWeb.Areas.Customer.Controllers
         private readonly ISatisElemaniService _satisElemaniService;
         private readonly ICariService _cariService;
         private readonly IStokKartiService _stokKartiService;
-        public SatisFaturasiController(ISatisFaturasiService satisFaturasiService, ICariService cariService, IStokKartiService stokKartiService, ISatisElemaniService satisElemaniService)
+        private readonly IParametreService _parametreService;
+        public SatisFaturasiController(ISatisFaturasiService satisFaturasiService, ICariService cariService, IStokKartiService stokKartiService, ISatisElemaniService satisElemaniService, IParametreService parametreService)
         {
             _satisFaturasiService = satisFaturasiService;
             _cariService = cariService;
             _satisElemaniService = satisElemaniService;
             _stokKartiService = stokKartiService;
+            _parametreService = parametreService;
         }
         
         public async Task<IActionResult> Index(DateTime? baslangic, DateTime? bitis)
@@ -118,6 +120,8 @@ namespace OnMuhasebeWeb.Areas.Customer.Controllers
 
             var tumStoklar = await _stokKartiService.GetAllStokKartlariAsync();
             ViewData["Stoklar"] = tumStoklar.Where(s => s.Aktif);
+
+            ViewData["VarsayilanKdv"] = await _parametreService.GetSayiAsync(Sabitler.ParamVarsayilanKdvOrani);
         }
     }
 }

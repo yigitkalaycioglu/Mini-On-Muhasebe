@@ -50,16 +50,16 @@
                 <div class="toplamlar" style="max-width: none;">
                     <div class="toplamlar-satir">
                         <span>Toplam borç</span>
-                        <span>@toplamBorc.ToString("N2") TL</span>
+                        <span>@toplamBorc.ToString("N2") @ViewData["ParaBirimi"]</span>
                     </div>
                     <div class="toplamlar-satir">
                         <span>Toplam alacak</span>
-                        <span>@toplamAlacak.ToString("N2") TL</span>
+                        <span>@toplamAlacak.ToString("N2") @ViewData["ParaBirimi"]</span>
                     </div>
                     <div class="toplamlar-satir genel">
                         <span>Bakiye</span>
                         <span>
-                            @Math.Abs(bakiye).ToString("N2") TL
+                            @Math.Abs(bakiye).ToString("N2") @ViewData["ParaBirimi"]
                             @if (bakiye > 0) { <span class="bakiye-etiket">(B)</span> }
                             else if (bakiye < 0) { <span class="bakiye-etiket">(A)</span> }
                         </span>

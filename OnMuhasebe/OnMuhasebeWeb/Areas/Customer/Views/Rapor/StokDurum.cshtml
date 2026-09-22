@@ -31,7 +31,7 @@
         <div class="stat-value">@Model.KritikSayisi / @Model.TukenenSayisi</div>
     </div>
     <div class="stat">
-        <div class="stat-label">Stok değeri (alış, TL)</div>
+        <div class="stat-label">Stok değeri (alış, @ViewData["ParaBirimi"])</div>
         <div class="stat-value">@Model.ToplamDeger.ToString("N2")</div>
     </div>
 </div>
@@ -65,7 +65,7 @@
                     <th class="cell-number">Mevcut</th>
                     <th class="cell-number">Kritik Sev.</th>
                     <th>Durum</th>
-                    <th class="cell-number">Değer (TL)</th>
+                    <th class="cell-number">Değer (@ViewData["ParaBirimi"])</th>
                 </tr>
             </thead>
             <tbody>

@@ -33,7 +33,7 @@
         <div class="stat-value">@borcumuz.ToString("N2")</div>
     </div>
     <div class="stat">
-        <div class="stat-label">Net (TL)</div>
+        <div class="stat-label">Net (@ViewData["ParaBirimi"])</div>
         <div class="stat-value">@((alacagimiz - borcumuz).ToString("N2"))</div>
     </div>
 </div>
@@ -73,7 +73,7 @@
                     <th>Tip</th>
                     <th class="cell-number">Toplam Borç</th>
                     <th class="cell-number">Toplam Alacak</th>
-                    <th class="cell-number">Bakiye (TL)</th>
+                    <th class="cell-number">Bakiye (@ViewData["ParaBirimi"])</th>
                 </tr>
             </thead>
             <tbody>

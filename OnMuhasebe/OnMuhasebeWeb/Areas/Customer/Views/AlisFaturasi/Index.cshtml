@@ -44,7 +44,7 @@
         <div class="stat-value">@Model.Sum(f => f.KdvToplam).ToString("N2")</div>
     </div>
     <div class="stat">
-        <div class="stat-label">Genel toplam (TL)</div>
+        <div class="stat-label">Genel toplam (@ViewData["ParaBirimi"])</div>
         <div class="stat-value">@Model.Sum(f => f.GenelToplam).ToString("N2")</div>
     </div>
 </div>
@@ -105,7 +105,7 @@
         </div>
 
         <div class="table-footer">
-            <span data-tablo-sayac="#tablo">@Model.Count</span> fatura gösteriliyor · Tutarlar TL
+            <span data-tablo-sayac="#tablo">@Model.Count</span> fatura gösteriliyor · Tutarlar @ViewData["ParaBirimi"]
         </div>
     }
     else

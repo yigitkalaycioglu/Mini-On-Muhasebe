@@ -68,7 +68,7 @@ INSERT INTO Parametreler (Id, ParametreKodu, ParametreDegeri, Aciklama) VALUES
 (3,  N'VarsayilanKdvOrani',       N'20',                     N'Yeni satırda öntanımlı KDV oranı'),
 (4,  N'ParaBirimi',               N'TL',                     N'Görüntüleme birimi'),
 (5,  N'OndalikBasamak',           N'2',                      N'Tutar hassasiyeti'),
-(6,  N'NegatifStokKontrolu',      N'Kapali',                 N'Stok yetersizse davranış'),
+(6,  N'NegatifStokKontrolu',      N'Acik',                   N'Açıkken stok yetersizse satış ve sayım eksiği kaydedilmez'),
 (7,  N'SatisFaturaNoFormati',     N'SAT-{yyyy}-{0000}',      N'Otomatik numara şablonu'),
 (8,  N'AlisFaturaNoFormati',      N'ALS-{yyyy}-{0000}',      N'Otomatik numara şablonu'),
 (9,  N'SayimFazlasiFisNoFormati', N'SF-{yyyy}-{0000}',       N'Otomatik numara şablonu'),

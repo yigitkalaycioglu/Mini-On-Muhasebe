@@ -47,6 +47,22 @@ namespace OnMuhasebe.Business.Services
             _ => hareketTipi
         };
 
+        /// <summary>Tek ürünün mevcut miktarı; toplama veritabanında yapılır (satış ve sayım eksiği kontrolü için).</summary>
+        public async Task<decimal> GetMevcutMiktarAsync(int stokId)
+        {
+            return await _context.StokHareketler
+                .Where(h => h.StokId == stokId)
+                .SumAsync(Etki);
+        }
+
+        /// <summary>Kritik seviyedeki aktif ürün sayısı; hareketler belleğe alınmadan veritabanında hesaplanır.</summary>
+        public async Task<int> GetKritikStokSayisiAsync()
+        {
+            return await _context.StokKartlari
+                .Where(s => s.Aktif)
+                .CountAsync(s => s.StokHareketleri.AsQueryable().Sum(Etki) <= s.KritikStok);
+        }
+
         public async Task<List<StokKarti>> GetAllStokKartlariAsync()
         {
             return await _context.StokKartlari

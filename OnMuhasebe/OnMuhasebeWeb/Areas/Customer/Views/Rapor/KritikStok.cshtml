@@ -45,7 +45,7 @@ else
             <div class="stat-value">@satirlar.Count(x => x.Mevcut <= 0)</div>
         </div>
         <div class="stat">
-            <div class="stat-label">Tamamlama maliyeti (TL)</div>
+            <div class="stat-label">Tamamlama maliyeti (@ViewData["ParaBirimi"])</div>
             <div class="stat-value">@satirlar.Sum(x => x.Maliyet).ToString("N2")</div>
         </div>
     </div>
@@ -61,7 +61,7 @@ else
                         <th class="cell-number">Kritik Seviye</th>
                         <th class="cell-number">Eksik</th>
                         <th class="cell-number">Alış Fiyatı</th>
-                        <th class="cell-number">Tamamlama (TL)</th>
+                        <th class="cell-number">Tamamlama (@ViewData["ParaBirimi"])</th>
                     </tr>
                 </thead>
                 <tbody>

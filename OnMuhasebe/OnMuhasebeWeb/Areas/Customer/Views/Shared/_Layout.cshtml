@@ -10,6 +10,10 @@
     // Rol bazlı menü: "Yönetim" bölümü (Kullanıcılar, Parametreler) yalnızca Yönetici rolüne görünür.
     var yonetimGorunsun = yoneticiMi;
 
+    // Firma bilgisi "Firma Unvanı" ve "Vergi Dairesi / No" parametrelerinden gelir (GorunumParametreleriFilter).
+    var firmaUnvani = ViewData["FirmaUnvani"] as string;
+    var vergiBilgisi = ViewData["VergiDairesiNo"] as string;
+
     var kullaniciAdi = User.Identity?.Name ?? "";
     var basHarf = kullaniciAdi.Length > 0 ? kullaniciAdi.Substring(0, 1).ToUpper() : "?";
 }
@@ -108,15 +112,19 @@
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>
                             Kullanıcılar
                         </a>
-                        <span class="nav-item-link is-pending" aria-disabled="true" title="Hazırlanıyor">
+                        <a class="nav-item-link @Aktif(aktifController == "Parametre")" asp-controller="Parametre" asp-action="Index">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14" /><line x1="4" y1="10" x2="4" y2="3" /><line x1="12" y1="21" x2="12" y2="12" /><line x1="12" y1="8" x2="12" y2="3" /><line x1="20" y1="21" x2="20" y2="16" /><line x1="20" y1="12" x2="20" y2="3" /><line x1="1" y1="14" x2="7" y2="14" /><line x1="9" y1="8" x2="15" y2="8" /><line x1="17" y1="16" x2="23" y2="16" /></svg>
                             Parametreler
-                        </span>
+                        </a>
                     </div>
                 }
             </nav>
 
             <div class="sidebar-footer">
+                @if (!string.IsNullOrEmpty(firmaUnvani))
+                {
+                    <div class="cell-strong">@firmaUnvani</div>
+                }
                 Mini Ön Muhasebe · Staj Projesi
             </div>
         </aside>
@@ -151,6 +159,15 @@
             </header>
 
             <main class="content" role="main">
+                @* Yalnızca yazdırırken görünür: raporların ve faturaların başlığında firma bilgisi *@
+                <div class="yazdirma-basligi">
+                    <strong>@firmaUnvani</strong>
+                    @if (!string.IsNullOrEmpty(vergiBilgisi))
+                    {
+                        <span>Vergi dairesi / no: @vergiBilgisi</span>
+                    }
+                    <span>Yazdırma tarihi: @DateTime.Now.ToString("dd.MM.yyyy HH:mm")</span>
+                </div>
                 @RenderBody()
             </main>
 

@@ -4,7 +4,9 @@
 // Kapsayıcı:  <div data-fatura-kalemleri
 //                  data-koleksiyon="SatisFaturaSatirlari"  → model binding koleksiyon adı
 //                  data-fiyat="satis" | "alis"             → stok seçilince hangi fiyat gelsin
-//                  data-ondalik=",">                       → sunucu kültürünün ondalık ayırıcısı
+//                  data-ondalik=","                        → sunucu kültürünün ondalık ayırıcısı
+//                  data-varsayilan-kdv="20"                → yeni satırda öntanımlı KDV (parametre)
+//                  data-para-birimi="TL">                  → toplamların yanında gösterilen birim (parametre)
 //
 // Model binding indeksleri 0'dan başlayıp kesintisiz olmalıdır
 // (SatisFaturaSatirlari[0].StokId, [1].StokId ...). Satır silinince
@@ -18,6 +20,8 @@
     const koleksiyon = kok.dataset.koleksiyon;
     const fiyatTipi = kok.dataset.fiyat;
     const ondalik = kok.dataset.ondalik || ',';
+    const varsayilanKdv = parseFloat(kok.dataset.varsayilanKdv);
+    const paraBirimi = kok.dataset.paraBirimi || 'TL';
 
     const govde = kok.querySelector('[data-kalem-govde]');
     const sablon = kok.querySelector('template[data-kalem-sablon]');
@@ -92,6 +96,9 @@
             if (veri.birimFiyat != null) alan(tr, 'BirimFiyat').value = sunucuBicimi(veri.birimFiyat, true);
             if (veri.kdvOrani != null) alan(tr, 'KdvOrani').value = sunucuBicimi(veri.kdvOrani, false);
             stokBilgisiniUygula(tr, false);
+        } else if (!isNaN(varsayilanKdv)) {
+            // Stok seçilince kartın kendi KDV oranı gelir; seçilene kadar parametredeki oran görünür.
+            alan(tr, 'KdvOrani').value = sunucuBicimi(varsayilanKdv, false);
         }
 
         yenidenNumarala();
@@ -124,9 +131,9 @@
             kdvToplam += kdv;
         });
 
-        kok.querySelector('[data-toplam="ara"]').textContent = paraBicimi.format(ara) + ' TL';
-        kok.querySelector('[data-toplam="kdv"]').textContent = paraBicimi.format(kdvToplam) + ' TL';
-        kok.querySelector('[data-toplam="genel"]').textContent = paraBicimi.format(ara + kdvToplam) + ' TL';
+        kok.querySelector('[data-toplam="ara"]').textContent = paraBicimi.format(ara) + ' ' + paraBirimi;
+        kok.querySelector('[data-toplam="kdv"]').textContent = paraBicimi.format(kdvToplam) + ' ' + paraBirimi;
+        kok.querySelector('[data-toplam="genel"]').textContent = paraBicimi.format(ara + kdvToplam) + ' ' + paraBirimi;
     }
 
     // ----- Olaylar -----

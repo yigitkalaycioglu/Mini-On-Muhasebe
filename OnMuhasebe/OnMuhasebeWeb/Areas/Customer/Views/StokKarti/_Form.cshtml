@@ -47,12 +47,12 @@
 <div class="form-section-title">Fiyat ve stok seviyesi</div>
 <div class="row g-3 mb-4">
     <div class="col-12 col-md-4">
-        <label asp-for="AlisFiyati" class="form-label">Alış fiyatı (TL) <span class="zorunlu">*</span></label>
+        <label asp-for="AlisFiyati" class="form-label">Alış fiyatı (@ViewData["ParaBirimi"]) <span class="zorunlu">*</span></label>
         <input asp-for="AlisFiyati" type="text" inputmode="decimal" class="form-control" placeholder="0,00" />
         <span asp-validation-for="AlisFiyati"></span>
     </div>
     <div class="col-12 col-md-4">
-        <label asp-for="SatisFiyati" class="form-label">Satış fiyatı (TL) <span class="zorunlu">*</span></label>
+        <label asp-for="SatisFiyati" class="form-label">Satış fiyatı (@ViewData["ParaBirimi"]) <span class="zorunlu">*</span></label>
         <input asp-for="SatisFiyati" type="text" inputmode="decimal" class="form-control" placeholder="0,00" />
         <span asp-validation-for="SatisFiyati"></span>
     </div>

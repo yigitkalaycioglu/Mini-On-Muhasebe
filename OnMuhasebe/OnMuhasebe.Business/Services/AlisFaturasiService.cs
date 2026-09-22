@@ -8,9 +8,11 @@ namespace OnMuhasebe.Business.Services
     public class AlisFaturasiService : IAlisFaturasiService
     {
         private readonly ApplicationDbContext _context;
-        public AlisFaturasiService(ApplicationDbContext context)
+        private readonly IParametreService _parametreService;
+        public AlisFaturasiService(ApplicationDbContext context, IParametreService parametreService)
         {
             _context = context;
+            _parametreService = parametreService;
         }
 
         public async Task<AlisFaturasi> CreateAlisFaturasiAsync(AlisFaturasi alisFaturasi, int kullaniciId)
@@ -30,11 +32,15 @@ namespace OnMuhasebe.Business.Services
             alisFaturasi.OlusturmaTarihi = DateTime.Now;
             alisFaturasi.AraToplam = 0;
             alisFaturasi.KdvToplam = 0;
+
+            // Tutarlar "Ondalık Basamak" parametresine göre yuvarlanır.
+            var basamak = (int)await _parametreService.GetSayiAsync(Sabitler.ParamOndalikBasamak);
+
             foreach (var kalem in alisFaturasi.AlisFaturaSatirlari)
             {
-                kalem.SatirTutari = kalem.Miktar * kalem.BirimFiyat;
+                kalem.SatirTutari = Math.Round(kalem.Miktar * kalem.BirimFiyat, basamak);
                 alisFaturasi.AraToplam += kalem.SatirTutari;
-                alisFaturasi.KdvToplam += kalem.SatirTutari * kalem.KdvOrani / 100;
+                alisFaturasi.KdvToplam += Math.Round(kalem.SatirTutari * kalem.KdvOrani / 100, basamak);
 
                 var stokHareket = new StokHareket
                 {
@@ -124,24 +130,10 @@ namespace OnMuhasebe.Business.Services
 
         public async Task<string> GetYeniFaturaNoAsync()
         {
-            int dynamicYear = DateTime.Now.Year;
-            string prefix = $"ALS-{dynamicYear}-";
-
-            var faturaNolar = await _context.AlisFaturalari
-                .Where(f => f.FaturaNo.StartsWith(prefix))
-                .Select(f => f.FaturaNo)
-                .ToListAsync();
-
-            var sonSira = 0;
-            foreach (var no in faturaNolar)
-            {
-                if (int.TryParse(no.Substring(prefix.Length), out var sira) && sira > sonSira)
-                {
-                    sonSira = sira;
-                }
-            }
-
-            return $"{prefix}{(sonSira + 1):D4}";
+            // Format "Alış Fatura No Formatı" parametresinden gelir (ör. ALS-{yyyy}-{0000}).
+            return await _parametreService.YeniBelgeNoAsync(
+                Sabitler.ParamAlisFaturaNoFormati,
+                _context.AlisFaturalari.Select(f => (string?)f.FaturaNo));
         }
     }
 }
