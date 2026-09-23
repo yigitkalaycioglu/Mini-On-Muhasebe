@@ -1,12 +1,11 @@
 @*
     SAYIM FAZLASI / SAYIM EKSİĞİ FİŞİ — StokHareketController
-    GET  SayimFisi(string? tip)   tip: "SayimFazlasi" | "SayimEksigi"  (varsayılan: SayimFazlasi)
-         ViewData["Stoklar"] : IEnumerable<StokKarti>  — aktif stoklar
-                               (mevcut miktarı göstermek için .Include(s => s.StokHareketleri))
-    POST SayimFisi(StokHareket stokHareket)
-         → HareketTipi formdan gelir; Yon backend'de belirlenir (Fazlası=Giris, Eksiği=Cikis)
+    GET  SayimFisi()   ?tip=SayimFazlasi | SayimEksigi  (varsayılan: SayimFazlasi, view query'den okur)
+         ViewData["Stoklar"] : List<SayimFisiStokViewModel>  — aktif stoklar ve mevcut miktarları
+    POST SayimFisi(StokHareket sayimFisi)
+         → HareketTipi formdan gelir; Yon serviste belirlenir (Fazlası=Giris, Eksiği=Cikis)
          → BelgeNo parametredeki formata göre otomatik üretilir (SF-2026-0001 / SE-2026-0001)
-         → StokKarti ve Kullanici formdan gelmediği için ModelState.Remove(...) gerekebilir
+         → Negatif stok kontrolü açıksa sayım eksiği mevcut miktarı aşamaz
     Sayım fişleri YALNIZCA stoğu etkiler, cari hesaba işlemez.
 *@
 @model StokHareket

@@ -65,6 +65,9 @@ namespace OnMuhasebeWeb.ViewModels
         public string TipSinifi { get; set; } = "";
         public decimal? GirisMiktari { get; set; }
         public decimal? CikisMiktari { get; set; }
+
+        // Yalnızca sayım fişleri bu ekrandan silinebilir; fatura hareketleri faturayla silinir.
+        public bool SayimFisi { get; set; }
     }
 
     public class StokHareketListesiViewModel

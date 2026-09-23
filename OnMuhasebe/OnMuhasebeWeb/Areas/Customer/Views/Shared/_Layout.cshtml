@@ -82,14 +82,14 @@
 
                 <div class="nav-section">
                     <div class="nav-section-title">Stok ve Finans</div>
-                    <span class="nav-item-link is-pending" aria-disabled="true" title="Hazırlanıyor">
+                    <a class="nav-item-link @Aktif(aktifController == "StokHareket" && aktifAction != "SayimFisi")" asp-controller="StokHareket" asp-action="Index">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m17 2 4 4-4 4" /><path d="M3 11v-1a4 4 0 0 1 4-4h14" /><path d="m7 22-4-4 4-4" /><path d="M21 13v1a4 4 0 0 1-4 4H3" /></svg>
                         Stok Hareketleri
-                    </span>
-                    <span class="nav-item-link is-pending" aria-disabled="true" title="Hazırlanıyor">
+                    </a>
+                    <a class="nav-item-link @Aktif(aktifController == "StokHareket" && aktifAction == "SayimFisi")" asp-controller="StokHareket" asp-action="SayimFisi">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" /></svg>
                         Sayım Fişi
-                    </span>
+                    </a>
                     <span class="nav-item-link is-pending" aria-disabled="true" title="Hazırlanıyor">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2" /><path d="M2 10h20" /></svg>
                         Tahsilat / Ödeme

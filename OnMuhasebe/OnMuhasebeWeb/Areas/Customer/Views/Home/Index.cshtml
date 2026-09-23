@@ -32,7 +32,7 @@
     <a asp-controller="AlisFaturasi" asp-action="Create" class="btn btn-outline-secondary">+ Alış Faturası</a>
     <button type="button" class="btn btn-outline-secondary" disabled title="Hazırlanıyor">+ Tahsilat</button>
     <button type="button" class="btn btn-outline-secondary" disabled title="Hazırlanıyor">+ Ödeme</button>
-    <button type="button" class="btn btn-outline-secondary" disabled title="Hazırlanıyor">+ Sayım Fişi</button>
+    <a asp-controller="StokHareket" asp-action="SayimFisi" class="btn btn-outline-secondary">+ Sayım Fişi</a>
 </div>
 
 <div class="form-section-title">Modüller</div>
@@ -73,11 +73,11 @@
         </a>
     </div>
     <div class="col-12 col-sm-6 col-lg-4">
-        <div class="module-card is-pending">
+        <a class="module-card" asp-controller="StokHareket" asp-action="Index">
             <div class="module-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m17 2 4 4-4 4" /><path d="M3 11v-1a4 4 0 0 1 4-4h14" /><path d="m7 22-4-4 4-4" /><path d="M21 13v1a4 4 0 0 1-4 4H3" /></svg></div>
-            <h3>Stok İşlemleri <span class="badge-soft">Hazırlanıyor</span></h3>
+            <h3>Stok İşlemleri</h3>
             <p>Tüm stok hareketleri, sayım fazlası ve eksiği fişleri.</p>
-        </div>
+        </a>
     </div>
     <div class="col-12 col-sm-6 col-lg-4">
         <div class="module-card is-pending">
