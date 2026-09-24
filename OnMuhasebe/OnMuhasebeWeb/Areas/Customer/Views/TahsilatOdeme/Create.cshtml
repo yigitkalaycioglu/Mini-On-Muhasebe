@@ -1,14 +1,13 @@
 @*
     TAHSİLAT / ÖDEME GİRİŞİ — TahsilatOdemeController
-    GET  Create(string? tip)   tip: "Tahsilat" | "Odeme"  (varsayılan: Tahsilat)
-         ViewData["Cariler"] : IEnumerable<Cari>  — TÜM aktif cariler
-                               (liste, seçilen işleme göre ekranda süzülür:
+    GET  Create()   ?tip=Tahsilat | Odeme  (varsayılan: Tahsilat, view query'den okur)
+         ViewData["Cariler"] : List<TahsilatOdemeCariViewModel>  — tüm aktif cariler ve uygun işlemleri
+                               (liste seçilen işleme göre ekranda süzülür:
                                 Tahsilat → Müşteri/Her ikisi, Ödeme → Tedarikçi/Her ikisi)
-    POST Create(CariHareket cariHareket, decimal tutar)
+    POST Create(CariHareket cariHareket, decimal? tutar)
          → Tahsilat: Alacak = tutar, Borc = 0   (müşterinin borcu azalır)
          → Ödeme   : Borc = tutar,   Alacak = 0 (tedarikçiye borcumuz azalır)
-         → BelgeNo, KullaniciId backend'de atanır
-         → Cari ve Kullanici formdan gelmediği için ModelState.Remove(...) gerekebilir
+         → BelgeNo (TAH-/ODE-), KullaniciId serviste atanır
 *@
 @model CariHareket
 @{

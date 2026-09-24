@@ -38,6 +38,7 @@ builder.Services.AddScoped<ISatisFaturasiService, SatisFaturasiService>();
 builder.Services.AddScoped<IAlisFaturasiService, AlisFaturasiService>();
 builder.Services.AddScoped<IParametreService, ParametreService>();
 builder.Services.AddScoped<IStokHareketService, StokHareketService>();
+builder.Services.AddScoped<ITahsilatOdemeService, TahsilatOdemeService>();
 
 var app = builder.Build();
 

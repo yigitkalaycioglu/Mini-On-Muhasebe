@@ -2,9 +2,8 @@
     TAHSİLAT / ÖDEME LİSTESİ — TahsilatOdemeController
     GET  Index(DateTime? baslangic, DateTime? bitis)
          → View(TahsilatOdemeListesiViewModel)  yalnızca IslemTipi "Tahsilat" veya "Odeme" olanlar, yeniden eskiye
-         .Include(h => h.Cari).Include(h => h.Kullanici)
-    POST Delete(int id) → RedirectToAction("Index")
-    İsteğe bağlı: TempData["Mesaj"]
+    POST Delete(int id) → RedirectToAction("Index")  (fatura hareketleri buradan silinemez)
+    İsteğe bağlı: TempData["Mesaj"], TempData["MesajTipi"] ("warning" ise uyarı rengi)
 *@
 @model TahsilatOdemeListesiViewModel
 @{
@@ -13,6 +12,7 @@
     var baslangic = Context.Request.Query["baslangic"].ToString();
     var bitis = Context.Request.Query["bitis"].ToString();
     var mesaj = TempData["Mesaj"] as string;
+    var uyariMi = TempData["MesajTipi"] as string == "warning";
 
     var toplamTahsilat = Model.ToplamTahsilat;
     var toplamOdeme = Model.ToplamOdeme;
@@ -31,7 +31,7 @@
 
 @if (!string.IsNullOrEmpty(mesaj))
 {
-    <div class="info-box">
+    <div class="info-box @(uyariMi ? "is-warning" : "")">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><path d="M22 4 12 14.01l-3-3" /></svg>
         <span>@mesaj</span>
     </div>
