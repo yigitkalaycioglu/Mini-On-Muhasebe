@@ -34,7 +34,7 @@
     </div>
     <div class="stat">
         <div class="stat-label">Net (@ViewData["ParaBirimi"])</div>
-        <div class="stat-value">@((alacagimiz - borcumuz).ToString("N2"))</div>
+        <div class="stat-value">@Model.Net.ToString("N2")</div>
     </div>
 </div>
 
@@ -99,9 +99,9 @@
             <tfoot>
                 <tr>
                     <td colspan="3">Genel toplam</td>
-                    <td class="cell-number">@satirlar.Sum(x => x.Borc).ToString("N2")</td>
-                    <td class="cell-number">@satirlar.Sum(x => x.Alacak).ToString("N2")</td>
-                    <td class="cell-number">@((alacagimiz - borcumuz).ToString("N2"))</td>
+                    <td class="cell-number">@Model.ToplamBorc.ToString("N2")</td>
+                    <td class="cell-number">@Model.ToplamAlacak.ToString("N2")</td>
+                    <td class="cell-number">@Model.Net.ToString("N2")</td>
                 </tr>
             </tfoot>
         </table>

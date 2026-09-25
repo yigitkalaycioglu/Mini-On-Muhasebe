@@ -63,6 +63,25 @@ namespace OnMuhasebe.Business.Services
             _ => islemTipi
         };
 
+        /// <summary>
+        /// Her carinin toplam borç, alacak ve bakiyesi. Hareketler belleğe alınmaz;
+        /// toplamlar veritabanında hesaplanıp cariyle birlikte gelir (liste ve rapor ekranları için).
+        /// </summary>
+        public async Task<List<CariBakiyesi>> GetCariBakiyeleriAsync()
+        {
+            return await _context.Cariler
+                .AsNoTracking()
+                .OrderBy(c => c.CariKodu)
+                .Select(c => new CariBakiyesi
+                {
+                    Cari = c,
+                    Borc = c.CariHareketleri.Sum(h => h.Borc),
+                    Alacak = c.CariHareketleri.Sum(h => h.Alacak),
+                    Bakiye = c.CariHareketleri.AsQueryable().Sum(Etki)
+                })
+                .ToListAsync();
+        }
+
         public async Task<List<Cari>> GetAllCarilerAsync()
         {
             return await _context.Cariler

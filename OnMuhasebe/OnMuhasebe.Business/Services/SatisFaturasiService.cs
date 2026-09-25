@@ -143,6 +143,48 @@ namespace OnMuhasebe.Business.Services
             return await query.OrderByDescending(f => f.Tarih).ThenByDescending(f => f.Id).ToListAsync();
         }
 
+        /// <summary>Satış elemanı bazında fatura sayısı ve toplamlar; gruplama veritabanında yapılır.</summary>
+        public async Task<List<SatisElemaniCirosu>> GetSatisElemaniCirolariAsync(DateTime? baslangic, DateTime? bitis)
+        {
+            var query = _context.SatisFaturalari.AsQueryable();
+            if (baslangic.HasValue)
+            {
+                query = query.Where(f => f.Tarih >= baslangic.Value.Date);
+            }
+            if (bitis.HasValue)
+            {
+                var bitisSonu = bitis.Value.Date.AddDays(1);
+                query = query.Where(f => f.Tarih < bitisSonu);
+            }
+
+            var toplamlar = await query
+                .GroupBy(f => f.SatisElemaniId)
+                .Select(g => new
+                {
+                    SatisElemaniId = g.Key,
+                    FaturaSayisi = g.Count(),
+                    AraToplam = g.Sum(f => f.AraToplam),
+                    KdvToplam = g.Sum(f => f.KdvToplam),
+                    GenelToplam = g.Sum(f => f.GenelToplam)
+                })
+                .ToDictionaryAsync(x => x.SatisElemaniId);
+
+            // Hiç satışı olmayan elemanlar da raporda sıfırla görünür.
+            var elemanlar = await _context.SatisElemanlari.AsNoTracking().OrderBy(e => e.AdSoyad).ToListAsync();
+            return elemanlar
+                .Select(e => toplamlar.TryGetValue(e.Id, out var t)
+                    ? new SatisElemaniCirosu
+                    {
+                        Eleman = e,
+                        FaturaSayisi = t.FaturaSayisi,
+                        AraToplam = t.AraToplam,
+                        KdvToplam = t.KdvToplam,
+                        GenelToplam = t.GenelToplam
+                    }
+                    : new SatisElemaniCirosu { Eleman = e })
+                .ToList();
+        }
+
         public async Task<SatisFaturasi?> GetSatisFaturasiByIdAsync(int id)
         {
             return await _context.SatisFaturalari

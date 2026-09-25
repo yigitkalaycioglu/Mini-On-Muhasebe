@@ -1,29 +1,17 @@
 @*
     RAPOR: SATIŞ ELEMANINA GÖRE SATIŞ — RaporController
     GET SatisElemaniSatis(DateTime? baslangic, DateTime? bitis)
-        → View(List<SatisElemani>)
-          .Include(e => e.SatisFaturalari.Where(f => f.Tarih >= bas && f.Tarih <= bit))  (tarih filtreli)
+        → View(SatisElemaniSatisRaporViewModel)
+    Fatura sayısı, toplamlar ve pay controller'da (gruplama veritabanında) hesaplanır.
 *@
-@model List<SatisElemani>
+@model SatisElemaniSatisRaporViewModel
 @{
     ViewData["Title"] = "Satış Elemanına Göre Satış";
 
     var baslangic = Context.Request.Query["baslangic"].ToString();
     var bitis = Context.Request.Query["bitis"].ToString();
 
-    var satirlar = Model
-        .Select(e => new
-        {
-            Eleman = e,
-            Adet = e.SatisFaturalari.Count,
-            Ara = e.SatisFaturalari.Sum(f => f.AraToplam),
-            Kdv = e.SatisFaturalari.Sum(f => f.KdvToplam),
-            Genel = e.SatisFaturalari.Sum(f => f.GenelToplam)
-        })
-        .OrderByDescending(x => x.Genel)
-        .ToList();
-
-    var toplamGenel = satirlar.Sum(x => x.Genel);
+    var satirlar = Model.Satirlar;
 }
 
 <div class="page-header">
@@ -74,16 +62,16 @@
                 <tbody>
                     @foreach (var x in satirlar)
                     {
-                        var pay = toplamGenel > 0 ? x.Genel / toplamGenel * 100 : 0;
+                        var pay = x.Pay;
                         <tr>
                             <td>
                                 <span class="cell-strong">@x.Eleman.AdSoyad</span>
                                 @if (!x.Eleman.Aktif) { <span class="badge-status badge-passive ms-1">Pasif</span> }
                             </td>
-                            <td class="cell-number">@x.Adet</td>
-                            <td class="cell-number">@x.Ara.ToString("N2")</td>
-                            <td class="cell-number cell-muted">@x.Kdv.ToString("N2")</td>
-                            <td class="cell-number cell-strong">@x.Genel.ToString("N2")</td>
+                            <td class="cell-number">@x.FaturaSayisi</td>
+                            <td class="cell-number">@x.AraToplam.ToString("N2")</td>
+                            <td class="cell-number cell-muted">@x.KdvToplam.ToString("N2")</td>
+                            <td class="cell-number cell-strong">@x.GenelToplam.ToString("N2")</td>
                             <td>
                                 <div class="d-flex align-items-center gap-2">
                                     <div class="oran-bar flex-grow-1"><span style="width: @pay.ToString("0.#", System.Globalization.CultureInfo.InvariantCulture)%;"></span></div>
@@ -96,10 +84,10 @@
                 <tfoot>
                     <tr>
                         <td>Toplam</td>
-                        <td class="cell-number">@satirlar.Sum(x => x.Adet)</td>
-                        <td class="cell-number">@satirlar.Sum(x => x.Ara).ToString("N2")</td>
-                        <td class="cell-number">@satirlar.Sum(x => x.Kdv).ToString("N2")</td>
-                        <td class="cell-number">@toplamGenel.ToString("N2")</td>
+                        <td class="cell-number">@Model.ToplamFaturaSayisi</td>
+                        <td class="cell-number">@Model.ToplamAra.ToString("N2")</td>
+                        <td class="cell-number">@Model.ToplamKdv.ToString("N2")</td>
+                        <td class="cell-number">@Model.ToplamGenel.ToString("N2")</td>
                         <td></td>
                     </tr>
                 </tfoot>

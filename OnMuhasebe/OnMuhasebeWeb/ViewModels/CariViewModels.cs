@@ -54,8 +54,11 @@ namespace OnMuhasebeWeb.ViewModels
     public class CariBakiyeRaporViewModel
     {
         public List<CariBakiyeSatiriViewModel> Satirlar { get; set; } = new();
+        public decimal ToplamBorc { get; set; }
+        public decimal ToplamAlacak { get; set; }
         public decimal Alacagimiz { get; set; }
         public decimal Borcumuz { get; set; }
+        public decimal Net { get; set; }
     }
 
     public class TahsilatOdemeSatiriViewModel

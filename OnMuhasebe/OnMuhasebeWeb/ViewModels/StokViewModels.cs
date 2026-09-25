@@ -55,6 +55,7 @@ namespace OnMuhasebeWeb.ViewModels
     public class KritikStokRaporViewModel
     {
         public List<KritikStokSatiriViewModel> Satirlar { get; set; } = new();
+        public int TukenenSayisi { get; set; }
         public decimal ToplamMaliyet { get; set; }
     }
 
@@ -82,5 +83,24 @@ namespace OnMuhasebeWeb.ViewModels
     {
         public StokKarti Stok { get; set; } = null!;
         public decimal Mevcut { get; set; }
+    }
+
+    public class SatisElemaniSatisSatiriViewModel
+    {
+        public SatisElemani Eleman { get; set; } = null!;
+        public int FaturaSayisi { get; set; }
+        public decimal AraToplam { get; set; }
+        public decimal KdvToplam { get; set; }
+        public decimal GenelToplam { get; set; }
+        public decimal Pay { get; set; }
+    }
+
+    public class SatisElemaniSatisRaporViewModel
+    {
+        public List<SatisElemaniSatisSatiriViewModel> Satirlar { get; set; } = new();
+        public int ToplamFaturaSayisi { get; set; }
+        public decimal ToplamAra { get; set; }
+        public decimal ToplamKdv { get; set; }
+        public decimal ToplamGenel { get; set; }
     }
 }

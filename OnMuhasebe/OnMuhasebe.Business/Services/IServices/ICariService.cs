@@ -8,6 +8,7 @@ namespace OnMuhasebe.Business.Services.IServices
         Task<List<Cari>> GetAllCarilerAsync();
         Task<Cari?> GetCariEkstresiAsync(int id, DateTime? baslangic, DateTime? bitis);
         Task<decimal> GetDevirBakiyeAsync(int cariId, DateTime? baslangic);
+        Task<List<CariBakiyesi>> GetCariBakiyeleriAsync();
         Task<Cari> CreateCariAsync(Cari cari);
         Task UpdateCariAsync(Cari cari);
         Task DeleteCariAsync(int id);

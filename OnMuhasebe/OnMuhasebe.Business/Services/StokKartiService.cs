@@ -36,7 +36,12 @@ namespace OnMuhasebe.Business.Services
             stokKarti.StokHareketleri.Where(h => h.Yon == Sabitler.YonCikis).Sum(h => h.Miktar);
 
         /// <summary>Mevcut miktar kritik seviyeye eşit ya da altındaysa uyarı verilir.</summary>
-        public bool KritikSeviyede(StokKarti stokKarti) => MevcutMiktar(stokKarti) <= stokKarti.KritikStok;
+        public bool KritikSeviyede(StokKarti stokKarti) => KritikMi(MevcutMiktar(stokKarti), stokKarti.KritikStok);
+
+        public bool KritikSeviyede(StokBakiyesi bakiye) => KritikMi(bakiye.Mevcut, bakiye.Stok.KritikStok);
+
+        // Kritik seviye kuralının tek tanımı (GetKritikStokSayisiAsync aynı karşılaştırmayı SQL'de yapar).
+        private static bool KritikMi(decimal mevcut, decimal kritikStok) => mevcut <= kritikStok;
 
         public string HareketTipiAdi(string hareketTipi) => hareketTipi switch
         {
@@ -61,6 +66,30 @@ namespace OnMuhasebe.Business.Services
             return await _context.StokKartlari
                 .Where(s => s.Aktif)
                 .CountAsync(s => s.StokHareketleri.AsQueryable().Sum(Etki) <= s.KritikStok);
+        }
+
+        /// <summary>
+        /// Her kartın giriş, çıkış ve mevcut miktarı. Hareketler belleğe alınmaz;
+        /// toplamlar veritabanında hesaplanıp kartla birlikte gelir (liste ve rapor ekranları için).
+        /// </summary>
+        public async Task<List<StokBakiyesi>> GetStokBakiyeleriAsync(bool yalnizcaAktif = false)
+        {
+            var query = _context.StokKartlari.AsNoTracking();
+            if (yalnizcaAktif)
+            {
+                query = query.Where(s => s.Aktif);
+            }
+
+            return await query
+                .OrderBy(s => s.StokKodu)
+                .Select(s => new StokBakiyesi
+                {
+                    Stok = s,
+                    Giris = s.StokHareketleri.Where(h => h.Yon == Sabitler.YonGiris).Sum(h => h.Miktar),
+                    Cikis = s.StokHareketleri.Where(h => h.Yon == Sabitler.YonCikis).Sum(h => h.Miktar),
+                    Mevcut = s.StokHareketleri.AsQueryable().Sum(Etki)
+                })
+                .ToListAsync();
         }
 
         public async Task<List<StokKarti>> GetAllStokKartlariAsync()

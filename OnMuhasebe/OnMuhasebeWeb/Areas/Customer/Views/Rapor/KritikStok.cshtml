@@ -42,11 +42,11 @@ else
         </div>
         <div class="stat">
             <div class="stat-label">Tükenmiş</div>
-            <div class="stat-value">@satirlar.Count(x => x.Mevcut <= 0)</div>
+            <div class="stat-value">@Model.TukenenSayisi</div>
         </div>
         <div class="stat">
             <div class="stat-label">Tamamlama maliyeti (@ViewData["ParaBirimi"])</div>
-            <div class="stat-value">@satirlar.Sum(x => x.Maliyet).ToString("N2")</div>
+            <div class="stat-value">@Model.ToplamMaliyet.ToString("N2")</div>
         </div>
     </div>
 
@@ -84,7 +84,7 @@ else
                 <tfoot>
                     <tr>
                         <td colspan="6">Toplam tamamlama maliyeti</td>
-                        <td class="cell-number">@satirlar.Sum(x => x.Maliyet).ToString("N2")</td>
+                        <td class="cell-number">@Model.ToplamMaliyet.ToString("N2")</td>
                     </tr>
                 </tfoot>
             </table>

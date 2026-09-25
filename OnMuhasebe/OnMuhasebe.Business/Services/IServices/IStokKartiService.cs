@@ -11,12 +11,14 @@ namespace OnMuhasebe.Business.Services.IServices
         Task DeleteStokKartiAsync(int id);
         Task<decimal> GetMevcutMiktarAsync(int stokId);
         Task<int> GetKritikStokSayisiAsync();
+        Task<List<StokBakiyesi>> GetStokBakiyeleriAsync(bool yalnizcaAktif = false);
 
         // Stok miktarı hiçbir yerde saklanmaz; StokHareketler'den hesaplanır.
         decimal MevcutMiktar(StokKarti stokKarti);
         decimal ToplamGiris(StokKarti stokKarti);
         decimal ToplamCikis(StokKarti stokKarti);
         bool KritikSeviyede(StokKarti stokKarti);
+        bool KritikSeviyede(StokBakiyesi bakiye);
         string HareketTipiAdi(string hareketTipi);
     }
 }
