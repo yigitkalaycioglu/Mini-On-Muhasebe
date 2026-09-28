@@ -108,6 +108,7 @@ namespace OnMuhasebe.Business.Services
 
         public async Task<StokKarti> CreateStokKartiAsync(StokKarti stokKarti)
         {
+            stokKarti.Id = 0; // Id veritabanında üretilir
             if (await _context.StokKartlari.AnyAsync(s => s.StokKodu == stokKarti.StokKodu))
             {
                 throw new InvalidOperationException("Bu stok kodu zaten kayıtlı.");
@@ -135,7 +136,7 @@ namespace OnMuhasebe.Business.Services
             await _context.SaveChangesAsync();
         }
 
-        public async Task DeleteStokKartiAsync(int id)
+        public async Task<bool> DeleteStokKartiAsync(int id)
         {
             var stokKarti = await _context.StokKartlari.FindAsync(id);
             if (stokKarti == null)
@@ -157,6 +158,7 @@ namespace OnMuhasebe.Business.Services
             }
 
             await _context.SaveChangesAsync();
+            return !kayitliIslemVar;
         }
     }
 }

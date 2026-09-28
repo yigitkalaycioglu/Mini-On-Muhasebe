@@ -1,0 +1,28 @@
+@*
+    HATA SAYFASI — HomeController
+    GET Hata(int? kod)   kod: HTTP durum kodu (404, 403 ...). Kod yoksa beklenmeyen hata (500) kabul edilir.
+    Program.cs: UseExceptionHandler ve UseStatusCodePagesWithReExecute buraya yönlendirir.
+*@
+@{
+    var kod = ViewData["Kod"] as int? ?? 500;
+    var (baslik, aciklama) = kod switch
+    {
+        404 => ("Sayfa bulunamadı", "Aradığınız kayıt ya da sayfa bulunamadı. Silinmiş olabilir veya adres hatalı olabilir."),
+        403 => ("Erişim engellendi", "Bu işlem için yetkiniz yok."),
+        400 => ("Geçersiz istek", "İstek işlenemedi. Sayfayı yenileyip tekrar deneyin."),
+        _ => ("Beklenmeyen bir hata oluştu", "İşleminiz tamamlanamamış olabilir. Lütfen tekrar deneyin; sorun sürerse yöneticinize bildirin.")
+    };
+    ViewData["Title"] = baslik;
+}
+
+<div class="table-card">
+    <div class="empty-state">
+        <div class="empty-state-icon" style="background: var(--warning-light); color: var(--warning);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>
+        </div>
+        <h3>@baslik</h3>
+        <p>@aciklama</p>
+        <p class="cell-muted">Hata kodu: @kod</p>
+        <a asp-controller="Home" asp-action="Index" class="btn btn-primary mt-2">Ana sayfaya dön</a>
+    </div>
+</div>

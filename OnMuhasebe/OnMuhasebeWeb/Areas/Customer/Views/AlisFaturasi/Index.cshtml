@@ -11,7 +11,6 @@
 
     var baslangic = Context.Request.Query["baslangic"].ToString();
     var bitis = Context.Request.Query["bitis"].ToString();
-    var mesaj = TempData["Mesaj"] as string;
 }
 
 <div class="page-header">
@@ -22,13 +21,7 @@
     <a asp-action="Create" class="btn btn-primary">+ Yeni Alış Faturası</a>
 </div>
 
-@if (!string.IsNullOrEmpty(mesaj))
-{
-    <div class="info-box">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><path d="M22 4 12 14.01l-3-3" /></svg>
-        <span>@mesaj</span>
-    </div>
-}
+<partial name="_Mesaj" />
 
 <div class="stat-grid">
     <div class="stat">

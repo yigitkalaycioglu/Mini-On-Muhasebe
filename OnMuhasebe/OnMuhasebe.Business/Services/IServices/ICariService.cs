@@ -11,7 +11,8 @@ namespace OnMuhasebe.Business.Services.IServices
         Task<List<CariBakiyesi>> GetCariBakiyeleriAsync();
         Task<Cari> CreateCariAsync(Cari cari);
         Task UpdateCariAsync(Cari cari);
-        Task DeleteCariAsync(int id);
+        // true: kayıt silindi, false: bağlı kayıtları olduğu için pasife alındı.
+        Task<bool> DeleteCariAsync(int id);
 
         // Cari bakiye hiçbir yerde saklanmaz; CariHareketler'den hesaplanır.
         decimal Bakiye(Cari cari);

@@ -1,4 +1,3 @@
-using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
@@ -68,9 +67,7 @@ namespace OnMuhasebeWeb.Areas.Customer.Controllers
             {
                 try
                 {
-                    int kullaniciId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-
-                    await _tahsilatOdemeService.CreateTahsilatOdemeAsync(cariHareket, tutar!.Value, kullaniciId);
+                    await _tahsilatOdemeService.CreateTahsilatOdemeAsync(cariHareket, tutar!.Value, User.KullaniciId());
                     TempData["Mesaj"] = $"{cariHareket.BelgeNo} numaralı {_cariService.IslemTipiAdi(cariHareket.IslemTipi).ToLower()} kaydedildi.";
                     TempData["MesajTipi"] = "success";
                     return RedirectToAction("Index");

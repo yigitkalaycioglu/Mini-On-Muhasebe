@@ -96,6 +96,7 @@ namespace OnMuhasebe.Business.Services
             sayimFisi.BelgeNo = await _parametreService.YeniBelgeNoAsync(
                 formatParametresi,
                 _context.StokHareketler.Where(h => h.HareketTipi == tip).Select(h => h.BelgeNo));
+            sayimFisi.Id = 0; // Id veritabanında üretilir
             sayimFisi.KullaniciId = kullaniciId;
 
             _context.StokHareketler.Add(sayimFisi);

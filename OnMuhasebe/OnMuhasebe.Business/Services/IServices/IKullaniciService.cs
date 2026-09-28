@@ -9,8 +9,10 @@ namespace OnMuhasebe.Business.Services.IServices
         Task<List<Kullanici>> GetAllKullanicilarAsync();
         Task<bool> IsKullaniciNameUniqueAsync(string kullaniciAdi, int? excludeId = null);
         Task<Kullanici> CreateKullaniciAsync(Kullanici kullanici, string sifre);
-        Task UpdateKullaniciAsync(Kullanici kullanici);
-        Task DeleteKullaniciAsync(int id);
+        // islemYapanId: oturumdaki kullanıcı; kendi yetkisini kaldırması ve son yöneticinin kaldırılması engellenir.
+        Task UpdateKullaniciAsync(Kullanici kullanici, int islemYapanId);
+        // true: kayıt silindi, false: bağlı kayıtları olduğu için pasife alındı.
+        Task<bool> DeleteKullaniciAsync(int id, int islemYapanId);
 
         Task SifreSifirlaAsync(int id, string yeniSifre);
     }

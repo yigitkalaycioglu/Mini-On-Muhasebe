@@ -8,7 +8,8 @@ namespace OnMuhasebe.Business.Services.IServices
         Task<List<StokKarti>> GetAllStokKartlariAsync();
         Task<StokKarti> CreateStokKartiAsync(StokKarti stokKarti);
         Task UpdateStokKartiAsync(StokKarti stokKarti);
-        Task DeleteStokKartiAsync(int id);
+        // true: kayıt silindi, false: bağlı kayıtları olduğu için pasife alındı.
+        Task<bool> DeleteStokKartiAsync(int id);
         Task<decimal> GetMevcutMiktarAsync(int stokId);
         Task<int> GetKritikStokSayisiAsync();
         Task<List<StokBakiyesi>> GetStokBakiyeleriAsync(bool yalnizcaAktif = false);

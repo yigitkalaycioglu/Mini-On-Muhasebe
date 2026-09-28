@@ -14,6 +14,9 @@ namespace OnMuhasebe.Business.Services
             _context = context;
         }
 
+        // Kayıtlı olmayan kullanıcı adıyla girişte karşılaştırılan geçerli biçimli bir özet.
+        private static readonly Lazy<string> SahteSifreHash = new(() => SifreYardimcisi.HashOlustur(Guid.NewGuid().ToString()));
+
         public async Task<List<Kullanici>> GetAllKullanicilarAsync()
         {
             return await _context.Kullanicilar.ToListAsync();
@@ -29,12 +32,12 @@ namespace OnMuhasebe.Business.Services
             var kullanici = await _context.Kullanicilar
                 .FirstOrDefaultAsync(k => k.KullaniciAdi == kullaniciAdi);
 
-            if (kullanici == null || !kullanici.Aktif)
-            {
-                return null;
-            }
+            // Kullanıcı bulunamasa da şifre doğrulaması aynı sürede çalıştırılır; böylece yanıt
+            // süresinden kullanıcı adının kayıtlı olup olmadığı anlaşılamaz.
+            var sifreDogru = SifreYardimcisi.Dogrula(sifre, kullanici?.SifreHash ?? SahteSifreHash.Value);
 
-            return SifreYardimcisi.Dogrula(sifre, kullanici.SifreHash) ? kullanici : null;
+            // Pasif kullanıcı giriş yapamaz.
+            return kullanici != null && kullanici.Aktif && sifreDogru ? kullanici : null;
         }
 
         public async Task<bool> IsKullaniciNameUniqueAsync(string kullaniciAdi, int? excludeId = null)
@@ -50,18 +53,31 @@ namespace OnMuhasebe.Business.Services
                 throw new InvalidOperationException("Bu kullanıcı adı zaten kayıtlı.");
             }
 
+            kullanici.Id = 0; // Id veritabanında üretilir
             kullanici.SifreHash = SifreYardimcisi.HashOlustur(sifre);
             _context.Kullanicilar.Add(kullanici);
             await _context.SaveChangesAsync();
             return kullanici;
         }
 
-        public async Task UpdateKullaniciAsync(Kullanici kullanici)
+        public async Task UpdateKullaniciAsync(Kullanici kullanici, int islemYapanId)
         {
             var existingKullanici = await _context.Kullanicilar.FindAsync(kullanici.Id);
             if (existingKullanici == null)
             {
                 throw new KeyNotFoundException("Kullanıcı bulunamadı.");
+            }
+
+            // Aktif bir yönetici pasife alınıyor ya da rolü düşürülüyorsa yönetimsiz kalınmamalı.
+            var yoneticilikKalkiyor = AktifYonetici(existingKullanici)
+                && (!kullanici.Aktif || kullanici.Rol != Sabitler.RolYonetici);
+            if (yoneticilikKalkiyor)
+            {
+                if (existingKullanici.Id == islemYapanId)
+                {
+                    throw new InvalidOperationException("Kendi yönetici yetkinizi kaldıramaz, kendinizi pasife alamazsınız.");
+                }
+                await SonYoneticiDegilseDevamAsync(existingKullanici.Id);
             }
 
             if (!await IsKullaniciNameUniqueAsync(kullanici.KullaniciAdi, kullanici.Id))
@@ -77,12 +93,21 @@ namespace OnMuhasebe.Business.Services
             await _context.SaveChangesAsync();
         }
 
-        public async Task DeleteKullaniciAsync(int id)
+        public async Task<bool> DeleteKullaniciAsync(int id, int islemYapanId)
         {
             var kullanici = await _context.Kullanicilar.FindAsync(id);
             if (kullanici == null)
             {
                 throw new KeyNotFoundException("Kullanıcı bulunamadı.");
+            }
+
+            if (id == islemYapanId)
+            {
+                throw new InvalidOperationException("Kendi hesabınızı silemez, pasife alamazsınız.");
+            }
+            if (AktifYonetici(kullanici))
+            {
+                await SonYoneticiDegilseDevamAsync(id);
             }
 
             var kayitliIslemVar = await _context.SatisFaturalari.AnyAsync(f => f.KullaniciId == id)
@@ -100,6 +125,21 @@ namespace OnMuhasebe.Business.Services
             }
 
             await _context.SaveChangesAsync();
+            return !kayitliIslemVar;
+        }
+
+        private static bool AktifYonetici(Kullanici kullanici) =>
+            kullanici.Aktif && kullanici.Rol == Sabitler.RolYonetici;
+
+        // Kullanıcı ve parametre yönetimi yalnızca yöneticiye açık; son yönetici kaldırılırsa kimse yönetemez.
+        private async Task SonYoneticiDegilseDevamAsync(int haricTutulanId)
+        {
+            var baskaYoneticiVar = await _context.Kullanicilar
+                .AnyAsync(k => k.Id != haricTutulanId && k.Aktif && k.Rol == Sabitler.RolYonetici);
+            if (!baskaYoneticiVar)
+            {
+                throw new InvalidOperationException("Sistemde en az bir aktif yönetici kalmalıdır.");
+            }
         }
 
         public async Task SifreSifirlaAsync(int id, string yeniSifre)

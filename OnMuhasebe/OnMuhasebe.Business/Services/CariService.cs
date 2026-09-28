@@ -121,6 +121,7 @@ namespace OnMuhasebe.Business.Services
 
         public async Task<Cari> CreateCariAsync(Cari cari)
         {
+            cari.Id = 0; // Id veritabanında üretilir
             if (await _context.Cariler.AnyAsync(c => c.CariKodu == cari.CariKodu))
             {
                 throw new InvalidOperationException("Bu cari kodu zaten kayıtlı.");
@@ -131,7 +132,7 @@ namespace OnMuhasebe.Business.Services
             return cari;
         }
 
-        public async Task DeleteCariAsync(int id)
+        public async Task<bool> DeleteCariAsync(int id)
         {
             var cari = await _context.Cariler.FindAsync(id);
             if (cari == null)
@@ -153,6 +154,7 @@ namespace OnMuhasebe.Business.Services
             }
 
             await _context.SaveChangesAsync();
+            return !kayitliIslemVar;
         }
 
         public async Task UpdateCariAsync(Cari cari)

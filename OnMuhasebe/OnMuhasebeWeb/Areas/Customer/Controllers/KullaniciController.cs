@@ -122,7 +122,7 @@ namespace OnMuhasebeWeb.Areas.Customer.Controllers
             {
                 try
                 {
-                    await _kullaniciService.UpdateKullaniciAsync(kullanici);
+                    await _kullaniciService.UpdateKullaniciAsync(kullanici, User.KullaniciId());
                     TempData["Mesaj"] = "Kullanıcı güncellendi.";
                     TempData["MesajTipi"] = "success";
                     return RedirectToAction("Index");
@@ -152,23 +152,23 @@ namespace OnMuhasebeWeb.Areas.Customer.Controllers
         [ActionName("Delete")]
         public async Task<IActionResult> DeletePost(int id)
         {
-            var kullanici = await _kullaniciService.GetKullaniciByIdAsync(id);
-            if (kullanici == null)
+            try
+            {
+                var silindi = await _kullaniciService.DeleteKullaniciAsync(id, User.KullaniciId());
+                TempData["Mesaj"] = silindi
+                    ? "Kullanıcı silindi."
+                    : "Bu kullanıcının işlem kayıtları olduğu için silinemedi; bunun yerine pasife alındı.";
+                TempData["MesajTipi"] = silindi ? "success" : "warning";
+            }
+            catch (KeyNotFoundException)
             {
                 return NotFound();
             }
-
-            await _kullaniciService.DeleteKullaniciAsync(id);
-
-            if (!kullanici.Aktif)
+            catch (InvalidOperationException ex)
             {
-                TempData["Mesaj"] = "Bu kullanıcının işlem kayıtları olduğu için silinemedi; bunun yerine pasife alındı.";
+                // Kendini ya da son yöneticiyi silme girişimi
+                TempData["Mesaj"] = ex.Message;
                 TempData["MesajTipi"] = "warning";
-            }
-            else
-            {
-                TempData["Mesaj"] = "Kullanıcı silindi.";
-                TempData["MesajTipi"] = "success";
             }
 
             return RedirectToAction("Index");

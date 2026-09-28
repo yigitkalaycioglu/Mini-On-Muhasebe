@@ -9,6 +9,7 @@ namespace OnMuhasebe.Business.Services.IServices
         Task<bool> IsSatisElemaniNameUniqueAsync(string adSoyad, int? excludeId = null);
         Task<SatisElemani> CreateSatisElemaniAsync(SatisElemani satisElemani);
         Task UpdateSatisElemaniAsync(SatisElemani satisElemani);
-        Task DeleteSatisElemaniAsync(int id);
+        // true: kayıt silindi, false: bağlı kayıtları olduğu için pasife alındı.
+        Task<bool> DeleteSatisElemaniAsync(int id);
     }
 }

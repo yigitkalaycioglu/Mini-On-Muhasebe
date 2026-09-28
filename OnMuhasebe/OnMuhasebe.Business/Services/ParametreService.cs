@@ -78,8 +78,35 @@ namespace OnMuhasebe.Business.Services
                 kayit.ParametreDegeri = DegeriDogrula(kayit.ParametreKodu, gelen.ParametreDegeri);
             }
 
+            await FormatlarFarkliMiAsync();
+
             await _context.SaveChangesAsync();
             _degerler = null;
+        }
+
+        /// <summary>
+        /// İki belge türü aynı numarayı üretirse numaralar karışır; bu yüzden formatların
+        /// sabit kısımları (yıl yerleştirildikten sonra) birbirinden farklı olmalıdır.
+        /// </summary>
+        private async Task FormatlarFarkliMiAsync()
+        {
+            // Takip edilen kayıtlar sorguda aynı nesne olarak döner; henüz kaydedilmemiş yeni değerler de görülür.
+            var formatParametreleri = await _context.Parametreler
+                .Where(p => FormatParametreleri.Contains(p.ParametreKodu))
+                .ToListAsync();
+            var formatlar = formatParametreleri
+                .Select(p => p.ParametreDegeri)
+                .Concat(new[] { Sabitler.TahsilatNoFormati, Sabitler.OdemeNoFormati });
+
+            var cakisanVar = formatlar
+                .Select(f => FormatCoz(f, DateTime.Now))
+                .GroupBy(f => (f.OnEk.ToUpperInvariant(), f.SonEk.ToUpperInvariant()))
+                .Any(g => g.Count() > 1);
+
+            if (cakisanVar)
+            {
+                throw new InvalidOperationException("Belge numarası formatları birbirinden farklı olmalıdır (ör. SAT-, ALS-, SF-, SE-; TAH- ve ODE- tahsilat/ödeme için ayrılmıştır).");
+            }
         }
 
         private static string DegeriDogrula(string kod, string? deger)

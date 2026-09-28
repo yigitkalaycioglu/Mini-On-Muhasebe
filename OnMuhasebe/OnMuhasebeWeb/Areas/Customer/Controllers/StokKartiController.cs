@@ -142,23 +142,17 @@ namespace OnMuhasebeWeb.Areas.Customer.Controllers
         [ActionName("Delete")]
         public async Task<IActionResult> DeletePost(int id)
         {
-            var stokKarti = await _stokKartiService.GetStokKartiByIdAsync(id);
-            if (stokKarti == null)
+            try
+            {
+                var silindi = await _stokKartiService.DeleteStokKartiAsync(id);
+                TempData["Mesaj"] = silindi
+                    ? "Stok kartı silindi."
+                    : "Bu stok kartının fatura veya hareket kayıtları olduğu için silinemedi; bunun yerine pasife alındı.";
+                TempData["MesajTipi"] = silindi ? "success" : "warning";
+            }
+            catch (KeyNotFoundException)
             {
                 return NotFound();
-            }
-
-            await _stokKartiService.DeleteStokKartiAsync(id);
-
-            if (!stokKarti.Aktif)
-            {
-                TempData["Mesaj"] = "Bu stok kartının fatura veya hareket kayıtları olduğu için silinemedi; bunun yerine pasife alındı.";
-                TempData["MesajTipi"] = "warning";
-            }
-            else
-            {
-                TempData["Mesaj"] = "Stok kartı silindi.";
-                TempData["MesajTipi"] = "success";
             }
 
             return RedirectToAction("Index");

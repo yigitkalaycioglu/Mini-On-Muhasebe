@@ -10,7 +10,6 @@
 @model List<Parametre>
 @{
     ViewData["Title"] = "Parametreler";
-    var mesaj = TempData["Mesaj"] as string;
 
     // Kod → (Grup, Etiket, Tür, İpucu).  Tür: metin | sayi | anahtar | format
     var tanimlar = new Dictionary<string, (string Grup, string Etiket, string Tur, string Ipucu)>
@@ -43,13 +42,7 @@
     </div>
 </div>
 
-@if (!string.IsNullOrEmpty(mesaj))
-{
-    <div class="info-box">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><path d="M22 4 12 14.01l-3-3" /></svg>
-        <span>@mesaj</span>
-    </div>
-}
+<partial name="_Mesaj" />
 
 @if (!Model.Any())
 {

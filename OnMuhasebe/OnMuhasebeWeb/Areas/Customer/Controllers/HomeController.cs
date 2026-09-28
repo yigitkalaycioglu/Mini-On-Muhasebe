@@ -31,5 +31,14 @@ namespace OnMuhasebeWeb.Areas.Customer.Controllers
         {
             return View();
         }
+
+        // Beklenmeyen hatalar ve 404 gibi durum kodları buraya yönlendirilir (Program.cs).
+        [AllowAnonymous]
+        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+        public IActionResult Hata(int? kod)
+        {
+            ViewData["Kod"] = kod ?? 500;
+            return View();
+        }
     }
 }

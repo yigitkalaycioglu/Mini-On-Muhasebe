@@ -10,11 +10,13 @@ namespace OnMuhasebe.Business.Services
         private readonly ApplicationDbContext _context;
         private readonly IParametreService _parametreService;
         private readonly IStokKartiService _stokKartiService;
-        public SatisFaturasiService(ApplicationDbContext context, IParametreService parametreService, IStokKartiService stokKartiService)
+        private readonly ICariService _cariService;
+        public SatisFaturasiService(ApplicationDbContext context, IParametreService parametreService, IStokKartiService stokKartiService, ICariService cariService)
         {
             _context = context;
             _parametreService = parametreService;
             _stokKartiService = stokKartiService;
+            _cariService = cariService;
         }
 
         public async Task<SatisFaturasi> CreateSatisFaturasiAsync(SatisFaturasi satisFaturasi, int kullaniciId)
@@ -28,6 +30,40 @@ namespace OnMuhasebe.Business.Services
                 throw new ArgumentOutOfRangeException(nameof(kullaniciId));
             }
 
+            if (satisFaturasi.SatisFaturaSatirlari.Count == 0)
+            {
+                throw new InvalidOperationException("Faturaya en az bir kalem ekleyin.");
+            }
+
+            // Form ekranda süzülse de istek elle değiştirilebilir; seçimler sunucuda da doğrulanır.
+            var cari = await _context.Cariler.FindAsync(satisFaturasi.CariId);
+            if (cari == null || !cari.Aktif || !_cariService.MusteriMi(cari))
+            {
+                throw new InvalidOperationException("Geçerli ve aktif bir müşteri seçilmelidir.");
+            }
+
+            var satisElemani = await _context.SatisElemanlari.FindAsync(satisFaturasi.SatisElemaniId);
+            if (satisElemani == null || !satisElemani.Aktif)
+            {
+                throw new InvalidOperationException("Geçerli ve aktif bir satış elemanı seçilmelidir.");
+            }
+
+            var stokIdler = satisFaturasi.SatisFaturaSatirlari.Select(k => k.StokId).Distinct().ToList();
+            var stokAdlari = await _context.StokKartlari
+                .Where(s => stokIdler.Contains(s.Id) && s.Aktif)
+                .ToDictionaryAsync(s => s.Id, s => s.StokAdi);
+            if (stokAdlari.Count != stokIdler.Count)
+            {
+                throw new InvalidOperationException("Faturadaki ürünlerden biri bulunamadı ya da pasif.");
+            }
+
+            // Id'ler veritabanında üretilir; istekle gelen değerler yok sayılır.
+            satisFaturasi.Id = 0;
+            foreach (var kalem in satisFaturasi.SatisFaturaSatirlari)
+            {
+                kalem.Id = 0;
+            }
+
             var faturaNo = await GetYeniFaturaNoAsync();
             satisFaturasi.FaturaNo = faturaNo;
             satisFaturasi.KullaniciId = kullaniciId;
@@ -39,11 +75,6 @@ namespace OnMuhasebe.Business.Services
             // Aynı üründen birden fazla kalem girilmişse kontrol toplam miktar üzerinden yapılır.
             if (await _parametreService.AcikMiAsync(Sabitler.ParamNegatifStokKontrolu))
             {
-                var stokIdler = satisFaturasi.SatisFaturaSatirlari.Select(k => k.StokId).Distinct().ToList();
-                var stokAdlari = await _context.StokKartlari
-                    .Where(s => stokIdler.Contains(s.Id))
-                    .ToDictionaryAsync(s => s.Id, s => s.StokAdi);
-
                 foreach (var grup in satisFaturasi.SatisFaturaSatirlari.GroupBy(k => k.StokId))
                 {
                     var istenenToplam = grup.Sum(k => k.Miktar);
@@ -51,8 +82,7 @@ namespace OnMuhasebe.Business.Services
 
                     if (mevcutMiktar < istenenToplam)
                     {
-                        var stokAdi = stokAdlari.TryGetValue(grup.Key, out var ad) ? ad : "Ürün";
-                        throw new InvalidOperationException($"{stokAdi} için yeterli stok yok. Mevcut: {mevcutMiktar:N2}, istenen: {istenenToplam:N2}");
+                        throw new InvalidOperationException($"{stokAdlari[grup.Key]} için yeterli stok yok. Mevcut: {mevcutMiktar:N2}, istenen: {istenenToplam:N2}");
                     }
                 }
             }
@@ -95,7 +125,19 @@ namespace OnMuhasebe.Business.Services
             _context.CariHareketler.Add(cariHareket);
 
             _context.SatisFaturalari.Add(satisFaturasi);
-            await _context.SaveChangesAsync();
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException)
+            {
+                // Aynı anda kaydedilen iki fatura aynı numarayı alırsa benzersiz indeks ikincisini reddeder.
+                if (await _context.SatisFaturalari.AsNoTracking().AnyAsync(f => f.FaturaNo == faturaNo))
+                {
+                    throw new InvalidOperationException($"{faturaNo} numarası bu sırada başka bir faturaya verildi. Faturayı tekrar kaydedin.");
+                }
+                throw;
+            }
             return satisFaturasi;
         }
 
@@ -107,13 +149,14 @@ namespace OnMuhasebe.Business.Services
                 throw new KeyNotFoundException("Satış faturası bulunamadı.");
             }
 
+            // Hareketler belge numarası ve türüyle bulunur; başka türde aynı numaralı belge olsa da ona dokunulmaz.
             var stokHareketleri = await _context.StokHareketler
-                .Where(h => h.BelgeNo == satisFaturasi.FaturaNo)
+                .Where(h => h.BelgeNo == satisFaturasi.FaturaNo && h.HareketTipi == Sabitler.HareketSatis)
                 .ToListAsync();
             _context.StokHareketler.RemoveRange(stokHareketleri);
 
             var cariHareketleri = await _context.CariHareketler
-                .Where(h => h.BelgeNo == satisFaturasi.FaturaNo)
+                .Where(h => h.BelgeNo == satisFaturasi.FaturaNo && h.IslemTipi == Sabitler.IslemSatis)
                 .ToListAsync();
             _context.CariHareketler.RemoveRange(cariHareketleri);
 

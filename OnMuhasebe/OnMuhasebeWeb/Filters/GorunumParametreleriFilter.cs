@@ -12,19 +12,30 @@ namespace OnMuhasebeWeb.Filters
     public class GorunumParametreleriFilter : IAsyncResultFilter
     {
         private readonly IParametreService _parametreService;
-        public GorunumParametreleriFilter(IParametreService parametreService)
+        private readonly ILogger<GorunumParametreleriFilter> _logger;
+        public GorunumParametreleriFilter(IParametreService parametreService, ILogger<GorunumParametreleriFilter> logger)
         {
             _parametreService = parametreService;
+            _logger = logger;
         }
 
         public async Task OnResultExecutionAsync(ResultExecutingContext context, ResultExecutionDelegate next)
         {
             if (context.Result is ViewResult viewResult)
             {
-                var viewData = viewResult.ViewData;
-                viewData["FirmaUnvani"] = await _parametreService.GetDegerAsync(Sabitler.ParamFirmaUnvani);
-                viewData["VergiDairesiNo"] = await _parametreService.GetDegerAsync(Sabitler.ParamVergiDairesiNo);
-                viewData["ParaBirimi"] = await _parametreService.GetDegerAsync(Sabitler.ParamParaBirimi);
+                try
+                {
+                    var viewData = viewResult.ViewData;
+                    viewData["FirmaUnvani"] = await _parametreService.GetDegerAsync(Sabitler.ParamFirmaUnvani);
+                    viewData["VergiDairesiNo"] = await _parametreService.GetDegerAsync(Sabitler.ParamVergiDairesiNo);
+                    viewData["ParaBirimi"] = await _parametreService.GetDegerAsync(Sabitler.ParamParaBirimi);
+                }
+                catch (Exception ex)
+                {
+                    // Parametreler okunamasa da sayfa açılsın (ör. veritabanı hatasında hata sayfasının kendisi).
+                    // View'ler bu değerler yoksa varsayılanları kullanır.
+                    _logger.LogWarning(ex, "Görünüm parametreleri okunamadı.");
+                }
             }
 
             await next();

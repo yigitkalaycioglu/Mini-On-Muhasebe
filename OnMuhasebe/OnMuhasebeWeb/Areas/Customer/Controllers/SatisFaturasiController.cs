@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 using OnMuhasebe.Business;
 using OnMuhasebe.Business.Services.IServices;
 using OnMuhasebe.Models;
-using System.Security.Claims;
 
 namespace OnMuhasebeWeb.Areas.Customer.Controllers
 {
@@ -64,9 +63,7 @@ namespace OnMuhasebeWeb.Areas.Customer.Controllers
             {
                 try
                 {
-                    int kullaniciId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-
-                    await _satisFaturasiService.CreateSatisFaturasiAsync(satisFaturasi, kullaniciId);
+                    await _satisFaturasiService.CreateSatisFaturasiAsync(satisFaturasi, User.KullaniciId());
                     TempData["Mesaj"] = $"{satisFaturasi.FaturaNo} numaralı fatura kaydedildi.";
                     TempData["MesajTipi"] = "success";
                     return RedirectToAction("Index");
@@ -105,6 +102,12 @@ namespace OnMuhasebeWeb.Areas.Customer.Controllers
             catch (KeyNotFoundException)
             {
                 return NotFound();
+            }
+            catch (InvalidOperationException ex)
+            {
+                TempData["Mesaj"] = ex.Message;
+                TempData["MesajTipi"] = "warning";
+                return RedirectToAction("Detay", new { id });
             }
 
             return RedirectToAction("Index");

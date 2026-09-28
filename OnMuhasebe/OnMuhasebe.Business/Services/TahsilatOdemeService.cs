@@ -94,6 +94,7 @@ namespace OnMuhasebe.Business.Services
             hareket.BelgeNo = await _parametreService.YeniBelgeNoFormattanAsync(
                 tahsilat ? Sabitler.TahsilatNoFormati : Sabitler.OdemeNoFormati,
                 _context.CariHareketler.Where(h => h.IslemTipi == tip).Select(h => h.BelgeNo));
+            hareket.Id = 0; // Id veritabanında üretilir
             hareket.KullaniciId = kullaniciId;
 
             _context.CariHareketler.Add(hareket);

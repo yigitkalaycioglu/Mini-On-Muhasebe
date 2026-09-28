@@ -1,4 +1,3 @@
-using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using OnMuhasebe.Business;
@@ -61,9 +60,7 @@ namespace OnMuhasebeWeb.Areas.Customer.Controllers
             {
                 try
                 {
-                    int kullaniciId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-
-                    await _alisFaturasiService.CreateAlisFaturasiAsync(alisFaturasi, kullaniciId);
+                    await _alisFaturasiService.CreateAlisFaturasiAsync(alisFaturasi, User.KullaniciId());
                     TempData["Mesaj"] = $"{alisFaturasi.FaturaNo} numaralı fatura kaydedildi.";
                     TempData["MesajTipi"] = "success";
                     return RedirectToAction("Index");
@@ -102,6 +99,12 @@ namespace OnMuhasebeWeb.Areas.Customer.Controllers
             catch (KeyNotFoundException)
             {
                 return NotFound();
+            }
+            catch (InvalidOperationException ex)
+            {
+                TempData["Mesaj"] = ex.Message;
+                TempData["MesajTipi"] = "warning";
+                return RedirectToAction("Detay", new { id });
             }
 
             return RedirectToAction("Index");

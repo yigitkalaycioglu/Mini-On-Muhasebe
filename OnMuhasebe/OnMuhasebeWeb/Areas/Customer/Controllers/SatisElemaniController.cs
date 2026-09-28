@@ -75,23 +75,17 @@ namespace OnMuhasebeWeb.Areas.Customer.Controllers
         [ActionName("Delete")]
         public async Task<IActionResult> DeletePost(int id)
         {
-            var satisElemani = await _satisElemaniService.GetSatisElemaniByIdAsync(id);
-            if (satisElemani == null)
+            try
+            {
+                var silindi = await _satisElemaniService.DeleteSatisElemaniAsync(id);
+                TempData["Mesaj"] = silindi
+                    ? "Satış elemanı silindi."
+                    : "Bu satış elemanının faturaları olduğu için silinemedi; bunun yerine pasife alındı.";
+                TempData["MesajTipi"] = silindi ? "success" : "warning";
+            }
+            catch (KeyNotFoundException)
             {
                 return NotFound();
-            }
-
-            await _satisElemaniService.DeleteSatisElemaniAsync(id);
-
-            if (!satisElemani.Aktif)
-            {
-                TempData["Mesaj"] = "Bu satış elemanının faturaları olduğu için silinemedi; bunun yerine pasife alındı.";
-                TempData["MesajTipi"] = "warning";
-            }
-            else
-            {
-                TempData["Mesaj"] = "Satış elemanı silindi.";
-                TempData["MesajTipi"] = "success";
             }
 
             return RedirectToAction("Index");

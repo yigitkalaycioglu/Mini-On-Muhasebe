@@ -1,4 +1,3 @@
-using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using OnMuhasebe.Business;
@@ -77,9 +76,7 @@ namespace OnMuhasebeWeb.Areas.Customer.Controllers
             {
                 try
                 {
-                    int kullaniciId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-
-                    await _stokHareketService.CreateSayimFisiAsync(sayimFisi, kullaniciId);
+                    await _stokHareketService.CreateSayimFisiAsync(sayimFisi, User.KullaniciId());
                     TempData["Mesaj"] = $"{sayimFisi.BelgeNo} numaralı {_stokKartiService.HareketTipiAdi(sayimFisi.HareketTipi).ToLower()} fişi kaydedildi.";
                     TempData["MesajTipi"] = "success";
                     return RedirectToAction("Index");

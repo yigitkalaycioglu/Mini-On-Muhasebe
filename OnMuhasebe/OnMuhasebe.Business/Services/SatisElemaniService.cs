@@ -31,6 +31,8 @@ namespace OnMuhasebe.Business.Services
 
         public async Task<SatisElemani> CreateSatisElemaniAsync(SatisElemani satisElemani)
         {
+            satisElemani.Id = 0; // Id veritabanında üretilir
+
             if (!await IsSatisElemaniNameUniqueAsync(satisElemani.AdSoyad))
             {
                 throw new InvalidOperationException("Bu ad ve soyad zaten kayıtlı.");
@@ -46,7 +48,7 @@ namespace OnMuhasebe.Business.Services
             return satisElemani;
         }
 
-        public async Task DeleteSatisElemaniAsync(int id)
+        public async Task<bool> DeleteSatisElemaniAsync(int id)
         {
             var satisElemani = await _context.SatisElemanlari.FindAsync(id);
             if (satisElemani == null)
@@ -54,7 +56,8 @@ namespace OnMuhasebe.Business.Services
                 throw new KeyNotFoundException("Satış elemanı bulunamadı.");
             }
 
-            if (await _context.SatisFaturalari.AnyAsync(f => f.SatisElemaniId == id))
+            var faturasiVar = await _context.SatisFaturalari.AnyAsync(f => f.SatisElemaniId == id);
+            if (faturasiVar)
             {
                 satisElemani.Aktif = false;
             }
@@ -64,6 +67,7 @@ namespace OnMuhasebe.Business.Services
             }
 
             await _context.SaveChangesAsync();
+            return !faturasiVar;
         }
 
         public async Task UpdateSatisElemaniAsync(SatisElemani satisElemani)
