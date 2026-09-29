@@ -82,10 +82,12 @@ namespace OnMuhasebe.Business.Services
                 .ToListAsync();
         }
 
+        /// <summary>Cariler hareketleri olmadan (açılır listeler için). Bakiye gerekiyorsa GetCariBakiyeleriAsync kullanılır.</summary>
         public async Task<List<Cari>> GetAllCarilerAsync()
         {
             return await _context.Cariler
-                .Include(c => c.CariHareketleri)
+                .AsNoTracking()
+                .OrderBy(c => c.CariKodu)
                 .ToListAsync();
         }
 
@@ -98,13 +100,19 @@ namespace OnMuhasebe.Business.Services
 
         public async Task<Cari?> GetCariEkstresiAsync(int id, DateTime? baslangic, DateTime? bitis)
         {
-            var bitisSonu = bitis?.Date.AddDays(1);
+            var cari = await _context.Cariler.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id);
+            if (cari == null)
+            {
+                return null;
+            }
 
-            return await _context.Cariler
-                .Include(c => c.CariHareketleri
-                    .Where(h => (!baslangic.HasValue || h.Tarih >= baslangic.Value)
-                             && (!bitisSonu.HasValue || h.Tarih < bitisSonu.Value)))
-                .FirstOrDefaultAsync(c => c.Id == id);
+            // Yalnızca seçilen dönemin hareketleri yüklenir; öncekiler devir bakiyesinde toplanır.
+            cari.CariHareketleri = await _context.CariHareketler
+                .AsNoTracking()
+                .Where(h => h.CariId == id)
+                .TarihAraliginda(h => h.Tarih, baslangic, bitis)
+                .ToListAsync();
+            return cari;
         }
 
         public async Task<decimal> GetDevirBakiyeAsync(int cariId, DateTime? baslangic)
@@ -115,7 +123,7 @@ namespace OnMuhasebe.Business.Services
             }
 
             return await _context.CariHareketler
-                .Where(h => h.CariId == cariId && h.Tarih < baslangic.Value)
+                .Where(h => h.CariId == cariId && h.Tarih < baslangic.Value.Date)
                 .SumAsync(Etki);
         }
 
@@ -124,7 +132,7 @@ namespace OnMuhasebe.Business.Services
             cari.Id = 0; // Id veritabanında üretilir
             if (await _context.Cariler.AnyAsync(c => c.CariKodu == cari.CariKodu))
             {
-                throw new InvalidOperationException("Bu cari kodu zaten kayıtlı.");
+                throw new AlanHatasiException(nameof(Cari.CariKodu), "Bu cari kodu zaten kayıtlı.");
             }
 
             _context.Cariler.Add(cari);
@@ -167,7 +175,7 @@ namespace OnMuhasebe.Business.Services
 
             if (await _context.Cariler.AnyAsync(c => c.CariKodu == cari.CariKodu && c.Id != cari.Id))
             {
-                throw new InvalidOperationException("Bu cari kodu zaten kayıtlı.");
+                throw new AlanHatasiException(nameof(Cari.CariKodu), "Bu cari kodu zaten kayıtlı.");
             }
 
             _context.Entry(existingCari).CurrentValues.SetValues(cari);

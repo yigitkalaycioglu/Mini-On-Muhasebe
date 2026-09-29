@@ -21,18 +21,19 @@ namespace OnMuhasebeWeb.Areas.Customer.Controllers
 
         public async Task<IActionResult> Index()
         {
-            var stokKartlari = await _stokKartiService.GetAllStokKartlariAsync();
+            // Mevcut miktarlar hareketler belleğe alınmadan veritabanında hesaplanır.
+            var bakiyeler = await _stokKartiService.GetStokBakiyeleriAsync();
 
             // "Kritik Stok Uyarısı" parametresi kapalıysa uyarı ve etiketler gösterilmez.
             var uyariAcik = await _parametreService.AcikMiAsync(Sabitler.ParamKritikStokUyarisi);
 
             var model = new StokListesiViewModel
             {
-                Satirlar = stokKartlari.Select(s => new StokSatiriViewModel
+                Satirlar = bakiyeler.Select(b => new StokSatiriViewModel
                 {
-                    Stok = s,
-                    Mevcut = _stokKartiService.MevcutMiktar(s),
-                    Kritik = uyariAcik && _stokKartiService.KritikSeviyede(s)
+                    Stok = b.Stok,
+                    Mevcut = b.Mevcut,
+                    Kritik = uyariAcik && _stokKartiService.KritikSeviyede(b)
                 }).ToList()
             };
             model.KritikSayisi = model.Satirlar.Count(x => x.Stok.Aktif && x.Kritik);
@@ -74,16 +75,13 @@ namespace OnMuhasebeWeb.Areas.Customer.Controllers
                     TempData["MesajTipi"] = "success";
                     return RedirectToAction("Index");
                 }
+                catch (AlanHatasiException ex)
+                {
+                    ModelState.AddModelError(ex.Alan, ex.Message);
+                }
                 catch (InvalidOperationException ex)
                 {
-                    if (ex.Message.Contains("stok kodu"))
-                    {
-                        ModelState.AddModelError("StokKodu", ex.Message);
-                    }
-                    else
-                    {
-                        ModelState.AddModelError(string.Empty, ex.Message);
-                    }
+                    ModelState.AddModelError(string.Empty, ex.Message);
                 }
             }
             return View("Create", stokKarti);
@@ -105,16 +103,13 @@ namespace OnMuhasebeWeb.Areas.Customer.Controllers
                     TempData["MesajTipi"] = "success";
                     return RedirectToAction("Index");
                 }
+                catch (AlanHatasiException ex)
+                {
+                    ModelState.AddModelError(ex.Alan, ex.Message);
+                }
                 catch (InvalidOperationException ex)
                 {
-                    if (ex.Message.Contains("stok kodu"))
-                    {
-                        ModelState.AddModelError("StokKodu", ex.Message);
-                    }
-                    else
-                    {
-                        ModelState.AddModelError(string.Empty, ex.Message);
-                    }
+                    ModelState.AddModelError(string.Empty, ex.Message);
                 }
                 catch (KeyNotFoundException)
                 {

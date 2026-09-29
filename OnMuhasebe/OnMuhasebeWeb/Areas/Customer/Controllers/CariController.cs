@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using OnMuhasebe.Business;
 using OnMuhasebe.Business.Services.IServices;
 using OnMuhasebe.Models;
 using OnMuhasebeWeb.ViewModels;
@@ -18,15 +19,16 @@ namespace OnMuhasebeWeb.Areas.Customer.Controllers
 
         public async Task<IActionResult> Index()
         {
-            var cariler = await _cariService.GetAllCarilerAsync();
+            // Bakiyeler hareketler belleğe alınmadan veritabanında hesaplanır.
+            var bakiyeler = await _cariService.GetCariBakiyeleriAsync();
 
             var model = new CariListesiViewModel
             {
-                Satirlar = cariler.Select(c => new CariSatiriViewModel
+                Satirlar = bakiyeler.Select(b => new CariSatiriViewModel
                 {
-                    Cari = c,
-                    TipAdi = _cariService.CariTipiAdi(c.CariTipi),
-                    Bakiye = _cariService.Bakiye(c)
+                    Cari = b.Cari,
+                    TipAdi = _cariService.CariTipiAdi(b.Cari.CariTipi),
+                    Bakiye = b.Bakiye
                 }).ToList()
             };
 
@@ -105,16 +107,13 @@ namespace OnMuhasebeWeb.Areas.Customer.Controllers
                     TempData["MesajTipi"] = "success";
                     return RedirectToAction("Index");
                 }
+                catch (AlanHatasiException ex)
+                {
+                    ModelState.AddModelError(ex.Alan, ex.Message);
+                }
                 catch (InvalidOperationException ex)
                 {
-                    if (ex.Message.Contains("cari kodu"))
-                    {
-                        ModelState.AddModelError("CariKodu", ex.Message);
-                    }
-                    else
-                    {
-                        ModelState.AddModelError(string.Empty, ex.Message);
-                    }
+                    ModelState.AddModelError(string.Empty, ex.Message);
                 }
             }
             return View("Create", cari);
@@ -136,16 +135,13 @@ namespace OnMuhasebeWeb.Areas.Customer.Controllers
                     TempData["MesajTipi"] = "success";
                     return RedirectToAction("Index");
                 }
+                catch (AlanHatasiException ex)
+                {
+                    ModelState.AddModelError(ex.Alan, ex.Message);
+                }
                 catch (InvalidOperationException ex)
                 {
-                    if (ex.Message.Contains("cari kodu"))
-                    {
-                        ModelState.AddModelError("CariKodu", ex.Message);
-                    }
-                    else
-                    {
-                        ModelState.AddModelError(string.Empty, ex.Message);
-                    }
+                    ModelState.AddModelError(string.Empty, ex.Message);
                 }
                 catch (KeyNotFoundException)
                 {

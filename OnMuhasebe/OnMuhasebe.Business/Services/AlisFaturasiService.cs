@@ -164,16 +164,7 @@ namespace OnMuhasebe.Business.Services
                 .Include(f => f.Kullanici)
                 .AsQueryable();
 
-            if (baslangic.HasValue)
-            {
-                query = query.Where(f => f.Tarih >= baslangic.Value.Date);
-            }
-            if (bitis.HasValue)
-            {
-                // Bitiş günü dahil olsun diye ertesi günün başlangıcından küçük olanlar alınır.
-                var bitisSonu = bitis.Value.Date.AddDays(1);
-                query = query.Where(f => f.Tarih < bitisSonu);
-            }
+            query = query.TarihAraliginda(f => f.Tarih, baslangic, bitis);
 
             return await query.OrderByDescending(f => f.Tarih).ThenByDescending(f => f.Id).ToListAsync();
         }

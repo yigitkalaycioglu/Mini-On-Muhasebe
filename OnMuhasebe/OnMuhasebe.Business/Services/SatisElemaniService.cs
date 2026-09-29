@@ -35,12 +35,12 @@ namespace OnMuhasebe.Business.Services
 
             if (!await IsSatisElemaniNameUniqueAsync(satisElemani.AdSoyad))
             {
-                throw new InvalidOperationException("Bu ad ve soyad zaten kayıtlı.");
+                throw new AlanHatasiException(nameof(SatisElemani.AdSoyad), "Bu ad ve soyad zaten kayıtlı.");
             }
 
             if (await _context.SatisElemanlari.AnyAsync(e => e.Telefon == satisElemani.Telefon))
             {
-                throw new InvalidOperationException("Bu telefon numarası zaten kayıtlı.");
+                throw new AlanHatasiException(nameof(SatisElemani.Telefon), "Bu telefon numarası zaten kayıtlı.");
             }
 
             _context.SatisElemanlari.Add(satisElemani);
@@ -80,12 +80,12 @@ namespace OnMuhasebe.Business.Services
 
             if (!await IsSatisElemaniNameUniqueAsync(satisElemani.AdSoyad, satisElemani.Id))
             {
-                throw new InvalidOperationException("Bu ad ve soyad zaten kayıtlı.");
+                throw new AlanHatasiException(nameof(SatisElemani.AdSoyad), "Bu ad ve soyad zaten kayıtlı.");
             }
 
             if (await _context.SatisElemanlari.AnyAsync(e => e.Telefon == satisElemani.Telefon && e.Id != satisElemani.Id))
             {
-                throw new InvalidOperationException("Bu telefon numarası zaten kayıtlı.");
+                throw new AlanHatasiException(nameof(SatisElemani.Telefon), "Bu telefon numarası zaten kayıtlı.");
             }
 
             existingSatisElemani.AdSoyad = satisElemani.AdSoyad;

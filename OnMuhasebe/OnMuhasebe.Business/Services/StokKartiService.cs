@@ -92,10 +92,12 @@ namespace OnMuhasebe.Business.Services
                 .ToListAsync();
         }
 
+        /// <summary>Stok kartları hareketleri olmadan (açılır listeler için). Miktar gerekiyorsa GetStokBakiyeleriAsync kullanılır.</summary>
         public async Task<List<StokKarti>> GetAllStokKartlariAsync()
         {
             return await _context.StokKartlari
-                .Include(s => s.StokHareketleri)
+                .AsNoTracking()
+                .OrderBy(s => s.StokKodu)
                 .ToListAsync();
         }
 
@@ -111,7 +113,7 @@ namespace OnMuhasebe.Business.Services
             stokKarti.Id = 0; // Id veritabanında üretilir
             if (await _context.StokKartlari.AnyAsync(s => s.StokKodu == stokKarti.StokKodu))
             {
-                throw new InvalidOperationException("Bu stok kodu zaten kayıtlı.");
+                throw new AlanHatasiException(nameof(StokKarti.StokKodu), "Bu stok kodu zaten kayıtlı.");
             }
 
             _context.StokKartlari.Add(stokKarti);
@@ -129,7 +131,7 @@ namespace OnMuhasebe.Business.Services
 
             if (await _context.StokKartlari.AnyAsync(s => s.StokKodu == stokKarti.StokKodu && s.Id != stokKarti.Id))
             {
-                throw new InvalidOperationException("Bu stok kodu zaten kayıtlı.");
+                throw new AlanHatasiException(nameof(StokKarti.StokKodu), "Bu stok kodu zaten kayıtlı.");
             }
 
             _context.Entry(existingStokKarti).CurrentValues.SetValues(stokKarti);

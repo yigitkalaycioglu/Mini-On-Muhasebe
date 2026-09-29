@@ -50,7 +50,7 @@ namespace OnMuhasebe.Business.Services
         {
             if (!await IsKullaniciNameUniqueAsync(kullanici.KullaniciAdi))
             {
-                throw new InvalidOperationException("Bu kullanıcı adı zaten kayıtlı.");
+                throw new AlanHatasiException(nameof(Kullanici.KullaniciAdi), "Bu kullanıcı adı zaten kayıtlı.");
             }
 
             kullanici.Id = 0; // Id veritabanında üretilir
@@ -82,7 +82,7 @@ namespace OnMuhasebe.Business.Services
 
             if (!await IsKullaniciNameUniqueAsync(kullanici.KullaniciAdi, kullanici.Id))
             {
-                throw new InvalidOperationException("Bu kullanıcı adı zaten kayıtlı.");
+                throw new AlanHatasiException(nameof(Kullanici.KullaniciAdi), "Bu kullanıcı adı zaten kayıtlı.");
             }
 
             existingKullanici.KullaniciAdi = kullanici.KullaniciAdi;

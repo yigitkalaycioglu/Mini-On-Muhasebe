@@ -118,13 +118,12 @@ namespace OnMuhasebeWeb.Areas.Customer.Controllers
         private async Task StoklariDoldurAsync()
         {
             // Fiş ekranında seçilen ürünün mevcut miktarı ve sayım sonrası miktar gösterilir.
-            var stoklar = await _stokKartiService.GetAllStokKartlariAsync();
-            ViewData["Stoklar"] = stoklar
-                .Where(s => s.Aktif)
-                .Select(s => new SayimFisiStokViewModel
+            var bakiyeler = await _stokKartiService.GetStokBakiyeleriAsync(yalnizcaAktif: true);
+            ViewData["Stoklar"] = bakiyeler
+                .Select(b => new SayimFisiStokViewModel
                 {
-                    Stok = s,
-                    Mevcut = _stokKartiService.MevcutMiktar(s)
+                    Stok = b.Stok,
+                    Mevcut = b.Mevcut
                 })
                 .ToList();
         }

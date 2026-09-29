@@ -27,16 +27,7 @@ namespace OnMuhasebe.Business.Services
                 .Include(h => h.Kullanici)
                 .Where(h => h.IslemTipi == Sabitler.IslemTahsilat || h.IslemTipi == Sabitler.IslemOdeme);
 
-            if (baslangic.HasValue)
-            {
-                query = query.Where(h => h.Tarih >= baslangic.Value.Date);
-            }
-            if (bitis.HasValue)
-            {
-                // Bitiş günü dahil olsun diye ertesi günün başlangıcından küçük olanlar alınır.
-                var bitisSonu = bitis.Value.Date.AddDays(1);
-                query = query.Where(h => h.Tarih < bitisSonu);
-            }
+            query = query.TarihAraliginda(h => h.Tarih, baslangic, bitis);
 
             return await query.OrderByDescending(h => h.Tarih).ThenByDescending(h => h.Id).ToListAsync();
         }

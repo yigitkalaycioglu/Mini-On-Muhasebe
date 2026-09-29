@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using OnMuhasebe.Business;
 using OnMuhasebe.Business.Services.IServices;
 using OnMuhasebe.Models;
 
@@ -50,20 +51,13 @@ namespace OnMuhasebeWeb.Areas.Customer.Controllers
                     TempData["MesajTipi"] = "success";
                     return RedirectToAction("Index");
                 }
+                catch (AlanHatasiException ex)
+                {
+                    ModelState.AddModelError(ex.Alan, ex.Message);
+                }
                 catch (InvalidOperationException ex)
                 {
-                    if (ex.Message.Contains("ad ve soyad"))
-                    {
-                        ModelState.AddModelError("AdSoyad", ex.Message);
-                    }
-                    else if (ex.Message.Contains("telefon"))
-                    {
-                        ModelState.AddModelError("Telefon", ex.Message);
-                    }
-                    else
-                    {
-                        ModelState.AddModelError(string.Empty, ex.Message);
-                    }
+                    ModelState.AddModelError(string.Empty, ex.Message);
                 }
             }
 
@@ -107,20 +101,13 @@ namespace OnMuhasebeWeb.Areas.Customer.Controllers
                     TempData["MesajTipi"] = "success";
                     return RedirectToAction("Index");
                 }
+                catch (AlanHatasiException ex)
+                {
+                    ModelState.AddModelError(ex.Alan, ex.Message);
+                }
                 catch (InvalidOperationException ex)
                 {
-                    if (ex.Message.Contains("ad ve soyad"))
-                    {
-                        ModelState.AddModelError("AdSoyad", ex.Message);
-                    }
-                    else if (ex.Message.Contains("telefon"))
-                    {
-                        ModelState.AddModelError("Telefon", ex.Message);
-                    }
-                    else
-                    {
-                        ModelState.AddModelError(string.Empty, ex.Message);
-                    }
+                    ModelState.AddModelError(string.Empty, ex.Message);
                 }
                 catch (KeyNotFoundException)
                 {

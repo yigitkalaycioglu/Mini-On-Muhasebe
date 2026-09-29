@@ -94,16 +94,13 @@ namespace OnMuhasebeWeb.Areas.Customer.Controllers
                     TempData["MesajTipi"] = "success";
                     return RedirectToAction("Index");
                 }
+                catch (AlanHatasiException ex)
+                {
+                    ModelState.AddModelError(ex.Alan, ex.Message);
+                }
                 catch (InvalidOperationException ex)
                 {
-                    if (ex.Message.Contains("kullanıcı adı"))
-                    {
-                        ModelState.AddModelError("KullaniciAdi", ex.Message);
-                    }
-                    else
-                    {
-                        ModelState.AddModelError(string.Empty, ex.Message);
-                    }
+                    ModelState.AddModelError(string.Empty, ex.Message);
                 }
             }
 
@@ -127,16 +124,13 @@ namespace OnMuhasebeWeb.Areas.Customer.Controllers
                     TempData["MesajTipi"] = "success";
                     return RedirectToAction("Index");
                 }
+                catch (AlanHatasiException ex)
+                {
+                    ModelState.AddModelError(ex.Alan, ex.Message);
+                }
                 catch (InvalidOperationException ex)
                 {
-                    if (ex.Message.Contains("kullanıcı adı"))
-                    {
-                        ModelState.AddModelError("KullaniciAdi", ex.Message);
-                    }
-                    else
-                    {
-                        ModelState.AddModelError(string.Empty, ex.Message);
-                    }
+                    ModelState.AddModelError(string.Empty, ex.Message);
                 }
                 catch (KeyNotFoundException)
                 {
