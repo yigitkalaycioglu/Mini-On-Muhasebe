@@ -2,6 +2,17 @@
 
 ASP.NET Core MVC ile yazılmış, stok ve cari takibi yapan mini ön muhasebe uygulaması.
 Staj projesi olarak, proje dökümanındaki haftalık plana göre geliştirildi.
+Ekranların kullanımı için: [Kısa Kullanım Kılavuzu](KULLANIM_KILAVUZU.md)
+
+## Modüller
+
+| Hafta | Modül |
+|---|---|
+| 1 | Giriş + rol bazlı yetkilendirme, kullanıcı yönetimi, satış elemanları |
+| 2 | Cari hesaplar (bakiye, ekstre), stok kartları |
+| 3 | Satış ve alış faturaları (stok ve cari hareketleri tek transaction'da) |
+| 4 | Stok hareketleri, sayım fazlası/eksiği fişleri, tahsilat/ödeme |
+| 5 | Parametreler, raporlar (cari bakiye, stok durum, kritik stok, satış elemanına göre satış) |
 
 ## Teknolojiler
 
@@ -16,9 +27,9 @@ Staj projesi olarak, proje dökümanındaki haftalık plana göre geliştirildi.
 ```
 OnMuhasebe.Models      → POCO entity sınıfları (11 tablo)
 OnMuhasebe.DataAccess  → DbContext, migration'lar
-OnMuhasebe.Business    → Servisler + interface'ler, Sabitler.cs
+OnMuhasebe.Business    → Servisler + interface'ler, Sabitler.cs, rapor özetleri
 OnMuhasebe.Utility     → SifreYardimcisi (PBKDF2)
-OnMuhasebeWeb          → Controller, View, ViewModel
+OnMuhasebeWeb          → Controller, View, ViewModel, filtre ve oturum doğrulama
 ```
 
 Bağımlılık yönü tek taraflı: `Web → Business → DataAccess → Models`.
@@ -126,10 +137,10 @@ var kritikSayisi = Model.Count(s => s.Aktif && Mevcut(s) <= s.KritikStok);
 hesap yapmıyor:
 
 ```csharp
-Satirlar = stokKartlari.Select(s => new StokSatiriViewModel {
-    Stok   = s,
-    Mevcut = _stokKartiService.MevcutMiktar(s),
-    Kritik = _stokKartiService.KritikSeviyede(s)
+Satirlar = bakiyeler.Select(b => new StokSatiriViewModel {
+    Stok   = b.Stok,
+    Mevcut = b.Mevcut,
+    Kritik = uyariAcik && _stokKartiService.KritikSeviyede(b)
 }).ToList()
 ```
 
@@ -177,10 +188,53 @@ her biri tek tek yeterli görünüp toplamda stok eksiye düşebiliyordu.
 
 ## 7. Fatura silindiğinde stok ve cari geri alınmıyordu
 
-**Çözüm:** Fatura silinirken `BelgeNo` üzerinden ilgili `StokHareket` ve `CariHareket`
-kayıtları bulunup siliniyor. Fatura ve hareketler tek bir `SaveChangesAsync()` çağrısında
-kaydediliyor; EF Core bunu **tek transaction** olarak çalıştırdığı için ya hepsi yazılıyor
-ya hiçbiri. Yarım kalmış fatura oluşamıyor.
+**Çözüm:** Fatura silinirken `BelgeNo` ve hareket türü üzerinden ilgili `StokHareket` ve
+`CariHareket` kayıtları bulunup siliniyor. Fatura ve hareketler tek bir `SaveChangesAsync()`
+çağrısında kaydediliyor; EF Core bunu **tek transaction** olarak çalıştırdığı için ya hepsi
+yazılıyor ya hiçbiri. Yarım kalmış fatura oluşamıyor.
+
+Sonradan fark edilen bir durum: alış faturası silinince girişler geri alındığı için, ürün bu
+arada satıldıysa stok eksiye düşebiliyordu. Negatif stok kontrolü açıkken bu silme artık
+engelleniyor ve kullanıcıya hangi ürünün eksiye düşeceği gösteriliyor.
+
+## 8. Virgüllü tutarlar sunucunun diline bağlıydı
+
+**Sorun:** Formlarda tutarlar `12,50` biçiminde giriliyor. Model binding bu metni
+sunucunun kültürüne göre sayıya çevirir. Geliştirme bilgisayarı Türkçe olduğu için sorun
+görünmüyordu; İngilizce bir sunucuda aynı değer `1250` olarak kaydedilirdi.
+
+**Çözüm:** `Program.cs` içinde `UseRequestLocalization` ile uygulama kültürü `tr-TR` olarak
+sabitlendi. Model binding'in İngilizce hata mesajları da (ör. *"The value 'abc' is not
+valid."*) Türkçe mesajlarla değiştirildi.
+
+## 9. Pasife alınan kullanıcının açık oturumu
+
+**Sorun:** Kullanıcı pasife alındığında yeniden giriş yapamıyordu, ama zaten açık olan
+oturumu 8 saatlik kayan süre boyunca eski yetkileriyle çalışmaya devam ediyordu. Rolü
+değiştirilen kullanıcı için de aynısı geçerliydi.
+
+**Çözüm:** Cookie authentication'ın `OnValidatePrincipal` olayında her istekte kullanıcı
+veritabanından okunuyor; kullanıcı silinmiş, pasif ya da adı/rolü değişmişse oturum
+kapatılıyor. Ayrıca yöneticinin kendini silmesi/pasife alması ve son aktif yöneticinin
+kaldırılması engellendi — aksi halde kullanıcı ve parametre yönetimi yapacak kimse kalmazdı.
+
+## 10. Liste ekranları bütün hareketleri belleğe çekiyordu
+
+**Sorun:** 2. maddedeki `Include` çözümü doğru sonuç veriyordu ama stok ve cari listeleri
+her açılışta *tüm* hareket kayıtlarını belleğe alıp C# tarafında topluyordu. Hareket sayısı
+arttıkça sayfa yavaşlar ve bellek kullanımı büyürdü.
+
+**Çözüm:** Liste ve rapor ekranları için toplamlar veritabanında hesaplanıyor. Aynı `Etki`
+ifadesi alt sorgu içinde kullanılarak formül tek yerde kaldı:
+
+```csharp
+.Select(s => new StokBakiyesi {
+    Stok   = s,
+    Mevcut = s.StokHareketleri.AsQueryable().Sum(Etki)   // SQL'de SUM
+})
+```
+
+Tek kaydın düzenleme ekranında (hareket sayısı az) `Include` ile yükleme korundu.
 
 ---
 
@@ -190,11 +244,15 @@ Her önemli değişiklikten sonra uygulama ayağa kaldırılıp gerçek HTTP ist
 (giriş → antiforgery token → form POST); ekranda görünen değerler doğrudan SQL sorgularıyla
 karşılaştırıldı. Test verisi her seferinde temizlenip veritabanı eski sayımlarına döndürüldü.
 
-Son doğrulama: 12 ekran HTTP 200; stok değerleri 28 / 650 / 55 / 4 / 50 ve cari bakiyeler
-280 / 1.440 / 800 / 7.950 veritabanıyla birebir eşleşti; fatura oluştur → sil akışı stoğu
-50 → 47 → 50, cari bakiyeyi 280 → 370 → 280 yaptı; yetersiz stokta fatura reddedildi.
+Son doğrulama (örnek veriyle): stok değerleri 8 / 0 / 5 / 4 / 50 ve cari bakiyeler
+280 / 1.440 / −900 / −800 hem liste ekranlarında hem raporlarda veritabanıyla birebir eşleşti;
+sayım fişi, tahsilat/ödeme ve fatura oluştur → sil akışları stoğu ve bakiyeyi doğru değiştirip
+geri aldı; yetersiz stokta satış ve sayım eksiği reddedildi.
 
-## Bilinen eksikler
+## Yapılmayanlar
 
-- Haftalık planın 4–5. hafta maddeleri (bazı rapor action'ları, kullanım kılavuzu)
-- Form ekranları ViewModel yerine entity kullanıyor (bilinçli tercih, yukarıda açıklandı)
+- Dökümandaki bonus maddeler (Excel/PDF aktarma, grafik, işlem geçmişi, yedekleme) yapılmadı.
+  Raporlar tarayıcıdan yazdırılabiliyor.
+- Form ekranları ViewModel yerine entity kullanıyor (bilinçli tercih, 4. maddede açıklandı).
+- Tahsilat/ödeme belge numaraları için dökümanda parametre tanımlı olmadığından sabit
+  `TAH-{yyyy}-{0000}` / `ODE-{yyyy}-{0000}` formatı kullanılıyor.

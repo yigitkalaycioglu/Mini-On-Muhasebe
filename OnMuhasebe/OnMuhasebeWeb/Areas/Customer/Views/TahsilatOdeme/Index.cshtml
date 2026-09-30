@@ -21,9 +21,10 @@
         <h1>Tahsilat / Ödeme</h1>
         <p class="page-subtitle">Müşterilerden tahsilatlar ve tedarikçilere yapılan ödemeler.</p>
     </div>
-    <div class="d-flex gap-2 flex-wrap">
+    <div class="d-flex gap-2 flex-wrap no-print">
         <a asp-action="Create" asp-route-tip="@Sabitler.IslemTahsilat" class="btn btn-primary">+ Tahsilat</a>
         <a asp-action="Create" asp-route-tip="@Sabitler.IslemOdeme" class="btn btn-outline-secondary">+ Ödeme</a>
+        <button type="button" class="btn btn-outline-secondary" data-yazdir>Yazdır</button>
     </div>
 </div>
 

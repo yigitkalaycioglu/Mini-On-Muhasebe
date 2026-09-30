@@ -33,9 +33,10 @@
             }
         </p>
     </div>
-    <div class="d-flex gap-2 flex-wrap">
+    <div class="d-flex gap-2 flex-wrap no-print">
         <a asp-action="SayimFisi" asp-route-tip="@Sabitler.HareketSayimFazlasi" class="btn btn-outline-secondary">+ Sayım Fazlası Fişi</a>
         <a asp-action="SayimFisi" asp-route-tip="@Sabitler.HareketSayimEksigi" class="btn btn-outline-secondary">− Sayım Eksiği Fişi</a>
+        <button type="button" class="btn btn-outline-secondary" data-yazdir>Yazdır</button>
     </div>
 </div>
 

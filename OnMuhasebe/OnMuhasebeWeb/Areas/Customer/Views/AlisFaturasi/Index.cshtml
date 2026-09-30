@@ -18,7 +18,10 @@
         <h1>Alış Faturaları</h1>
         <p class="page-subtitle">Tedarikçilerden gelen faturalar ve toplamları.</p>
     </div>
-    <a asp-action="Create" class="btn btn-primary">+ Yeni Alış Faturası</a>
+    <div class="d-flex gap-2 flex-wrap no-print">
+        <a asp-action="Create" class="btn btn-primary">+ Yeni Alış Faturası</a>
+        <button type="button" class="btn btn-outline-secondary" data-yazdir>Yazdır</button>
+    </div>
 </div>
 
 <partial name="_Mesaj" />
