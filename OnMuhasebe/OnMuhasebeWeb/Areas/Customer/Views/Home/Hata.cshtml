@@ -1,14 +1,21 @@
 @*
     HATA SAYFASI — HomeController
-    GET Hata(int? kod)   kod: HTTP durum kodu (404, 403 ...). Kod yoksa beklenmeyen hata (500) kabul edilir.
+    GET Hata(int? kod)   kod: HTTP durum kodu (404, 403, 429 ...). Kod yoksa beklenmeyen hata (500) kabul edilir.
     Program.cs: UseExceptionHandler ve UseStatusCodePagesWithReExecute buraya yönlendirir.
+    Oturum açılmamışsa (ör. giriş hız sınırı) menüsüz giriş düzeni kullanılır.
 *@
 @{
+    if (User.Identity?.IsAuthenticated != true)
+    {
+        Layout = "_AuthLayout";
+    }
+
     var kod = ViewData["Kod"] as int? ?? 500;
     var (baslik, aciklama) = kod switch
     {
         404 => ("Sayfa bulunamadı", "Aradığınız kayıt ya da sayfa bulunamadı. Silinmiş olabilir veya adres hatalı olabilir."),
         403 => ("Erişim engellendi", "Bu işlem için yetkiniz yok."),
+        429 => ("Çok fazla deneme", "Kısa sürede çok fazla giriş denemesi yapıldı. Bir dakika bekleyip tekrar deneyin."),
         400 => ("Geçersiz istek", "İstek işlenemedi. Sayfayı yenileyip tekrar deneyin."),
         _ => ("Beklenmeyen bir hata oluştu", "İşleminiz tamamlanamamış olabilir. Lütfen tekrar deneyin; sorun sürerse yöneticinize bildirin.")
     };

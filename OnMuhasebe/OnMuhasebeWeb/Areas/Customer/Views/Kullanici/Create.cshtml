@@ -53,7 +53,7 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
-    <script>
+    <script nonce="@Html.CspNonce()">
         (function () {
             const form = document.getElementById('kullaniciForm');
             const sifre = document.getElementById('sifre');

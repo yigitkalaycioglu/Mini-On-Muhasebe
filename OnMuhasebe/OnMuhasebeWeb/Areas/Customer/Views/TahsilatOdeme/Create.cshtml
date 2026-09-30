@@ -109,7 +109,7 @@
 </div>
 
 @section Scripts {
-    <script>
+    <script nonce="@Html.CspNonce()">
         (function () {
             const cariSecimi = document.getElementById('CariId');
             const cariEtiket = document.getElementById('cariEtiket');

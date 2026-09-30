@@ -7,7 +7,8 @@ işlemlerin hangi sırayla yapılacağını anlatır. Kurulum adımları için `
 
 Uygulama tarayıcıdan açılır (`dotnet run` ile çalıştırıldığında `http://localhost:5029`). Giriş ekranında
 kullanıcı adı ve şifre girilir. Pasife alınmış kullanıcı giriş yapamaz; açık bir oturumu varsa
-bir sonraki tıklamada oturumu kapanır.
+bir sonraki tıklamada oturumu kapanır. Bir kullanıcı adıyla üst üste 5 kez hatalı şifre girilirse
+o kullanıcı adıyla 5 dakika giriş yapılamaz; aynı bilgisayardan dakikada en fazla 10 giriş denemesi yapılabilir.
 
 | Rol | Görebildiği ekranlar |
 |---|---|

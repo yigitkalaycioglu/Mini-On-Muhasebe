@@ -115,6 +115,7 @@ document.querySelectorAll('[data-anahtar-hedef]').forEach(function (kutu) {
         const tip = (alan.dataset.toastType || 'success').toLowerCase();
 
         toastr.options = {
+            escapeHtml: true,   // mesaj HTML olarak değil düz metin olarak gösterilir
             closeButton: true,
             progressBar: true,
             positionClass: 'toast-top-right',

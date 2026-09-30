@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.EntityFrameworkCore;
@@ -9,6 +10,9 @@ using OnMuhasebeWeb.Filters;
 using OnMuhasebeWeb.Guvenlik;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Yanıtlarda sunucu yazılımının adı ("Server: Kestrel") gönderilmez.
+builder.WebHost.ConfigureKestrel(options => options.AddServerHeader = false);
 
 // Add services to the container.
 // Firma bilgisi ve para birimi her sayfada gerektiği için tek bir filtreyle ViewData'ya konur.
@@ -60,6 +64,31 @@ builder.Services.AddScoped<IParametreService, ParametreService>();
 builder.Services.AddScoped<IStokHareketService, StokHareketService>();
 builder.Services.AddScoped<ITahsilatOdemeService, TahsilatOdemeService>();
 
+// Kaba kuvvet saldırısına karşı: kullanıcı adı başına hatalı deneme sayacı (bellekte)...
+builder.Services.AddMemoryCache();
+builder.Services.AddSingleton<GirisDenemeTakibi>();
+
+// ...ve IP başına giriş denemesi hız sınırı. Aşılırsa 429 döner, hata sayfası gösterilir.
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddPolicy(GirisDenemeTakibi.HizSiniriPolitikasi, context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            context.Connection.RemoteIpAddress?.ToString() ?? "bilinmiyor",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = GirisDenemeTakibi.IpBasinaDakikadaDeneme,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0
+            }));
+    options.OnRejected = (context, _) =>
+    {
+        var logger = context.HttpContext.RequestServices.GetRequiredService<ILoggerFactory>().CreateLogger("OnMuhasebeWeb.Guvenlik");
+        logger.LogWarning("Giriş hız sınırı aşıldı: IP {Ip}", context.HttpContext.Connection.RemoteIpAddress);
+        return ValueTask.CompletedTask;
+    };
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -74,6 +103,9 @@ if (!app.Environment.IsDevelopment())
 // 404 gibi durumlarda boş sayfa yerine uygulamanın hata sayfası gösterilir.
 app.UseStatusCodePagesWithReExecute("/Customer/Home/Hata", "?kod={0}");
 
+// Content-Security-Policy, X-Frame-Options, X-Content-Type-Options, Referrer-Policy...
+app.UseGuvenlikBasliklari(app.Environment.IsDevelopment());
+
 app.UseHttpsRedirection();
 
 // Tutarlar virgüllü girilir ("12,50"). Kültür sunucunun diline bırakılırsa İngilizce bir sunucuda
@@ -87,6 +119,9 @@ app.UseRequestLocalization(new RequestLocalizationOptions
 });
 
 app.UseRouting();
+
+// Hız sınırı politikası action'a [EnableRateLimiting] ile bağlandığı için UseRouting'den sonra gelir.
+app.UseRateLimiter();
 
 app.UseAuthentication();
 app.UseAuthorization();

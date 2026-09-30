@@ -108,7 +108,7 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
-    <script>
+    <script nonce="@Html.CspNonce()">
         (function () {
             const aciklama = document.querySelector('#tipAciklama span');
             const radyolar = document.querySelectorAll('input[name="HareketTipi"]');
