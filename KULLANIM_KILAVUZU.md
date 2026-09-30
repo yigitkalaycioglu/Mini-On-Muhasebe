@@ -5,7 +5,7 @@ işlemlerin hangi sırayla yapılacağını anlatır. Kurulum adımları için `
 
 ## 1. Giriş ve roller
 
-Uygulama tarayıcıdan açılır (geliştirme ortamında `https://localhost:7233`). Giriş ekranında
+Uygulama tarayıcıdan açılır (`dotnet run` ile çalıştırıldığında `http://localhost:5029`). Giriş ekranında
 kullanıcı adı ve şifre girilir. Pasife alınmış kullanıcı giriş yapamaz; açık bir oturumu varsa
 bir sonraki tıklamada oturumu kapanır.
 

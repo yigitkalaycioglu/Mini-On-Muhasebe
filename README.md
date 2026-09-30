@@ -37,6 +37,11 @@ Controller doğrudan `DbContext` kullanmaz, her zaman servis interface'i üzerin
 
 ## Kurulum
 
+Gereksinimler: .NET 10 SDK ve SQL Server. Aşağıdaki komutlar `localhost\MSSQLSERVER01`
+adlı örneği kullanır; SQL Server'ınız farklı bir adla kuruluysa (ör. `localhost` ya da
+`.\SQLEXPRESS`) komutlardaki sunucu adını ve `OnMuhasebe/OnMuhasebeWeb/appsettings.json`
+içindeki `DefaultConnection` bağlantı cümlesini ona göre değiştirin.
+
 ```bash
 # 1. Veritabanını oluştur
 # (-f i:65001: Türkçe karakterlerin bozulmaması için dosyayı UTF-8 okur)
@@ -45,12 +50,17 @@ sqlcmd -S "localhost\MSSQLSERVER01" -E -f i:65001 -i OnMuhasebe/Database/create_
 # 2. Örnek veriyi yükle (opsiyonel)
 sqlcmd -S "localhost\MSSQLSERVER01" -E -f i:65001 -i OnMuhasebe/Database/seed_data.sql
 
-# 3. Çalıştır
+# 3. Çalıştır → http://localhost:5029
 cd OnMuhasebe/OnMuhasebeWeb
 dotnet run
 ```
 
-Örnek kullanıcılar (parola: `123456`) `seed_data.sql` içinde tanımlı, yalnızca test amaçlıdır.
+Örnek veriyle gelen kullanıcılar (yalnızca test amaçlı, ikisinin de parolası `123456`):
+
+| Kullanıcı adı | Rol |
+|---|---|
+| `admin` | Yönetici |
+| `ayse.yilmaz` | Standart |
 
 ---
 
