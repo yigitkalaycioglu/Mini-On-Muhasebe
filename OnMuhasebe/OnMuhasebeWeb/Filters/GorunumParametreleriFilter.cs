@@ -6,7 +6,7 @@ using OnMuhasebe.Business.Services.IServices;
 namespace OnMuhasebeWeb.Filters
 {
     /// <summary>
-    /// Her sayfada gereken görüntü parametrelerini (firma bilgisi, para birimi) ViewData'ya koyar.
+    /// Her sayfada gereken görüntü parametrelerini (firma bilgisi, para birimi, tutar biçimi) ViewData'ya koyar.
     /// Böylece her controller aynı değerleri ayrı ayrı okumak zorunda kalmaz.
     /// </summary>
     public class GorunumParametreleriFilter : IAsyncResultFilter
@@ -29,6 +29,11 @@ namespace OnMuhasebeWeb.Filters
                     viewData["FirmaUnvani"] = await _parametreService.GetDegerAsync(Sabitler.ParamFirmaUnvani);
                     viewData["VergiDairesiNo"] = await _parametreService.GetDegerAsync(Sabitler.ParamVergiDairesiNo);
                     viewData["ParaBirimi"] = await _parametreService.GetDegerAsync(Sabitler.ParamParaBirimi);
+
+                    // Tutarlar "Ondalık Basamak" parametresine göre gösterilir (Html.Tutar yardımcısı).
+                    var basamak = await _parametreService.GetOndalikBasamakAsync();
+                    viewData["OndalikBasamak"] = basamak;
+                    viewData["TutarBicimi"] = "N" + basamak;
                 }
                 catch (Exception ex)
                 {

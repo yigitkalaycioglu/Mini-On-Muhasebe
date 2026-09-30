@@ -18,10 +18,11 @@
     var ondalik = System.Globalization.CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator;
     var varsayilanKdv = ViewData["VarsayilanKdv"] as decimal? ?? 20m;
     var paraBirimi = ViewData["ParaBirimi"] as string ?? "TL";
+    var ondalikBasamak = ViewData["OndalikBasamak"] as int? ?? 2;
 }
 
 <div class="table-card" data-fatura-kalemleri data-koleksiyon="@koleksiyon" data-fiyat="@fiyatTipi" data-ondalik="@ondalik"
-     data-varsayilan-kdv="@varsayilanKdv.ToString(inv)" data-para-birimi="@paraBirimi">
+     data-varsayilan-kdv="@varsayilanKdv.ToString(inv)" data-para-birimi="@paraBirimi" data-ondalik-basamak="@ondalikBasamak">
     <div class="card-header">Fatura kalemleri</div>
 
     <div class="table-wrapper">
@@ -69,7 +70,7 @@
             <td>
                 <input type="text" inputmode="decimal" class="form-control text-end" data-alan="KdvOrani" placeholder="@varsayilanKdv.ToString("0.##")" autocomplete="off" />
             </td>
-            <td class="satir-tutar">0,00</td>
+            <td class="satir-tutar">@Html.Tutar(0)</td>
             <td>
                 <button type="button" class="btn btn-sm btn-ghost" data-kalem-sil title="Satırı sil" aria-label="Satırı sil">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /><path d="M10 11v6" /><path d="M14 11v6" /></svg>
@@ -88,15 +89,15 @@
         <div class="toplamlar">
             <div class="toplamlar-satir">
                 <span>Ara toplam (KDV hariç)</span>
-                <span data-toplam="ara">0,00 @paraBirimi</span>
+                <span data-toplam="ara">@Html.Tutar(0) @paraBirimi</span>
             </div>
             <div class="toplamlar-satir">
                 <span>KDV toplamı</span>
-                <span data-toplam="kdv">0,00 @paraBirimi</span>
+                <span data-toplam="kdv">@Html.Tutar(0) @paraBirimi</span>
             </div>
             <div class="toplamlar-satir genel">
                 <span>Genel toplam</span>
-                <span data-toplam="genel">0,00 @paraBirimi</span>
+                <span data-toplam="genel">@Html.Tutar(0) @paraBirimi</span>
             </div>
         </div>
     </div>

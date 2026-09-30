@@ -34,15 +34,15 @@
     </div>
     <div class="stat">
         <div class="stat-label">Ara toplam</div>
-        <div class="stat-value">@Model.Sum(f => f.AraToplam).ToString("N2")</div>
+        <div class="stat-value">@Html.Tutar(Model.Sum(f => f.AraToplam))</div>
     </div>
     <div class="stat">
         <div class="stat-label">KDV toplamı</div>
-        <div class="stat-value">@Model.Sum(f => f.KdvToplam).ToString("N2")</div>
+        <div class="stat-value">@Html.Tutar(Model.Sum(f => f.KdvToplam))</div>
     </div>
     <div class="stat">
         <div class="stat-label">Genel toplam (@ViewData["ParaBirimi"])</div>
-        <div class="stat-value">@Model.Sum(f => f.GenelToplam).ToString("N2")</div>
+        <div class="stat-value">@Html.Tutar(Model.Sum(f => f.GenelToplam))</div>
     </div>
 </div>
 
@@ -97,9 +97,9 @@
                             <td>@f.Tarih.ToString("dd.MM.yyyy")</td>
                             <td class="cell-strong">@f.Cari?.Unvan</td>
                             <td class="cell-muted">@f.SatisElemani?.AdSoyad</td>
-                            <td class="cell-number">@f.AraToplam.ToString("N2")</td>
-                            <td class="cell-number cell-muted">@f.KdvToplam.ToString("N2")</td>
-                            <td class="cell-number cell-strong">@f.GenelToplam.ToString("N2")</td>
+                            <td class="cell-number">@Html.Tutar(f.AraToplam)</td>
+                            <td class="cell-number cell-muted">@Html.Tutar(f.KdvToplam)</td>
+                            <td class="cell-number cell-strong">@Html.Tutar(f.GenelToplam)</td>
                             <td>
                                 <div class="row-actions">
                                     <a asp-action="Detay" asp-route-id="@f.Id" class="btn btn-sm btn-ghost">Detay</a>

@@ -6,7 +6,8 @@
 //                  data-fiyat="satis" | "alis"             → stok seçilince hangi fiyat gelsin
 //                  data-ondalik=","                        → sunucu kültürünün ondalık ayırıcısı
 //                  data-varsayilan-kdv="20"                → yeni satırda öntanımlı KDV (parametre)
-//                  data-para-birimi="TL">                  → toplamların yanında gösterilen birim (parametre)
+//                  data-para-birimi="TL"                   → toplamların yanında gösterilen birim (parametre)
+//                  data-ondalik-basamak="2">               → tutarların yuvarlandığı basamak (parametre)
 //
 // Model binding indeksleri 0'dan başlayıp kesintisiz olmalıdır
 // (SatisFaturaSatirlari[0].StokId, [1].StokId ...). Satır silinince
@@ -22,12 +23,13 @@
     const ondalik = kok.dataset.ondalik || ',';
     const varsayilanKdv = parseFloat(kok.dataset.varsayilanKdv);
     const paraBirimi = kok.dataset.paraBirimi || 'TL';
+    const tutarBasamagi = Number.isInteger(parseInt(kok.dataset.ondalikBasamak, 10)) ? parseInt(kok.dataset.ondalikBasamak, 10) : 2;
 
     const govde = kok.querySelector('[data-kalem-govde]');
     const sablon = kok.querySelector('template[data-kalem-sablon]');
     const uyari = kok.querySelector('[data-kalem-uyari]');
     const form = kok.closest('form');
-    const paraBicimi = new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const paraBicimi = new Intl.NumberFormat('tr-TR', { minimumFractionDigits: tutarBasamagi, maximumFractionDigits: tutarBasamagi });
 
     // ----- Sayı yardımcıları -----
     // Hem "1.250,50" hem "1250.50" hem "12,5" yazımını kabul eder
@@ -47,6 +49,12 @@
     }
 
     const yuvarla = (n) => Math.round((n + Number.EPSILON) * 100) / 100;
+
+    // Satır tutarı ve KDV sunucudaki gibi "Ondalık Basamak" parametresine göre yuvarlanır.
+    const tutarYuvarla = (n) => {
+        const kat = Math.pow(10, tutarBasamagi);
+        return Math.round((n + Number.EPSILON) * kat) / kat;
+    };
 
     // Sunucunun beklediği biçim: "12,50" (tr-TR)
     function sunucuBicimi(n, sabitBasamak) {
@@ -123,8 +131,8 @@
             const fiyat = sayi(alan(tr, 'BirimFiyat').value) || 0;
             const oran = sayi(alan(tr, 'KdvOrani').value) || 0;
 
-            const tutar = yuvarla(miktar * fiyat);
-            const kdv = yuvarla(tutar * oran / 100);
+            const tutar = tutarYuvarla(miktar * fiyat);
+            const kdv = tutarYuvarla(tutar * oran / 100);
 
             tr.querySelector('.satir-tutar').textContent = paraBicimi.format(tutar);
             ara += tutar;

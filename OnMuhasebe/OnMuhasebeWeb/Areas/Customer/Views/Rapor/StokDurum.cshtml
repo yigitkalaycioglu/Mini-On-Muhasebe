@@ -32,7 +32,7 @@
     </div>
     <div class="stat">
         <div class="stat-label">Stok değeri (alış, @ViewData["ParaBirimi"])</div>
-        <div class="stat-value">@Model.ToplamDeger.ToString("N2")</div>
+        <div class="stat-value">@Html.Tutar(Model.ToplamDeger)</div>
     </div>
 </div>
 
@@ -84,14 +84,14 @@
                             else if (x.Seviye == "kritik") { <span class="badge-soft badge-warning">Kritik</span> }
                             else { <span class="badge-soft badge-success">Yeterli</span> }
                         </td>
-                        <td class="cell-number">@x.Deger.ToString("N2")</td>
+                        <td class="cell-number">@Html.Tutar(x.Deger)</td>
                     </tr>
                 }
             </tbody>
             <tfoot>
                 <tr>
                     <td colspan="8">Toplam stok değeri</td>
-                    <td class="cell-number">@Model.ToplamDeger.ToString("N2")</td>
+                    <td class="cell-number">@Html.Tutar(Model.ToplamDeger)</td>
                 </tr>
             </tfoot>
         </table>

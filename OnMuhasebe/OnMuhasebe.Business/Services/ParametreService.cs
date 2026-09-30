@@ -53,6 +53,9 @@ namespace OnMuhasebe.Business.Services
         // Belge numarası kolonları nvarchar(20)
         private const int BelgeNoUzunlugu = 20;
 
+        // Tutar kolonları decimal(18,2); daha fazla basamak saklanamaz.
+        private const int EnFazlaOndalikBasamak = 2;
+
         private static readonly Regex SiraDeseni = new(@"\{(0+)\}");
 
         public async Task<List<Parametre>> GetAllParametrelerAsync()
@@ -134,9 +137,9 @@ namespace OnMuhasebe.Business.Services
             }
             else if (kod == Sabitler.ParamOndalikBasamak)
             {
-                if (!int.TryParse(deger, out var basamak) || basamak < 0 || basamak > 4)
+                if (!int.TryParse(deger, out var basamak) || basamak < 0 || basamak > EnFazlaOndalikBasamak)
                 {
-                    throw new InvalidOperationException("Ondalık basamak 0 ile 4 arasında bir tam sayı olmalıdır.");
+                    throw new InvalidOperationException($"Ondalık basamak 0 ile {EnFazlaOndalikBasamak} arasında bir tam sayı olmalıdır (tutarlar 2 basamakla saklanır).");
                 }
             }
             else if (FormatParametreleri.Contains(kod))
@@ -188,6 +191,12 @@ namespace OnMuhasebe.Business.Services
             var deger = await GetDegerAsync(parametreKodu);
             if (SayiyaCevir(deger, out var sayi)) return sayi;
             return SayiyaCevir(Varsayilan(parametreKodu), out var varsayilan) ? varsayilan : 0;
+        }
+
+        public async Task<int> GetOndalikBasamakAsync()
+        {
+            // Veritabanında elle geçersiz bir değer yazılmış olsa da 0-2 aralığında kalır.
+            return Math.Clamp((int)await GetSayiAsync(Sabitler.ParamOndalikBasamak), 0, EnFazlaOndalikBasamak);
         }
 
         // Hem "20.5" hem "20,5" kabul edilir.

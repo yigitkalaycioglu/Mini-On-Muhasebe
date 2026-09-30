@@ -97,7 +97,7 @@
                         <td class="cell-number">@k.Miktar.ToString("N2") <span class="cell-muted">@k.StokKarti?.Birim</span></td>
                         <td class="cell-number">@k.BirimFiyat.ToString("N2")</td>
                         <td class="cell-number cell-muted">%@k.KdvOrani.ToString("0.##")</td>
-                        <td class="cell-number cell-strong">@k.SatirTutari.ToString("N2")</td>
+                        <td class="cell-number cell-strong">@Html.Tutar(k.SatirTutari)</td>
                     </tr>
                 }
             </tbody>
@@ -107,15 +107,15 @@
         <div class="toplamlar">
             <div class="toplamlar-satir">
                 <span>Ara toplam (KDV hariç)</span>
-                <span>@Model.AraToplam.ToString("N2") @ViewData["ParaBirimi"]</span>
+                <span>@Html.Tutar(Model.AraToplam) @ViewData["ParaBirimi"]</span>
             </div>
             <div class="toplamlar-satir">
                 <span>KDV toplamı</span>
-                <span>@Model.KdvToplam.ToString("N2") @ViewData["ParaBirimi"]</span>
+                <span>@Html.Tutar(Model.KdvToplam) @ViewData["ParaBirimi"]</span>
             </div>
             <div class="toplamlar-satir genel">
                 <span>Genel toplam</span>
-                <span>@Model.GenelToplam.ToString("N2") @ViewData["ParaBirimi"]</span>
+                <span>@Html.Tutar(Model.GenelToplam) @ViewData["ParaBirimi"]</span>
             </div>
         </div>
     </div>

@@ -69,9 +69,9 @@
                                 @if (!x.Eleman.Aktif) { <span class="badge-status badge-passive ms-1">Pasif</span> }
                             </td>
                             <td class="cell-number">@x.FaturaSayisi</td>
-                            <td class="cell-number">@x.AraToplam.ToString("N2")</td>
-                            <td class="cell-number cell-muted">@x.KdvToplam.ToString("N2")</td>
-                            <td class="cell-number cell-strong">@x.GenelToplam.ToString("N2")</td>
+                            <td class="cell-number">@Html.Tutar(x.AraToplam)</td>
+                            <td class="cell-number cell-muted">@Html.Tutar(x.KdvToplam)</td>
+                            <td class="cell-number cell-strong">@Html.Tutar(x.GenelToplam)</td>
                             <td>
                                 <div class="d-flex align-items-center gap-2">
                                     <div class="oran-bar flex-grow-1"><span style="width: @pay.ToString("0.#", System.Globalization.CultureInfo.InvariantCulture)%;"></span></div>
@@ -85,9 +85,9 @@
                     <tr>
                         <td>Toplam</td>
                         <td class="cell-number">@Model.ToplamFaturaSayisi</td>
-                        <td class="cell-number">@Model.ToplamAra.ToString("N2")</td>
-                        <td class="cell-number">@Model.ToplamKdv.ToString("N2")</td>
-                        <td class="cell-number">@Model.ToplamGenel.ToString("N2")</td>
+                        <td class="cell-number">@Html.Tutar(Model.ToplamAra)</td>
+                        <td class="cell-number">@Html.Tutar(Model.ToplamKdv)</td>
+                        <td class="cell-number">@Html.Tutar(Model.ToplamGenel)</td>
                         <td></td>
                     </tr>
                 </tfoot>

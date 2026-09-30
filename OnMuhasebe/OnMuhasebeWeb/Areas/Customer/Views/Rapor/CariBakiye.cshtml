@@ -26,15 +26,15 @@
 <div class="stat-grid">
     <div class="stat">
         <div class="stat-label">Alacağımız (borçlu cariler)</div>
-        <div class="stat-value">@alacagimiz.ToString("N2")</div>
+        <div class="stat-value">@Html.Tutar(alacagimiz)</div>
     </div>
     <div class="stat">
         <div class="stat-label">Borcumuz (alacaklı cariler)</div>
-        <div class="stat-value">@borcumuz.ToString("N2")</div>
+        <div class="stat-value">@Html.Tutar(borcumuz)</div>
     </div>
     <div class="stat">
         <div class="stat-label">Net (@ViewData["ParaBirimi"])</div>
-        <div class="stat-value">@Model.Net.ToString("N2")</div>
+        <div class="stat-value">@Html.Tutar(Model.Net)</div>
     </div>
 </div>
 
@@ -86,10 +86,10 @@
                             <a asp-controller="Cari" asp-action="Ekstre" asp-route-id="@x.Cari.Id" class="cell-strong">@x.Cari.Unvan</a>
                         </td>
                         <td><span class="badge-soft">@x.TipAdi</span></td>
-                        <td class="cell-number">@x.Borc.ToString("N2")</td>
-                        <td class="cell-number">@x.Alacak.ToString("N2")</td>
+                        <td class="cell-number">@Html.Tutar(x.Borc)</td>
+                        <td class="cell-number">@Html.Tutar(x.Alacak)</td>
                         <td class="cell-number cell-strong">
-                            @Math.Abs(x.Bakiye).ToString("N2")
+                            @Html.Tutar(Math.Abs(x.Bakiye))
                             @if (x.Bakiye > 0) { <span class="bakiye-etiket">(B)</span> }
                             else if (x.Bakiye < 0) { <span class="bakiye-etiket">(A)</span> }
                         </td>
@@ -99,9 +99,9 @@
             <tfoot>
                 <tr>
                     <td colspan="3">Genel toplam</td>
-                    <td class="cell-number">@Model.ToplamBorc.ToString("N2")</td>
-                    <td class="cell-number">@Model.ToplamAlacak.ToString("N2")</td>
-                    <td class="cell-number">@Model.Net.ToString("N2")</td>
+                    <td class="cell-number">@Html.Tutar(Model.ToplamBorc)</td>
+                    <td class="cell-number">@Html.Tutar(Model.ToplamAlacak)</td>
+                    <td class="cell-number">@Html.Tutar(Model.Net)</td>
                 </tr>
             </tfoot>
         </table>

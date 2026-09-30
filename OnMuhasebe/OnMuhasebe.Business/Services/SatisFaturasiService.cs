@@ -87,14 +87,15 @@ namespace OnMuhasebe.Business.Services
                 }
             }
 
-            // Tutarlar "Ondalık Basamak" parametresine göre yuvarlanır.
-            var basamak = (int)await _parametreService.GetSayiAsync(Sabitler.ParamOndalikBasamak);
+            // Tutarlar "Ondalık Basamak" parametresine göre ticari usulde (yarım yukarı) yuvarlanır;
+            // Math.Round varsayılanı bankacı yuvarlamasıdır (0,365 → 0,36) ve ekrandaki hesapla uyuşmaz.
+            var basamak = await _parametreService.GetOndalikBasamakAsync();
 
             foreach (var kalem in satisFaturasi.SatisFaturaSatirlari)
             {
-                kalem.SatirTutari = Math.Round(kalem.Miktar * kalem.BirimFiyat, basamak);
+                kalem.SatirTutari = Math.Round(kalem.Miktar * kalem.BirimFiyat, basamak, MidpointRounding.AwayFromZero);
                 satisFaturasi.AraToplam += kalem.SatirTutari;
-                satisFaturasi.KdvToplam += Math.Round(kalem.SatirTutari * kalem.KdvOrani / 100, basamak);
+                satisFaturasi.KdvToplam += Math.Round(kalem.SatirTutari * kalem.KdvOrani / 100, basamak, MidpointRounding.AwayFromZero);
 
                 var stokHareket = new StokHareket
                 {

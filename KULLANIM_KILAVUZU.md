@@ -85,7 +85,7 @@ düğmesiyle firma başlığı eklenmiş olarak yazdırılabilir.
 | Firma unvanı, vergi dairesi / no | Menü altında ve yazdırılan sayfaların başlığında görünür |
 | Varsayılan KDV oranı | Yeni stok kartında ve yeni fatura satırında öntanımlı gelir |
 | Para birimi | Tutarların yanında gösterilen birim |
-| Ondalık basamak | Fatura ve tahsilat tutarlarının yuvarlanacağı basamak sayısı |
+| Ondalık basamak | Tutarların kaç basamakla hesaplanıp gösterileceği (0–2). Miktarlar ve birim fiyatlar etkilenmez |
 | Negatif stok kontrolü | Açıkken stok yetersizse satış faturası ve sayım eksiği kaydedilmez |
 | Kritik stok uyarısı | Açıkken panelde ve stok listesinde kritik seviye uyarısı gösterilir |
 | Belge no formatları | `SAT-{yyyy}-{0000}` gibi: `{yyyy}` yıl, `{0000}` sıra numarası. Her belge türünün formatı farklı olmalıdır |

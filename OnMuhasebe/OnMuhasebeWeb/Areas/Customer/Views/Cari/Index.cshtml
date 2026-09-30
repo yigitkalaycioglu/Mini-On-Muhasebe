@@ -70,7 +70,7 @@
                             <td><span class="badge-soft">@satir.TipAdi</span></td>
                             <td class="cell-muted">@c.Telefon</td>
                             <td class="cell-number cell-strong">
-                                @Math.Abs(bakiye).ToString("N2")
+                                @Html.Tutar(Math.Abs(bakiye))
                                 @if (bakiye > 0) { <span class="bakiye-etiket" title="Borçlu">(B)</span> }
                                 else if (bakiye < 0) { <span class="bakiye-etiket" title="Alacaklı">(A)</span> }
                             </td>

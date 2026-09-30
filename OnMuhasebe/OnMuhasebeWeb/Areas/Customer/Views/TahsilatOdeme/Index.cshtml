@@ -33,15 +33,15 @@
 <div class="stat-grid">
     <div class="stat">
         <div class="stat-label">Toplam tahsilat</div>
-        <div class="stat-value tutar-alacak">@toplamTahsilat.ToString("N2")</div>
+        <div class="stat-value tutar-alacak">@Html.Tutar(toplamTahsilat)</div>
     </div>
     <div class="stat">
         <div class="stat-label">Toplam ödeme</div>
-        <div class="stat-value tutar-borc">@toplamOdeme.ToString("N2")</div>
+        <div class="stat-value tutar-borc">@Html.Tutar(toplamOdeme)</div>
     </div>
     <div class="stat">
         <div class="stat-label">Net (@ViewData["ParaBirimi"])</div>
-        <div class="stat-value">@Model.Net.ToString("N2")</div>
+        <div class="stat-value">@Html.Tutar(Model.Net)</div>
     </div>
 </div>
 
@@ -110,7 +110,7 @@
                             </td>
                             <td class="cell-muted">@h.OdemeTuru</td>
                             <td class="cell-number cell-strong @(tahsilat ? "tutar-alacak" : "tutar-borc")">
-                                @satir.Tutar.ToString("N2")
+                                @Html.Tutar(satir.Tutar)
                             </td>
                             <td class="cell-muted">@h.Aciklama</td>
                             <td class="cell-muted">@h.Kullanici?.AdSoyad</td>

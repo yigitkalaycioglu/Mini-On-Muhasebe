@@ -17,7 +17,7 @@ Ekranların kullanımı için: [Kısa Kullanım Kılavuzu](KULLANIM_KILAVUZU.md)
 ## Teknolojiler
 
 - .NET 10 / ASP.NET Core MVC (Areas: `Customer`)
-- Entity Framework Core 10 — Code First, 4 migration
+- Entity Framework Core 10 — Code First, 5 migration (kolon tipleri dökümanın 7. bölümüyle birebir)
 - SQL Server (`localhost\MSSQLSERVER01`, veritabanı: `OnMuhasebe`)
 - Cookie Authentication + rol bazlı yetkilendirme (PBKDF2 parola özeti)
 - Bootstrap 5
@@ -39,10 +39,11 @@ Controller doğrudan `DbContext` kullanmaz, her zaman servis interface'i üzerin
 
 ```bash
 # 1. Veritabanını oluştur
-sqlcmd -S "localhost\MSSQLSERVER01" -i OnMuhasebe/Database/create_database.sql
+# (-f i:65001: Türkçe karakterlerin bozulmaması için dosyayı UTF-8 okur)
+sqlcmd -S "localhost\MSSQLSERVER01" -E -f i:65001 -i OnMuhasebe/Database/create_database.sql
 
 # 2. Örnek veriyi yükle (opsiyonel)
-sqlcmd -S "localhost\MSSQLSERVER01" -d OnMuhasebe -i OnMuhasebe/Database/seed_data.sql
+sqlcmd -S "localhost\MSSQLSERVER01" -E -f i:65001 -i OnMuhasebe/Database/seed_data.sql
 
 # 3. Çalıştır
 cd OnMuhasebe/OnMuhasebeWeb
@@ -235,6 +236,25 @@ ifadesi alt sorgu içinde kullanılarak formül tek yerde kaldı:
 ```
 
 Tek kaydın düzenleme ekranında (hareket sayısı az) `Include` ile yükleme korundu.
+
+## 11. Veritabanı kolon tipleri dökümandan farklıydı
+
+**Sorun:** Proje dökümanı tekrar baştan sona kontrol edilince, tablo ve kolon adları doğru
+olsa da 18 kolonun tipinin 7. bölümdeki tablodan farklı olduğu görüldü. Tarih alanları `date`
+yerine `datetime2`, KDV oranları `decimal(5,2)` yerine `decimal(18,2)`, belge numarası ve
+hareket tipi gibi alanlar `nvarchar(20)` yerine `nvarchar(max)`/`nvarchar(450)` olmuştu.
+
+**Sebep:** EF Core, tipi belirtilmeyen alanlara kendi varsayılanını verir: `DateTime` →
+`datetime2`, `decimal` → `decimal(18,2)`, uzunluğu verilmemiş `string` → `nvarchar(max)`
+(indeksli olanlar `nvarchar(450)`). Formdan girilen alanlarda `[StringLength]` olduğu için
+sorun yoktu; sunucunun atadığı alanlar (belge no, hareket tipi, şifre özeti) açıkta kalmıştı.
+
+**Çözüm:** `ApplicationDbContext` içinde tipler dökümandaki tabloya göre tanımlandı
+(`HasColumnType("date")`, `HasPrecision(5, 2)`, `HasMaxLength(20)`...) ve yeni bir migration
+eklendi. Aynı migration'da cari, stok, satış elemanı ve kullanıcıdan belgelere giden ilişkiler
+`Cascade` yerine `Restrict` yapıldı: artık bir ana kayıt veritabanından silinerek faturaları
+ve hareketleri, yani muhasebe geçmişi, kaybolamaz (fatura → kalemler ilişkisi `Cascade` kaldı).
+Şema, dökümandaki 11 tablo / 86 kolon / 13 ilişki ile alan alan karşılaştırılarak doğrulandı.
 
 ---
 

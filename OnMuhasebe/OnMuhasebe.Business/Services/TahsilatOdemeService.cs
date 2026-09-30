@@ -48,8 +48,8 @@ namespace OnMuhasebe.Business.Services
             }
 
             // Tutar "Ondalık Basamak" parametresine göre yuvarlanır.
-            var basamak = (int)await _parametreService.GetSayiAsync(Sabitler.ParamOndalikBasamak);
-            tutar = Math.Round(tutar, basamak);
+            var basamak = await _parametreService.GetOndalikBasamakAsync();
+            tutar = Math.Round(tutar, basamak, MidpointRounding.AwayFromZero);
             if (tutar <= 0)
             {
                 throw new InvalidOperationException("Tutar sıfırdan büyük olmalıdır.");

@@ -46,7 +46,7 @@ else
         </div>
         <div class="stat">
             <div class="stat-label">Tamamlama maliyeti (@ViewData["ParaBirimi"])</div>
-            <div class="stat-value">@Model.ToplamMaliyet.ToString("N2")</div>
+            <div class="stat-value">@Html.Tutar(Model.ToplamMaliyet)</div>
         </div>
     </div>
 
@@ -77,14 +77,14 @@ else
                             <td class="cell-number">@x.Stok.KritikStok.ToString("N2")</td>
                             <td class="cell-number cell-strong">@x.Eksik.ToString("N2")</td>
                             <td class="cell-number cell-muted">@x.Stok.AlisFiyati.ToString("N2")</td>
-                            <td class="cell-number">@x.Maliyet.ToString("N2")</td>
+                            <td class="cell-number">@Html.Tutar(x.Maliyet)</td>
                         </tr>
                     }
                 </tbody>
                 <tfoot>
                     <tr>
                         <td colspan="6">Toplam tamamlama maliyeti</td>
-                        <td class="cell-number">@Model.ToplamMaliyet.ToString("N2")</td>
+                        <td class="cell-number">@Html.Tutar(Model.ToplamMaliyet)</td>
                     </tr>
                 </tfoot>
             </table>

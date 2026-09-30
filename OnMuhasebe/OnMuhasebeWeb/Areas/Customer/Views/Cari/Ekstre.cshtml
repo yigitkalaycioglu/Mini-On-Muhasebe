@@ -22,7 +22,7 @@
     Microsoft.AspNetCore.Html.IHtmlContent BakiyeYaz(decimal tutar)
     {
         var etiket = tutar > 0 ? " <span class=\"bakiye-etiket\">(B)</span>" : tutar < 0 ? " <span class=\"bakiye-etiket\">(A)</span>" : "";
-        return new Microsoft.AspNetCore.Html.HtmlString(Math.Abs(tutar).ToString("N2") + etiket);
+        return new Microsoft.AspNetCore.Html.HtmlString(Html.Tutar(Math.Abs(tutar)) + etiket);
     }
 }
 
@@ -88,11 +88,11 @@ else
         </div>
         <div class="stat">
             <div class="stat-label">Dönem borç</div>
-            <div class="stat-value">@toplamBorc.ToString("N2")</div>
+            <div class="stat-value">@Html.Tutar(toplamBorc)</div>
         </div>
         <div class="stat">
             <div class="stat-label">Dönem alacak</div>
-            <div class="stat-value">@toplamAlacak.ToString("N2")</div>
+            <div class="stat-value">@Html.Tutar(toplamAlacak)</div>
         </div>
         <div class="stat">
             <div class="stat-label">Güncel bakiye</div>
@@ -139,8 +139,8 @@ else
                                 }
                             </td>
                             <td class="cell-muted">@h.Aciklama</td>
-                            <td class="cell-number">@(h.Borc != 0 ? h.Borc.ToString("N2") : "")</td>
-                            <td class="cell-number">@(h.Alacak != 0 ? h.Alacak.ToString("N2") : "")</td>
+                            <td class="cell-number">@(h.Borc != 0 ? Html.Tutar(h.Borc) : "")</td>
+                            <td class="cell-number">@(h.Alacak != 0 ? Html.Tutar(h.Alacak) : "")</td>
                             <td class="cell-number cell-strong">@BakiyeYaz(satir.YuruyenBakiye)</td>
                         </tr>
                     }
@@ -155,8 +155,8 @@ else
                 <tfoot>
                     <tr>
                         <td colspan="4">Dönem toplamı</td>
-                        <td class="cell-number">@toplamBorc.ToString("N2")</td>
-                        <td class="cell-number">@toplamAlacak.ToString("N2")</td>
+                        <td class="cell-number">@Html.Tutar(toplamBorc)</td>
+                        <td class="cell-number">@Html.Tutar(toplamAlacak)</td>
                         <td class="cell-number">@BakiyeYaz(sonBakiye)</td>
                     </tr>
                 </tfoot>

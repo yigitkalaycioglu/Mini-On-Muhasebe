@@ -12,6 +12,9 @@ namespace OnMuhasebe.Business.Services.IServices
         Task<bool> AcikMiAsync(string parametreKodu);
         Task<decimal> GetSayiAsync(string parametreKodu);
 
+        // Tutarların yuvarlanacağı ve gösterileceği basamak (0-2; kolonlar decimal(18,2)).
+        Task<int> GetOndalikBasamakAsync();
+
         /// <summary>
         /// Formatı parametreden okuyup ("SAT-{yyyy}-{0000}" gibi) sıradaki belge numarasını üretir.
         /// mevcutNolar: aynı türdeki belgelerin kayıtlı numaraları; sorgu olarak verilir, veritabanında süzülür.

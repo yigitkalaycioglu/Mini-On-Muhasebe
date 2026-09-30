@@ -1060,3 +1060,452 @@ END;
 COMMIT;
 GO
 
+BEGIN TRANSACTION;
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260930123631_DokumanKolonTipleriVeSilmeKurallari'
+)
+BEGIN
+    ALTER TABLE [AlisFaturalari] DROP CONSTRAINT [FK_AlisFaturalari_Cariler_CariId];
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260930123631_DokumanKolonTipleriVeSilmeKurallari'
+)
+BEGIN
+    ALTER TABLE [AlisFaturalari] DROP CONSTRAINT [FK_AlisFaturalari_Kullanicilar_KullaniciId];
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260930123631_DokumanKolonTipleriVeSilmeKurallari'
+)
+BEGIN
+    ALTER TABLE [AlisFaturaSatirlari] DROP CONSTRAINT [FK_AlisFaturaSatirlari_StokKartlari_StokId];
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260930123631_DokumanKolonTipleriVeSilmeKurallari'
+)
+BEGIN
+    ALTER TABLE [CariHareketler] DROP CONSTRAINT [FK_CariHareketler_Cariler_CariId];
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260930123631_DokumanKolonTipleriVeSilmeKurallari'
+)
+BEGIN
+    ALTER TABLE [CariHareketler] DROP CONSTRAINT [FK_CariHareketler_Kullanicilar_KullaniciId];
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260930123631_DokumanKolonTipleriVeSilmeKurallari'
+)
+BEGIN
+    ALTER TABLE [SatisFaturalari] DROP CONSTRAINT [FK_SatisFaturalari_Cariler_CariId];
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260930123631_DokumanKolonTipleriVeSilmeKurallari'
+)
+BEGIN
+    ALTER TABLE [SatisFaturalari] DROP CONSTRAINT [FK_SatisFaturalari_Kullanicilar_KullaniciId];
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260930123631_DokumanKolonTipleriVeSilmeKurallari'
+)
+BEGIN
+    ALTER TABLE [SatisFaturalari] DROP CONSTRAINT [FK_SatisFaturalari_SatisElemanlari_SatisElemaniId];
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260930123631_DokumanKolonTipleriVeSilmeKurallari'
+)
+BEGIN
+    ALTER TABLE [SatisFaturaSatirlari] DROP CONSTRAINT [FK_SatisFaturaSatirlari_StokKartlari_StokId];
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260930123631_DokumanKolonTipleriVeSilmeKurallari'
+)
+BEGIN
+    ALTER TABLE [StokHareketler] DROP CONSTRAINT [FK_StokHareketler_Kullanicilar_KullaniciId];
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260930123631_DokumanKolonTipleriVeSilmeKurallari'
+)
+BEGIN
+    ALTER TABLE [StokHareketler] DROP CONSTRAINT [FK_StokHareketler_StokKartlari_StokId];
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260930123631_DokumanKolonTipleriVeSilmeKurallari'
+)
+BEGIN
+    DECLARE @var30 nvarchar(max);
+    SELECT @var30 = QUOTENAME([d].[name])
+    FROM [sys].[default_constraints] [d]
+    INNER JOIN [sys].[columns] [c] ON [d].[parent_column_id] = [c].[column_id] AND [d].[parent_object_id] = [c].[object_id]
+    WHERE ([d].[parent_object_id] = OBJECT_ID(N'[StokKartlari]') AND [c].[name] = N'KdvOrani');
+    IF @var30 IS NOT NULL EXEC(N'ALTER TABLE [StokKartlari] DROP CONSTRAINT ' + @var30 + ';');
+    ALTER TABLE [StokKartlari] ALTER COLUMN [KdvOrani] decimal(5,2) NOT NULL;
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260930123631_DokumanKolonTipleriVeSilmeKurallari'
+)
+BEGIN
+    DECLARE @var31 nvarchar(max);
+    SELECT @var31 = QUOTENAME([d].[name])
+    FROM [sys].[default_constraints] [d]
+    INNER JOIN [sys].[columns] [c] ON [d].[parent_column_id] = [c].[column_id] AND [d].[parent_object_id] = [c].[object_id]
+    WHERE ([d].[parent_object_id] = OBJECT_ID(N'[StokHareketler]') AND [c].[name] = N'Yon');
+    IF @var31 IS NOT NULL EXEC(N'ALTER TABLE [StokHareketler] DROP CONSTRAINT ' + @var31 + ';');
+    ALTER TABLE [StokHareketler] ALTER COLUMN [Yon] nvarchar(10) NOT NULL;
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260930123631_DokumanKolonTipleriVeSilmeKurallari'
+)
+BEGIN
+    DECLARE @var32 nvarchar(max);
+    SELECT @var32 = QUOTENAME([d].[name])
+    FROM [sys].[default_constraints] [d]
+    INNER JOIN [sys].[columns] [c] ON [d].[parent_column_id] = [c].[column_id] AND [d].[parent_object_id] = [c].[object_id]
+    WHERE ([d].[parent_object_id] = OBJECT_ID(N'[StokHareketler]') AND [c].[name] = N'Tarih');
+    IF @var32 IS NOT NULL EXEC(N'ALTER TABLE [StokHareketler] DROP CONSTRAINT ' + @var32 + ';');
+    ALTER TABLE [StokHareketler] ALTER COLUMN [Tarih] date NOT NULL;
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260930123631_DokumanKolonTipleriVeSilmeKurallari'
+)
+BEGIN
+    DECLARE @var33 nvarchar(max);
+    SELECT @var33 = QUOTENAME([d].[name])
+    FROM [sys].[default_constraints] [d]
+    INNER JOIN [sys].[columns] [c] ON [d].[parent_column_id] = [c].[column_id] AND [d].[parent_object_id] = [c].[object_id]
+    WHERE ([d].[parent_object_id] = OBJECT_ID(N'[StokHareketler]') AND [c].[name] = N'HareketTipi');
+    IF @var33 IS NOT NULL EXEC(N'ALTER TABLE [StokHareketler] DROP CONSTRAINT ' + @var33 + ';');
+    ALTER TABLE [StokHareketler] ALTER COLUMN [HareketTipi] nvarchar(20) NOT NULL;
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260930123631_DokumanKolonTipleriVeSilmeKurallari'
+)
+BEGIN
+    DROP INDEX [IX_StokHareketler_BelgeNo] ON [StokHareketler];
+    DECLARE @var34 nvarchar(max);
+    SELECT @var34 = QUOTENAME([d].[name])
+    FROM [sys].[default_constraints] [d]
+    INNER JOIN [sys].[columns] [c] ON [d].[parent_column_id] = [c].[column_id] AND [d].[parent_object_id] = [c].[object_id]
+    WHERE ([d].[parent_object_id] = OBJECT_ID(N'[StokHareketler]') AND [c].[name] = N'BelgeNo');
+    IF @var34 IS NOT NULL EXEC(N'ALTER TABLE [StokHareketler] DROP CONSTRAINT ' + @var34 + ';');
+    ALTER TABLE [StokHareketler] ALTER COLUMN [BelgeNo] nvarchar(20) NULL;
+    CREATE INDEX [IX_StokHareketler_BelgeNo] ON [StokHareketler] ([BelgeNo]);
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260930123631_DokumanKolonTipleriVeSilmeKurallari'
+)
+BEGIN
+    DECLARE @var35 nvarchar(max);
+    SELECT @var35 = QUOTENAME([d].[name])
+    FROM [sys].[default_constraints] [d]
+    INNER JOIN [sys].[columns] [c] ON [d].[parent_column_id] = [c].[column_id] AND [d].[parent_object_id] = [c].[object_id]
+    WHERE ([d].[parent_object_id] = OBJECT_ID(N'[SatisFaturaSatirlari]') AND [c].[name] = N'KdvOrani');
+    IF @var35 IS NOT NULL EXEC(N'ALTER TABLE [SatisFaturaSatirlari] DROP CONSTRAINT ' + @var35 + ';');
+    ALTER TABLE [SatisFaturaSatirlari] ALTER COLUMN [KdvOrani] decimal(5,2) NOT NULL;
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260930123631_DokumanKolonTipleriVeSilmeKurallari'
+)
+BEGIN
+    DECLARE @var36 nvarchar(max);
+    SELECT @var36 = QUOTENAME([d].[name])
+    FROM [sys].[default_constraints] [d]
+    INNER JOIN [sys].[columns] [c] ON [d].[parent_column_id] = [c].[column_id] AND [d].[parent_object_id] = [c].[object_id]
+    WHERE ([d].[parent_object_id] = OBJECT_ID(N'[SatisFaturalari]') AND [c].[name] = N'Tarih');
+    IF @var36 IS NOT NULL EXEC(N'ALTER TABLE [SatisFaturalari] DROP CONSTRAINT ' + @var36 + ';');
+    ALTER TABLE [SatisFaturalari] ALTER COLUMN [Tarih] date NOT NULL;
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260930123631_DokumanKolonTipleriVeSilmeKurallari'
+)
+BEGIN
+    DECLARE @var37 nvarchar(max);
+    SELECT @var37 = QUOTENAME([d].[name])
+    FROM [sys].[default_constraints] [d]
+    INNER JOIN [sys].[columns] [c] ON [d].[parent_column_id] = [c].[column_id] AND [d].[parent_object_id] = [c].[object_id]
+    WHERE ([d].[parent_object_id] = OBJECT_ID(N'[SatisFaturalari]') AND [c].[name] = N'OlusturmaTarihi');
+    IF @var37 IS NOT NULL EXEC(N'ALTER TABLE [SatisFaturalari] DROP CONSTRAINT ' + @var37 + ';');
+    ALTER TABLE [SatisFaturalari] ALTER COLUMN [OlusturmaTarihi] datetime NOT NULL;
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260930123631_DokumanKolonTipleriVeSilmeKurallari'
+)
+BEGIN
+    DROP INDEX [IX_SatisFaturalari_FaturaNo] ON [SatisFaturalari];
+    DECLARE @var38 nvarchar(max);
+    SELECT @var38 = QUOTENAME([d].[name])
+    FROM [sys].[default_constraints] [d]
+    INNER JOIN [sys].[columns] [c] ON [d].[parent_column_id] = [c].[column_id] AND [d].[parent_object_id] = [c].[object_id]
+    WHERE ([d].[parent_object_id] = OBJECT_ID(N'[SatisFaturalari]') AND [c].[name] = N'FaturaNo');
+    IF @var38 IS NOT NULL EXEC(N'ALTER TABLE [SatisFaturalari] DROP CONSTRAINT ' + @var38 + ';');
+    ALTER TABLE [SatisFaturalari] ALTER COLUMN [FaturaNo] nvarchar(20) NOT NULL;
+    CREATE UNIQUE INDEX [IX_SatisFaturalari_FaturaNo] ON [SatisFaturalari] ([FaturaNo]);
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260930123631_DokumanKolonTipleriVeSilmeKurallari'
+)
+BEGIN
+    DECLARE @var39 nvarchar(max);
+    SELECT @var39 = QUOTENAME([d].[name])
+    FROM [sys].[default_constraints] [d]
+    INNER JOIN [sys].[columns] [c] ON [d].[parent_column_id] = [c].[column_id] AND [d].[parent_object_id] = [c].[object_id]
+    WHERE ([d].[parent_object_id] = OBJECT_ID(N'[Kullanicilar]') AND [c].[name] = N'SifreHash');
+    IF @var39 IS NOT NULL EXEC(N'ALTER TABLE [Kullanicilar] DROP CONSTRAINT ' + @var39 + ';');
+    ALTER TABLE [Kullanicilar] ALTER COLUMN [SifreHash] nvarchar(256) NOT NULL;
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260930123631_DokumanKolonTipleriVeSilmeKurallari'
+)
+BEGIN
+    DECLARE @var40 nvarchar(max);
+    SELECT @var40 = QUOTENAME([d].[name])
+    FROM [sys].[default_constraints] [d]
+    INNER JOIN [sys].[columns] [c] ON [d].[parent_column_id] = [c].[column_id] AND [d].[parent_object_id] = [c].[object_id]
+    WHERE ([d].[parent_object_id] = OBJECT_ID(N'[Kullanicilar]') AND [c].[name] = N'Rol');
+    IF @var40 IS NOT NULL EXEC(N'ALTER TABLE [Kullanicilar] DROP CONSTRAINT ' + @var40 + ';');
+    ALTER TABLE [Kullanicilar] ALTER COLUMN [Rol] nvarchar(20) NOT NULL;
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260930123631_DokumanKolonTipleriVeSilmeKurallari'
+)
+BEGIN
+    DECLARE @var41 nvarchar(max);
+    SELECT @var41 = QUOTENAME([d].[name])
+    FROM [sys].[default_constraints] [d]
+    INNER JOIN [sys].[columns] [c] ON [d].[parent_column_id] = [c].[column_id] AND [d].[parent_object_id] = [c].[object_id]
+    WHERE ([d].[parent_object_id] = OBJECT_ID(N'[CariHareketler]') AND [c].[name] = N'Tarih');
+    IF @var41 IS NOT NULL EXEC(N'ALTER TABLE [CariHareketler] DROP CONSTRAINT ' + @var41 + ';');
+    ALTER TABLE [CariHareketler] ALTER COLUMN [Tarih] date NOT NULL;
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260930123631_DokumanKolonTipleriVeSilmeKurallari'
+)
+BEGIN
+    DECLARE @var42 nvarchar(max);
+    SELECT @var42 = QUOTENAME([d].[name])
+    FROM [sys].[default_constraints] [d]
+    INNER JOIN [sys].[columns] [c] ON [d].[parent_column_id] = [c].[column_id] AND [d].[parent_object_id] = [c].[object_id]
+    WHERE ([d].[parent_object_id] = OBJECT_ID(N'[CariHareketler]') AND [c].[name] = N'IslemTipi');
+    IF @var42 IS NOT NULL EXEC(N'ALTER TABLE [CariHareketler] DROP CONSTRAINT ' + @var42 + ';');
+    ALTER TABLE [CariHareketler] ALTER COLUMN [IslemTipi] nvarchar(20) NOT NULL;
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260930123631_DokumanKolonTipleriVeSilmeKurallari'
+)
+BEGIN
+    DROP INDEX [IX_CariHareketler_BelgeNo] ON [CariHareketler];
+    DECLARE @var43 nvarchar(max);
+    SELECT @var43 = QUOTENAME([d].[name])
+    FROM [sys].[default_constraints] [d]
+    INNER JOIN [sys].[columns] [c] ON [d].[parent_column_id] = [c].[column_id] AND [d].[parent_object_id] = [c].[object_id]
+    WHERE ([d].[parent_object_id] = OBJECT_ID(N'[CariHareketler]') AND [c].[name] = N'BelgeNo');
+    IF @var43 IS NOT NULL EXEC(N'ALTER TABLE [CariHareketler] DROP CONSTRAINT ' + @var43 + ';');
+    ALTER TABLE [CariHareketler] ALTER COLUMN [BelgeNo] nvarchar(20) NULL;
+    CREATE INDEX [IX_CariHareketler_BelgeNo] ON [CariHareketler] ([BelgeNo]);
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260930123631_DokumanKolonTipleriVeSilmeKurallari'
+)
+BEGIN
+    DECLARE @var44 nvarchar(max);
+    SELECT @var44 = QUOTENAME([d].[name])
+    FROM [sys].[default_constraints] [d]
+    INNER JOIN [sys].[columns] [c] ON [d].[parent_column_id] = [c].[column_id] AND [d].[parent_object_id] = [c].[object_id]
+    WHERE ([d].[parent_object_id] = OBJECT_ID(N'[AlisFaturaSatirlari]') AND [c].[name] = N'KdvOrani');
+    IF @var44 IS NOT NULL EXEC(N'ALTER TABLE [AlisFaturaSatirlari] DROP CONSTRAINT ' + @var44 + ';');
+    ALTER TABLE [AlisFaturaSatirlari] ALTER COLUMN [KdvOrani] decimal(5,2) NOT NULL;
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260930123631_DokumanKolonTipleriVeSilmeKurallari'
+)
+BEGIN
+    DECLARE @var45 nvarchar(max);
+    SELECT @var45 = QUOTENAME([d].[name])
+    FROM [sys].[default_constraints] [d]
+    INNER JOIN [sys].[columns] [c] ON [d].[parent_column_id] = [c].[column_id] AND [d].[parent_object_id] = [c].[object_id]
+    WHERE ([d].[parent_object_id] = OBJECT_ID(N'[AlisFaturalari]') AND [c].[name] = N'Tarih');
+    IF @var45 IS NOT NULL EXEC(N'ALTER TABLE [AlisFaturalari] DROP CONSTRAINT ' + @var45 + ';');
+    ALTER TABLE [AlisFaturalari] ALTER COLUMN [Tarih] date NOT NULL;
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260930123631_DokumanKolonTipleriVeSilmeKurallari'
+)
+BEGIN
+    DECLARE @var46 nvarchar(max);
+    SELECT @var46 = QUOTENAME([d].[name])
+    FROM [sys].[default_constraints] [d]
+    INNER JOIN [sys].[columns] [c] ON [d].[parent_column_id] = [c].[column_id] AND [d].[parent_object_id] = [c].[object_id]
+    WHERE ([d].[parent_object_id] = OBJECT_ID(N'[AlisFaturalari]') AND [c].[name] = N'OlusturmaTarihi');
+    IF @var46 IS NOT NULL EXEC(N'ALTER TABLE [AlisFaturalari] DROP CONSTRAINT ' + @var46 + ';');
+    ALTER TABLE [AlisFaturalari] ALTER COLUMN [OlusturmaTarihi] datetime NOT NULL;
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260930123631_DokumanKolonTipleriVeSilmeKurallari'
+)
+BEGIN
+    DROP INDEX [IX_AlisFaturalari_FaturaNo] ON [AlisFaturalari];
+    DECLARE @var47 nvarchar(max);
+    SELECT @var47 = QUOTENAME([d].[name])
+    FROM [sys].[default_constraints] [d]
+    INNER JOIN [sys].[columns] [c] ON [d].[parent_column_id] = [c].[column_id] AND [d].[parent_object_id] = [c].[object_id]
+    WHERE ([d].[parent_object_id] = OBJECT_ID(N'[AlisFaturalari]') AND [c].[name] = N'FaturaNo');
+    IF @var47 IS NOT NULL EXEC(N'ALTER TABLE [AlisFaturalari] DROP CONSTRAINT ' + @var47 + ';');
+    ALTER TABLE [AlisFaturalari] ALTER COLUMN [FaturaNo] nvarchar(20) NOT NULL;
+    CREATE UNIQUE INDEX [IX_AlisFaturalari_FaturaNo] ON [AlisFaturalari] ([FaturaNo]);
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260930123631_DokumanKolonTipleriVeSilmeKurallari'
+)
+BEGIN
+    ALTER TABLE [AlisFaturalari] ADD CONSTRAINT [FK_AlisFaturalari_Cariler_CariId] FOREIGN KEY ([CariId]) REFERENCES [Cariler] ([Id]) ON DELETE NO ACTION;
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260930123631_DokumanKolonTipleriVeSilmeKurallari'
+)
+BEGIN
+    ALTER TABLE [AlisFaturalari] ADD CONSTRAINT [FK_AlisFaturalari_Kullanicilar_KullaniciId] FOREIGN KEY ([KullaniciId]) REFERENCES [Kullanicilar] ([Id]) ON DELETE NO ACTION;
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260930123631_DokumanKolonTipleriVeSilmeKurallari'
+)
+BEGIN
+    ALTER TABLE [AlisFaturaSatirlari] ADD CONSTRAINT [FK_AlisFaturaSatirlari_StokKartlari_StokId] FOREIGN KEY ([StokId]) REFERENCES [StokKartlari] ([Id]) ON DELETE NO ACTION;
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260930123631_DokumanKolonTipleriVeSilmeKurallari'
+)
+BEGIN
+    ALTER TABLE [CariHareketler] ADD CONSTRAINT [FK_CariHareketler_Cariler_CariId] FOREIGN KEY ([CariId]) REFERENCES [Cariler] ([Id]) ON DELETE NO ACTION;
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260930123631_DokumanKolonTipleriVeSilmeKurallari'
+)
+BEGIN
+    ALTER TABLE [CariHareketler] ADD CONSTRAINT [FK_CariHareketler_Kullanicilar_KullaniciId] FOREIGN KEY ([KullaniciId]) REFERENCES [Kullanicilar] ([Id]) ON DELETE NO ACTION;
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260930123631_DokumanKolonTipleriVeSilmeKurallari'
+)
+BEGIN
+    ALTER TABLE [SatisFaturalari] ADD CONSTRAINT [FK_SatisFaturalari_Cariler_CariId] FOREIGN KEY ([CariId]) REFERENCES [Cariler] ([Id]) ON DELETE NO ACTION;
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260930123631_DokumanKolonTipleriVeSilmeKurallari'
+)
+BEGIN
+    ALTER TABLE [SatisFaturalari] ADD CONSTRAINT [FK_SatisFaturalari_Kullanicilar_KullaniciId] FOREIGN KEY ([KullaniciId]) REFERENCES [Kullanicilar] ([Id]) ON DELETE NO ACTION;
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260930123631_DokumanKolonTipleriVeSilmeKurallari'
+)
+BEGIN
+    ALTER TABLE [SatisFaturalari] ADD CONSTRAINT [FK_SatisFaturalari_SatisElemanlari_SatisElemaniId] FOREIGN KEY ([SatisElemaniId]) REFERENCES [SatisElemanlari] ([Id]) ON DELETE NO ACTION;
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260930123631_DokumanKolonTipleriVeSilmeKurallari'
+)
+BEGIN
+    ALTER TABLE [SatisFaturaSatirlari] ADD CONSTRAINT [FK_SatisFaturaSatirlari_StokKartlari_StokId] FOREIGN KEY ([StokId]) REFERENCES [StokKartlari] ([Id]) ON DELETE NO ACTION;
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260930123631_DokumanKolonTipleriVeSilmeKurallari'
+)
+BEGIN
+    ALTER TABLE [StokHareketler] ADD CONSTRAINT [FK_StokHareketler_Kullanicilar_KullaniciId] FOREIGN KEY ([KullaniciId]) REFERENCES [Kullanicilar] ([Id]) ON DELETE NO ACTION;
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260930123631_DokumanKolonTipleriVeSilmeKurallari'
+)
+BEGIN
+    ALTER TABLE [StokHareketler] ADD CONSTRAINT [FK_StokHareketler_StokKartlari_StokId] FOREIGN KEY ([StokId]) REFERENCES [StokKartlari] ([Id]) ON DELETE NO ACTION;
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260930123631_DokumanKolonTipleriVeSilmeKurallari'
+)
+BEGIN
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20260930123631_DokumanKolonTipleriVeSilmeKurallari', N'10.0.12');
+END;
+
+COMMIT;
+GO
+
