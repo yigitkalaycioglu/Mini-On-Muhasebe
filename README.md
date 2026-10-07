@@ -2,7 +2,7 @@
 
 ASP.NET Core MVC ile yazılmış, stok ve cari takibi yapan mini ön muhasebe uygulaması.
 Staj projesi olarak, proje dökümanındaki haftalık plana göre geliştirildi.
-Ekranların kullanımı için: [Kısa Kullanım Kılavuzu](KULLANIM_KILAVUZU.md)
+Ekranların kullanımı için: [Kısa Kullanım Kılavuzu](docs/KULLANIM_KILAVUZU.md)
 
 ## Modüller
 
@@ -39,20 +39,19 @@ Controller doğrudan `DbContext` kullanmaz, her zaman servis interface'i üzerin
 
 Gereksinimler: .NET 10 SDK ve SQL Server. Aşağıdaki komutlar `localhost\MSSQLSERVER01`
 adlı örneği kullanır; SQL Server'ınız farklı bir adla kuruluysa (ör. `localhost` ya da
-`.\SQLEXPRESS`) komutlardaki sunucu adını ve `OnMuhasebe/OnMuhasebeWeb/appsettings.json`
+`.\SQLEXPRESS`) komutlardaki sunucu adını ve `src/OnMuhasebe.Web/appsettings.json`
 içindeki `DefaultConnection` bağlantı cümlesini ona göre değiştirin.
 
 ```bash
 # 1. Veritabanını oluştur
 # (-f i:65001: Türkçe karakterlerin bozulmaması için dosyayı UTF-8 okur)
-sqlcmd -S "localhost\MSSQLSERVER01" -E -f i:65001 -i OnMuhasebe/Database/create_database.sql
+sqlcmd -S "localhost\MSSQLSERVER01" -E -f i:65001 -i database/create_database.sql
 
 # 2. Örnek veriyi yükle (opsiyonel)
-sqlcmd -S "localhost\MSSQLSERVER01" -E -f i:65001 -i OnMuhasebe/Database/seed_data.sql
+sqlcmd -S "localhost\MSSQLSERVER01" -E -f i:65001 -i database/seed_data.sql
 
 # 3. Çalıştır → http://localhost:5029
-cd OnMuhasebe/OnMuhasebeWeb
-dotnet run
+dotnet run --project src/OnMuhasebe.Web
 ```
 
 Örnek veriyle gelen kullanıcılar (yalnızca test amaçlı, ikisinin de parolası `123456`):

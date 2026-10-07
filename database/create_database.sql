@@ -13,7 +13,7 @@
 --   sqlcmd -S "localhost\MSSQLSERVER01" -E -f i:65001 -i seed_data.sql
 --
 -- Alternatif (geliştirme ortamında, proje kökünden):
---   dotnet ef database update --project OnMuhasebe.DataAccess --startup-project OnMuhasebeWeb
+--   dotnet ef database update --project src/OnMuhasebe.Infrastructure --startup-project src/OnMuhasebe.Web
 --
 -- Oluşturulan tablolar (11 adet):
 --   Kullanicilar, SatisElemanlari, Cariler, StokKartlari,

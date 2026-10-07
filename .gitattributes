@@ -1,0 +1,20 @@
+# Metin dosyaları depoda LF ile saklanır; çalışma kopyasındaki satır sonu işletim sistemine bırakılır.
+* text=auto
+
+*.cs      text diff=csharp
+*.cshtml  text diff=html
+*.csproj  text
+*.slnx    text
+*.props   text
+*.json    text
+*.md      text diff=markdown
+*.sql     text
+*.sh      text eol=lf
+
+*.docx    binary
+*.ico     binary
+*.png     binary
+*.jpg     binary
+*.webp    binary
+*.woff    binary
+*.woff2   binary

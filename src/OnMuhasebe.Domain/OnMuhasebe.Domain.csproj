@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Entity'ler, sabitler ve iş kuralları. Hiçbir projeye ya da pakete bağımlı değildir. -->
+
+</Project>
