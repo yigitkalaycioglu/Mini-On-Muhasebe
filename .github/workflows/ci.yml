@@ -1,0 +1,90 @@
+# Her push ve pull request'te kod biçimi denetlenir; çözüm derlenir, migration'ların modelle uyumu kontrol edilir,
+# birim testleri ve gerçek bir SQL Server üzerinde entegrasyon testleri çalıştırılır.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+jobs:
+  bicim:
+    name: Kod biçimi
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Paketleri yükle
+        run: dotnet restore OnMuhasebe.slnx
+
+      - name: .editorconfig kurallarını denetle
+        run: dotnet format OnMuhasebe.slnx --verify-no-changes --no-restore
+
+  derle-ve-test:
+    name: Derleme ve testler
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    # Entegrasyon testleri için geçici SQL Server (yereldeki gibi 2025). Parola yalnızca bu iş boyunca yaşayan
+    # konteynere aittir; testler her çalıştırmada kendi veritabanını kurar ve sonunda siler.
+    services:
+      sqlserver:
+        image: mcr.microsoft.com/mssql/server:2025-latest
+        env:
+          ACCEPT_EULA: "Y"
+          MSSQL_SA_PASSWORD: OnMuhasebe_Ci2026
+        ports:
+          - 1433:1433
+        options: >-
+          --health-cmd "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P OnMuhasebe_Ci2026 -C -b -Q 'SELECT 1'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 20
+          --health-start-period 20s
+
+    env:
+      ONMUHASEBE_TEST_SQL: "Server=localhost,1433;User Id=sa;Password=OnMuhasebe_Ci2026;TrustServerCertificate=True"
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Paketleri ve araçları yükle
+        run: |
+          dotnet restore OnMuhasebe.slnx
+          dotnet tool restore
+
+      - name: Derle
+        run: dotnet build OnMuhasebe.slnx --configuration Release --no-restore
+
+      - name: Migration'lar modelle uyumlu mu
+        run: >-
+          dotnet ef migrations has-pending-model-changes
+          --project src/OnMuhasebe.Infrastructure
+          --startup-project src/OnMuhasebe.Web
+          --configuration Release --no-build
+
+      - name: Testleri çalıştır
+        run: dotnet test --solution OnMuhasebe.slnx --configuration Release --no-build
