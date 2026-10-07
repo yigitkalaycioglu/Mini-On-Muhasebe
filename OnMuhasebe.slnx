@@ -5,6 +5,10 @@
     <Project Path="src/OnMuhasebe.Infrastructure/OnMuhasebe.Infrastructure.csproj" />
     <Project Path="src/OnMuhasebe.Web/OnMuhasebe.Web.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/OnMuhasebe.UnitTests/OnMuhasebe.UnitTests.csproj" />
+    <Project Path="tests/OnMuhasebe.IntegrationTests/OnMuhasebe.IntegrationTests.csproj" />
+  </Folder>
   <Folder Name="/Solution Items/">
     <File Path=".editorconfig" />
     <File Path="Directory.Build.props" />
