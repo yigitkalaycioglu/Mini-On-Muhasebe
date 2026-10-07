@@ -31,7 +31,13 @@ namespace OnMuhasebe.IntegrationTests
         private Task<int> StokEkleAsync() =>
             Servis<IStokKartiService, int>(async s => (await s.CreateStokKartiAsync(new StokKartiDto
             {
-                StokKodu = Kod("S"), StokAdi = "Test Ürünü", Birim = "Adet", KdvOrani = 20, AlisFiyati = 10, SatisFiyati = 15, KritikStok = 2
+                StokKodu = Kod("S"),
+                StokAdi = "Test Ürünü",
+                Birim = "Adet",
+                KdvOrani = 20,
+                AlisFiyati = 10,
+                SatisFiyati = 15,
+                KritikStok = 2
             })).Id);
 
         private Task<decimal> MevcutAsync(int stokId) => Servis<IStokKartiService, decimal>(s => s.GetMevcutMiktarAsync(stokId));
@@ -44,13 +50,17 @@ namespace OnMuhasebe.IntegrationTests
         private Task<int> AlisAsync(int tedarikci, int stok, decimal miktar) =>
             Servis<IAlisFaturasiService, int>(async s => (await s.CreateAlisFaturasiAsync(new AlisFaturasiDto
             {
-                CariId = tedarikci, Tarih = DateTime.Today, Kalemler = [new FaturaKalemiDto { StokId = stok, Miktar = miktar, BirimFiyat = 10, KdvOrani = 20 }]
+                CariId = tedarikci,
+                Tarih = DateTime.Today,
+                Kalemler = [new FaturaKalemiDto { StokId = stok, Miktar = miktar, BirimFiyat = 10, KdvOrani = 20 }]
             }, Yonetici)).Id);
 
         private Task<int> SatisAsync(int musteri, int stok, decimal miktar) =>
             Servis<ISatisFaturasiService, int>(async s => (await s.CreateSatisFaturasiAsync(new SatisFaturasiDto
             {
-                CariId = musteri, SatisElemaniId = 1, Tarih = DateTime.Today,
+                CariId = musteri,
+                SatisElemaniId = 1,
+                Tarih = DateTime.Today,
                 Kalemler = [new FaturaKalemiDto { StokId = stok, Miktar = miktar, BirimFiyat = 15, KdvOrani = 20 }]
             }, Yonetici)).Id);
 
@@ -99,7 +109,10 @@ namespace OnMuhasebe.IntegrationTests
 
             var fis = await Servis<IStokHareketService, string>(async s => (await s.CreateSayimFisiAsync(new SayimFisiDto
             {
-                HareketTipi = Sabitler.HareketSayimFazlasi, StokId = stok, Tarih = DateTime.Today, Miktar = 7
+                HareketTipi = Sabitler.HareketSayimFazlasi,
+                StokId = stok,
+                Tarih = DateTime.Today,
+                Miktar = 7
             }, Yonetici)).BelgeNo!);
 
             Assert.StartsWith("SF-", fis);
@@ -116,13 +129,21 @@ namespace OnMuhasebe.IntegrationTests
 
             await Servis<ITahsilatOdemeService, int>(async s => (await s.CreateTahsilatOdemeAsync(new TahsilatOdemeDto
             {
-                IslemTipi = Sabitler.IslemTahsilat, CariId = musteri, Tarih = DateTime.Today, Tutar = 50.005m, OdemeTuru = "Nakit"
+                IslemTipi = Sabitler.IslemTahsilat,
+                CariId = musteri,
+                Tarih = DateTime.Today,
+                Tutar = 50.005m,
+                OdemeTuru = "Nakit"
             }, Yonetici)).Id);
 
             Assert.Equal(-50.01m, await BakiyeAsync(musteri));   // tutar parametredeki 2 basamağa yarım yukarı yuvarlanır
             await Assert.ThrowsAsync<IsKuraliException>(() => Servis<ITahsilatOdemeService, int>(async s => (await s.CreateTahsilatOdemeAsync(new TahsilatOdemeDto
             {
-                IslemTipi = Sabitler.IslemTahsilat, CariId = tedarikci, Tarih = DateTime.Today, Tutar = 10, OdemeTuru = "Nakit"
+                IslemTipi = Sabitler.IslemTahsilat,
+                CariId = tedarikci,
+                Tarih = DateTime.Today,
+                Tutar = 10,
+                OdemeTuru = "Nakit"
             }, Yonetici)).Id));
         }
 

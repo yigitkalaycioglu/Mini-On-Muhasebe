@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using OnMuhasebe.Application.Abstractions;
 using OnMuhasebe.Application.Dtos;
 using OnMuhasebe.Application.Exceptions;

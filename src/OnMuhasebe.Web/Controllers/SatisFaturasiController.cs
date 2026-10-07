@@ -25,7 +25,7 @@ namespace OnMuhasebe.Web.Controllers
             _stokKartiService = stokKartiService;
             _parametreService = parametreService;
         }
-        
+
         public async Task<IActionResult> Index(DateTime? baslangic, DateTime? bitis)
         {
             var satisFaturalari = await _satisFaturasiService.GetAllSatisFaturalariAsync(baslangic, bitis);
