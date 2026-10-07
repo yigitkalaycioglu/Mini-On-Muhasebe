@@ -16,7 +16,7 @@ GO
 -- ------------------------------------------------------------
 -- Kullanicilar
 -- Not: Şifreler örnek/test amaçlıdır; her iki kullanıcının şifresi "123456".
--- Biçim: iterasyon.salt(Base64).hash(Base64) — PBKDF2-SHA256, OnMuhasebe.Utility/SifreYardimcisi.
+-- Biçim: iterasyon.salt(Base64).hash(Base64) — PBKDF2-SHA256, src/OnMuhasebe.Infrastructure/Security/Pbkdf2SifreHashleyici.cs.
 -- Salt her kullanıcı için rastgele üretildiğinden aynı şifre farklı hash verir.
 -- ------------------------------------------------------------
 SET IDENTITY_INSERT Kullanicilar ON;
