@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using OnMuhasebe.Application.Dtos;
 using OnMuhasebe.Application.Exceptions;
 using OnMuhasebe.Application.Services;
 using OnMuhasebe.Domain;
-using OnMuhasebe.Domain.Entities;
 using OnMuhasebe.Web.Extensions;
 using OnMuhasebe.Web.Security;
 
@@ -41,19 +41,9 @@ namespace OnMuhasebe.Web.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [ActionName("Create")]
-        public async Task<IActionResult> CreatePost(AlisFaturasi alisFaturasi)
+        public async Task<IActionResult> CreatePost(AlisFaturasiDto fatura)
         {
-            // Formdan gelmeyen alanlar nullable yüzünden örtük [Required] sayılır; doğrulamadan çıkar.
-            ModelState.Remove(nameof(AlisFaturasi.FaturaNo));
-            ModelState.Remove(nameof(AlisFaturasi.Cari));
-            ModelState.Remove(nameof(AlisFaturasi.Kullanici));
-            for (var i = 0; i < alisFaturasi.AlisFaturaSatirlari.Count; i++)
-            {
-                ModelState.Remove($"AlisFaturaSatirlari[{i}].AlisFaturasi");
-                ModelState.Remove($"AlisFaturaSatirlari[{i}].StokKarti");
-            }
-
-            if (alisFaturasi.AlisFaturaSatirlari.Count == 0)
+            if (fatura.Kalemler.Count == 0)
             {
                 ModelState.AddModelError(string.Empty, "Faturaya en az bir kalem ekleyin.");
             }
@@ -62,8 +52,8 @@ namespace OnMuhasebe.Web.Controllers
             {
                 try
                 {
-                    await _alisFaturasiService.CreateAlisFaturasiAsync(alisFaturasi, User.KullaniciId());
-                    this.BasariMesaji($"{alisFaturasi.FaturaNo} numaralı fatura kaydedildi.");
+                    var kayit = await _alisFaturasiService.CreateAlisFaturasiAsync(fatura, User.KullaniciId());
+                    this.BasariMesaji($"{kayit.FaturaNo} numaralı fatura kaydedildi.");
                     return RedirectToAction("Index");
                 }
                 catch (IsKuraliException ex)
@@ -73,7 +63,7 @@ namespace OnMuhasebe.Web.Controllers
             }
 
             await DropdownListeleriniDoldurAsync();
-            return View("Create", alisFaturasi);
+            return View("Create", fatura);
         }
 
         public async Task<IActionResult> Detay(int id)

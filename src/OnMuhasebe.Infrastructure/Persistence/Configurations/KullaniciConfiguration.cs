@@ -10,6 +10,8 @@ namespace OnMuhasebe.Infrastructure.Persistence.Configurations
         {
             builder.HasIndex(k => k.KullaniciAdi).IsUnique();
 
+            builder.Property(k => k.KullaniciAdi).HasMaxLength(50);
+            builder.Property(k => k.AdSoyad).HasMaxLength(100);
             builder.Property(k => k.SifreHash).HasMaxLength(256);
             builder.Property(k => k.Rol).HasMaxLength(20);
         }

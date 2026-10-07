@@ -1,10 +1,10 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
+using OnMuhasebe.Application.Dtos;
 using OnMuhasebe.Application.Exceptions;
 using OnMuhasebe.Application.Services;
 using OnMuhasebe.Domain;
-using OnMuhasebe.Domain.Entities;
 using OnMuhasebe.Web.Extensions;
 using OnMuhasebe.Web.Security;
 using OnMuhasebe.Web.ViewModels;
@@ -53,24 +53,20 @@ namespace OnMuhasebe.Web.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [ActionName("Create")]
-        public async Task<IActionResult> CreatePost(CariHareket cariHareket, decimal? tutar)
+        public async Task<IActionResult> CreatePost(TahsilatOdemeDto islem)
         {
-            // Borc/Alacak tutardan, BelgeNo ve KullaniciId serviste atanır; navigation'lar formdan gelmez.
-            ModelState.Remove(nameof(CariHareket.Cari));
-            ModelState.Remove(nameof(CariHareket.Kullanici));
-
             // Boş tutar hata üretmeden null gelir; geçersiz metin ise zaten bağlama hatası olarak işaretlidir.
-            if (tutar == null && ModelState.GetFieldValidationState("tutar") != ModelValidationState.Invalid)
+            if (islem.Tutar == null && ModelState.GetFieldValidationState(nameof(TahsilatOdemeDto.Tutar)) != ModelValidationState.Invalid)
             {
-                ModelState.AddModelError("tutar", "Tutar zorunludur.");
+                ModelState.AddModelError(nameof(TahsilatOdemeDto.Tutar), "Tutar zorunludur.");
             }
 
             if (ModelState.IsValid)
             {
                 try
                 {
-                    await _tahsilatOdemeService.CreateTahsilatOdemeAsync(cariHareket, tutar!.Value, User.KullaniciId());
-                    this.BasariMesaji($"{cariHareket.BelgeNo} numaralı {_cariService.IslemTipiAdi(cariHareket.IslemTipi).ToLower()} kaydedildi.");
+                    var kayit = await _tahsilatOdemeService.CreateTahsilatOdemeAsync(islem, User.KullaniciId());
+                    this.BasariMesaji($"{kayit.BelgeNo} numaralı {_cariService.IslemTipiAdi(kayit.IslemTipi).ToLower()} kaydedildi.");
                     return RedirectToAction("Index");
                 }
                 catch (IsKuraliException ex)
@@ -80,7 +76,7 @@ namespace OnMuhasebe.Web.Controllers
             }
 
             await CarileriDoldurAsync();
-            return View("Create", cariHareket);
+            return View("Create", islem);
         }
 
         [HttpPost]

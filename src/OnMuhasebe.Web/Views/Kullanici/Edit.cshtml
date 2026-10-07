@@ -1,19 +1,19 @@
 @*
     KULLANICI KARTI (DÜZENLE) — KullaniciController  [Yalnızca Yönetici]
-    GET  Edit(int id)                               → View(kullanici)
-    POST Edit(int id, Kullanici kullanici)          → SifreHash'e dokunulmamalı (ModelState.Remove("SifreHash"))
+    GET  Edit(int id)                               → View(KullaniciDuzenleViewModel)
+    POST Edit(int id, KullaniciDto kullanici)       → şifreye dokunulmaz
     POST SifreSifirla(int id, string yeniSifre, string yeniSifreTekrar) → RedirectToAction("Edit", new { id })
     İsteğe bağlı: TempData["Mesaj"] ile başarı mesajı gösterilir.
 *@
-@model Kullanici
+@model KullaniciDuzenleViewModel
 @{
     ViewData["Title"] = "Kullanıcı Kartı";
 }
 
 <div class="page-header">
     <div>
-        <h1>@Model.AdSoyad</h1>
-        <p class="page-subtitle"><span class="text-mono">@Model.KullaniciAdi</span> · @Model.Rol</p>
+        <h1>@Model.Form.AdSoyad</h1>
+        <p class="page-subtitle"><span class="text-mono">@Model.Form.KullaniciAdi</span> · @Model.Form.Rol</p>
     </div>
     <a asp-action="Index" class="btn btn-outline-secondary">← Listeye dön</a>
 </div>
@@ -27,9 +27,7 @@
             <div class="card-body">
                 <form asp-action="Edit" asp-route-id="@Model.Id" method="post">
                     <div asp-validation-summary="ModelOnly"></div>
-                    <input type="hidden" asp-for="Id" />
-
-                    <partial name="_Form" model="Model" />
+                    <partial name="_Form" model="Model.Form" />
 
                     <div class="form-actions">
                         <button type="submit" class="btn btn-primary">Değişiklikleri Kaydet</button>

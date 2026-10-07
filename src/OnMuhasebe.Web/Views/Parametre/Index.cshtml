@@ -1,13 +1,13 @@
 @*
     PARAMETRELER — ParametreController  [Yalnızca Yönetici]
-    GET  Index() → View(List<Parametre>)
-    POST Index(List<Parametre> parametreler)
+    GET  Index() → View(List<ParametreDegeriDto>)
+    POST Index(List<ParametreDegeriDto> parametreler)
          Form alanları: [i].Id, [i].ParametreKodu, [i].ParametreDegeri
          → Id'ye göre kayıtları bulup yalnızca ParametreDegeri güncellenmeli
-         → RedirectToAction("Index") + TempData["Mesaj"] = "Parametreler kaydedildi."
+         → RedirectToAction("Index") + "Parametreler kaydedildi." mesajı
     Bilinen parametre kodları ekranda gruplanır; tanınmayan kodlar "Diğer" bölümünde düz metin olarak çıkar.
 *@
-@model List<Parametre>
+@model List<ParametreDegeriDto>
 @{
     ViewData["Title"] = "Parametreler";
 

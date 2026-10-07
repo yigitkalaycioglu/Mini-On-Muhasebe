@@ -1,3 +1,4 @@
+using OnMuhasebe.Application.Dtos;
 using OnMuhasebe.Application.Models;
 using OnMuhasebe.Domain.Entities;
 
@@ -9,7 +10,7 @@ namespace OnMuhasebe.Application.Services
         Task<SatisFaturasi?> GetSatisFaturasiByIdAsync(int id);
         Task<List<SatisElemaniCirosu>> GetSatisElemaniCirolariAsync(DateTime? baslangic, DateTime? bitis);
         Task<string> GetYeniFaturaNoAsync();
-        Task<SatisFaturasi> CreateSatisFaturasiAsync(SatisFaturasi satisFaturasi, int kullaniciId);
+        Task<SatisFaturasi> CreateSatisFaturasiAsync(SatisFaturasiDto fatura, int kullaniciId);
         Task DeleteSatisFaturasiAsync(int id);
     }
 }

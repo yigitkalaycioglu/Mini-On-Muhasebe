@@ -1,9 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using OnMuhasebe.Application.Dtos;
 using OnMuhasebe.Application.Exceptions;
 using OnMuhasebe.Application.Services;
-using OnMuhasebe.Domain.Entities;
 using OnMuhasebe.Web.Extensions;
+using OnMuhasebe.Web.ViewModels;
 
 namespace OnMuhasebe.Web.Controllers
 {
@@ -34,13 +35,13 @@ namespace OnMuhasebe.Web.Controllers
             {
                 return NotFound();
             }
-            return View(satisElemani);
+            return View(new SatisElemaniDuzenleViewModel { Id = id, Form = SatisElemaniDto.FromEntity(satisElemani) });
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         [ActionName("Create")]
-        public async Task<IActionResult> CreatePost(SatisElemani satisElemani)
+        public async Task<IActionResult> CreatePost(SatisElemaniDto satisElemani)
         {
             if (ModelState.IsValid)
             {
@@ -80,15 +81,13 @@ namespace OnMuhasebe.Web.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [ActionName("Edit")]
-        public async Task<IActionResult> EditPost(int id, SatisElemani satisElemani)
+        public async Task<IActionResult> EditPost(int id, SatisElemaniDto satisElemani)
         {
             if (ModelState.IsValid)
             {
-                satisElemani.Id = id;
-
                 try
                 {
-                    await _satisElemaniService.UpdateSatisElemaniAsync(satisElemani);
+                    await _satisElemaniService.UpdateSatisElemaniAsync(id, satisElemani);
                     this.BasariMesaji("Satış elemanı güncellendi.");
                     return RedirectToAction("Index");
                 }
@@ -98,7 +97,7 @@ namespace OnMuhasebe.Web.Controllers
                 }
             }
 
-            return View("Edit", satisElemani);
+            return View("Edit", new SatisElemaniDuzenleViewModel { Id = id, Form = satisElemani });
         }
     }
 }

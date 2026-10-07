@@ -24,6 +24,8 @@ namespace OnMuhasebe.Infrastructure.Persistence.Configurations
             builder.Property(h => h.Tarih).HasColumnType("date");
             builder.Property(h => h.IslemTipi).HasMaxLength(20);
             builder.Property(h => h.BelgeNo).HasMaxLength(20);
+            builder.Property(h => h.OdemeTuru).HasMaxLength(20);
+            builder.Property(h => h.Aciklama).HasMaxLength(250);
         }
     }
 }

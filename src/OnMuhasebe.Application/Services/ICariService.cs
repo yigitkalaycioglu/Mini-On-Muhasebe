@@ -1,3 +1,4 @@
+using OnMuhasebe.Application.Dtos;
 using OnMuhasebe.Application.Models;
 using OnMuhasebe.Domain.Entities;
 
@@ -10,8 +11,8 @@ namespace OnMuhasebe.Application.Services
         Task<Cari?> GetCariEkstresiAsync(int id, DateTime? baslangic, DateTime? bitis);
         Task<decimal> GetDevirBakiyeAsync(int cariId, DateTime? baslangic);
         Task<List<CariBakiyesi>> GetCariBakiyeleriAsync();
-        Task<Cari> CreateCariAsync(Cari cari);
-        Task UpdateCariAsync(Cari cari);
+        Task<Cari> CreateCariAsync(CariDto cari);
+        Task UpdateCariAsync(int id, CariDto cari);
         // true: kayıt silindi, false: bağlı kayıtları olduğu için pasife alındı.
         Task<bool> DeleteCariAsync(int id);
 

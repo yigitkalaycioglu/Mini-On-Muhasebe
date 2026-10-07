@@ -1,3 +1,4 @@
+using OnMuhasebe.Application.Dtos;
 using OnMuhasebe.Domain.Entities;
 
 namespace OnMuhasebe.Web.ViewModels
@@ -102,5 +103,13 @@ namespace OnMuhasebe.Web.ViewModels
         public decimal ToplamAra { get; set; }
         public decimal ToplamKdv { get; set; }
         public decimal ToplamGenel { get; set; }
+    }
+
+    /// <summary>Stok kartı düzenleme ekranı: form alanları, kayıtlı karttan hesaplanan stok özeti.</summary>
+    public class StokKartiDuzenleViewModel
+    {
+        public int Id { get; set; }
+        public StokKartiDto Form { get; set; } = new();
+        public StokOzetiViewModel Ozet { get; set; } = new();
     }
 }

@@ -28,7 +28,9 @@ namespace OnMuhasebe.Web.Extensions
                 mesajlar.SetNonPropertyAttemptedValueIsInvalidAccessor(deger => $"'{deger}' geçerli bir değer değil.");
                 mesajlar.SetUnknownValueIsInvalidAccessor(alan => $"{alan} için girilen değer geçerli değil.");
                 mesajlar.SetNonPropertyUnknownValueIsInvalidAccessor(() => "Girilen değer geçerli değil.");
-                mesajlar.SetValueMustNotBeNullAccessor(alan => $"{alan} alanı boş bırakılamaz.");
+                // Bu mesajın parametresi alan adı değil girilen (boş) değerdir; mesaj alan adını içeremez,
+                // hata zaten ilgili alanın altında gösterilir.
+                mesajlar.SetValueMustNotBeNullAccessor(_ => "Bu alan boş bırakılamaz.");
                 mesajlar.SetValueMustBeANumberAccessor(alan => $"{alan} alanına sayı girilmelidir.");
                 mesajlar.SetNonPropertyValueMustBeANumberAccessor(() => "Bu alana sayı girilmelidir.");
                 mesajlar.SetMissingBindRequiredValueAccessor(alan => $"{alan} alanı zorunludur.");

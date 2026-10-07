@@ -1,6 +1,7 @@
 using System.Globalization;
 using Microsoft.EntityFrameworkCore;
 using OnMuhasebe.Application.Abstractions;
+using OnMuhasebe.Application.Dtos;
 using OnMuhasebe.Application.Exceptions;
 using OnMuhasebe.Domain;
 using OnMuhasebe.Domain.Entities;
@@ -67,7 +68,7 @@ namespace OnMuhasebe.Application.Services
             return await _context.Parametreler.OrderBy(p => p.Id).ToListAsync();
         }
 
-        public async Task UpdateParametrelerAsync(List<Parametre> parametreler)
+        public async Task UpdateParametrelerAsync(IReadOnlyList<ParametreDegeriDto> parametreler)
         {
             var idler = parametreler.Select(p => p.Id).ToList();
             var kayitlar = await _context.Parametreler

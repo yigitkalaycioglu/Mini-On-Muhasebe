@@ -1,7 +1,7 @@
 @*
     Satış ve Alış faturası ortak kalem tablosu.
     Çağıran view bu partial'dan ÖNCE şunları ViewData'ya koymalıdır:
-      ViewData["KalemKoleksiyonu"] : "SatisFaturaSatirlari" | "AlisFaturaSatirlari"
+      ViewData["KalemKoleksiyonu"] : formdaki kalem listesinin adı ("Kalemler")
       ViewData["KalemFiyatTipi"]   : "satis" | "alis"   (stok seçilince gelecek fiyat)
       ViewData["IlkKalemler"]      : doğrulama hatasında geri dönen kalemler
                                      (new { stokId, miktar, birimFiyat, kdvOrani } listesi)

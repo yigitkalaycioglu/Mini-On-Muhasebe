@@ -4,12 +4,12 @@
          ViewData["Cariler"] : List<TahsilatOdemeCariViewModel>  — tüm aktif cariler ve uygun işlemleri
                                (liste seçilen işleme göre ekranda süzülür:
                                 Tahsilat → Müşteri/Her ikisi, Ödeme → Tedarikçi/Her ikisi)
-    POST Create(CariHareket cariHareket, decimal? tutar)
+    POST Create(TahsilatOdemeDto islem)
          → Tahsilat: Alacak = tutar, Borc = 0   (müşterinin borcu azalır)
          → Ödeme   : Borc = tutar,   Alacak = 0 (tedarikçiye borcumuz azalır)
          → BelgeNo (TAH-/ODE-), KullaniciId serviste atanır
 *@
-@model CariHareket
+@model TahsilatOdemeDto
 @{
     ViewData["Title"] = "Tahsilat / Ödeme Girişi";
 

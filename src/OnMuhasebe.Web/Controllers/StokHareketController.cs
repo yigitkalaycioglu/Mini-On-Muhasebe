@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using OnMuhasebe.Application.Dtos;
 using OnMuhasebe.Application.Exceptions;
 using OnMuhasebe.Application.Services;
 using OnMuhasebe.Domain;
-using OnMuhasebe.Domain.Entities;
 using OnMuhasebe.Web.Extensions;
 using OnMuhasebe.Web.Security;
 using OnMuhasebe.Web.ViewModels;
@@ -67,19 +67,14 @@ namespace OnMuhasebe.Web.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [ActionName("SayimFisi")]
-        public async Task<IActionResult> SayimFisiPost(StokHareket sayimFisi)
+        public async Task<IActionResult> SayimFisiPost(SayimFisiDto sayimFisi)
         {
-            // Yon, BelgeNo ve KullaniciId sunucuda atanır; navigation'lar formdan gelmez.
-            ModelState.Remove(nameof(StokHareket.Yon));
-            ModelState.Remove(nameof(StokHareket.StokKarti));
-            ModelState.Remove(nameof(StokHareket.Kullanici));
-
             if (ModelState.IsValid)
             {
                 try
                 {
-                    await _stokHareketService.CreateSayimFisiAsync(sayimFisi, User.KullaniciId());
-                    this.BasariMesaji($"{sayimFisi.BelgeNo} numaralı {_stokKartiService.HareketTipiAdi(sayimFisi.HareketTipi).ToLower()} fişi kaydedildi.");
+                    var kayit = await _stokHareketService.CreateSayimFisiAsync(sayimFisi, User.KullaniciId());
+                    this.BasariMesaji($"{kayit.BelgeNo} numaralı {_stokKartiService.HareketTipiAdi(kayit.HareketTipi).ToLower()} fişi kaydedildi.");
                     return RedirectToAction("Index");
                 }
                 catch (IsKuraliException ex)

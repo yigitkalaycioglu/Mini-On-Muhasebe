@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using OnMuhasebe.Application.Abstractions;
+using OnMuhasebe.Application.Dtos;
 using OnMuhasebe.Application.Exceptions;
 using OnMuhasebe.Application.Extensions;
 using OnMuhasebe.Domain;
@@ -35,16 +36,12 @@ namespace OnMuhasebe.Application.Services
             return await query.OrderByDescending(h => h.Tarih).ThenByDescending(h => h.Id).ToListAsync();
         }
 
-        public async Task<CariHareket> CreateTahsilatOdemeAsync(CariHareket hareket, decimal tutar, int kullaniciId)
+        public async Task<CariHareket> CreateTahsilatOdemeAsync(TahsilatOdemeDto islem, int kullaniciId)
         {
-            if (hareket == null)
-            {
-                throw new ArgumentNullException(nameof(hareket));
-            }
-            if (kullaniciId <= 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(kullaniciId));
-            }
+            ArgumentNullException.ThrowIfNull(islem);
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(kullaniciId);
+
+            var hareket = islem.ToEntity();
             if (!TahsilatVeyaOdeme(hareket.IslemTipi))
             {
                 throw new IsKuraliException("İşlem Tahsilat veya Ödeme olmalıdır.");
@@ -52,7 +49,7 @@ namespace OnMuhasebe.Application.Services
 
             // Tutar "Ondalık Basamak" parametresine göre yuvarlanır.
             var basamak = await _parametreService.GetOndalikBasamakAsync();
-            tutar = TutarHesabi.Yuvarla(tutar, basamak);
+            var tutar = TutarHesabi.Yuvarla(islem.Tutar ?? 0, basamak);
             if (tutar <= 0)
             {
                 throw new IsKuraliException("Tutar sıfırdan büyük olmalıdır.");
@@ -88,7 +85,6 @@ namespace OnMuhasebe.Application.Services
             hareket.BelgeNo = await _parametreService.YeniBelgeNoFormattanAsync(
                 tahsilat ? Sabitler.TahsilatNoFormati : Sabitler.OdemeNoFormati,
                 _context.CariHareketler.Where(h => h.IslemTipi == tip).Select(h => h.BelgeNo));
-            hareket.Id = 0; // Id veritabanında üretilir
             hareket.KullaniciId = kullaniciId;
 
             _context.CariHareketler.Add(hareket);

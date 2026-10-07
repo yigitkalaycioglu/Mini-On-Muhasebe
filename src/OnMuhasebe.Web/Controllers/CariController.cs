@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using OnMuhasebe.Application.Dtos;
 using OnMuhasebe.Application.Exceptions;
 using OnMuhasebe.Application.Services;
 using OnMuhasebe.Domain.Entities;
@@ -89,14 +90,13 @@ namespace OnMuhasebe.Web.Controllers
                 return NotFound();
             }
 
-            ViewData["Ozet"] = CariOzetiHazirla(cari);
-            return View(cari);
+            return View(DuzenlemeModeli(id, CariDto.FromEntity(cari), cari));
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         [ActionName("Create")]
-        public async Task<IActionResult> CreatePost(Cari cari)
+        public async Task<IActionResult> CreatePost(CariDto cari)
         {
             if (ModelState.IsValid)
             {
@@ -117,15 +117,13 @@ namespace OnMuhasebe.Web.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [ActionName("Edit")]
-        public async Task<IActionResult> EditPost(int id, Cari cari)
+        public async Task<IActionResult> EditPost(int id, CariDto cari)
         {
             if (ModelState.IsValid)
             {
-                cari.Id = id;
-
                 try
                 {
-                    await _cariService.UpdateCariAsync(cari);
+                    await _cariService.UpdateCariAsync(id, cari);
                     this.BasariMesaji("Cari güncellendi.");
                     return RedirectToAction("Index");
                 }
@@ -135,17 +133,26 @@ namespace OnMuhasebe.Web.Controllers
                 }
             }
 
-            // Formdan gelen nesnede hareket listesi boştur; hesap özeti kayıtlı cariden hesaplanır.
+            // Form girilen değerlerle yeniden gösterilir; hesap özeti kayıtlı cariden hesaplanır.
             var kayitli = await _cariService.GetCariByIdAsync(id);
-            ViewData["Ozet"] = kayitli == null ? new CariOzetiViewModel() : CariOzetiHazirla(kayitli);
-            return View("Edit", cari);
+            if (kayitli == null)
+            {
+                return NotFound();
+            }
+            return View("Edit", DuzenlemeModeli(id, cari, kayitli));
         }
 
-        private CariOzetiViewModel CariOzetiHazirla(Cari cari) => new()
+        private CariDuzenleViewModel DuzenlemeModeli(int id, CariDto form, Cari kayitli) => new()
         {
-            ToplamBorc = _cariService.ToplamBorc(cari),
-            ToplamAlacak = _cariService.ToplamAlacak(cari),
-            Bakiye = _cariService.Bakiye(cari)
+            Id = id,
+            Form = form,
+            Ozet = new CariOzetiViewModel
+            {
+                ToplamBorc = _cariService.ToplamBorc(kayitli),
+                ToplamAlacak = _cariService.ToplamAlacak(kayitli),
+                Bakiye = _cariService.Bakiye(kayitli)
+            },
+            HareketSayisi = kayitli.CariHareketleri.Count
         };
 
         [HttpPost]

@@ -1,6 +1,7 @@
 using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using OnMuhasebe.Application.Abstractions;
+using OnMuhasebe.Application.Dtos;
 using OnMuhasebe.Application.Exceptions;
 using OnMuhasebe.Application.Models;
 using OnMuhasebe.Domain;
@@ -110,40 +111,34 @@ namespace OnMuhasebe.Application.Services
                 .FirstOrDefaultAsync(s => s.Id == id);
         }
 
-        public async Task<StokKarti> CreateStokKartiAsync(StokKarti stokKarti)
+        public async Task<StokKarti> CreateStokKartiAsync(StokKartiDto stokKarti)
         {
-            stokKarti.Id = 0; // Id veritabanında üretilir
             if (await _context.StokKartlari.AnyAsync(s => s.StokKodu == stokKarti.StokKodu))
             {
-                throw new IsKuraliException(nameof(StokKarti.StokKodu), "Bu stok kodu zaten kayıtlı.");
+                throw new IsKuraliException(nameof(StokKartiDto.StokKodu), "Bu stok kodu zaten kayıtlı.");
             }
 
-            _context.StokKartlari.Add(stokKarti);
+            var yeni = new StokKarti();
+            stokKarti.ApplyTo(yeni);
+            _context.StokKartlari.Add(yeni);
             await _context.SaveChangesAsync();
-            return stokKarti;
+            return yeni;
         }
 
-        public async Task UpdateStokKartiAsync(StokKarti stokKarti)
+        public async Task UpdateStokKartiAsync(int id, StokKartiDto stokKarti)
         {
-            var existingStokKarti = await _context.StokKartlari.FindAsync(stokKarti.Id);
+            var existingStokKarti = await _context.StokKartlari.FindAsync(id);
             if (existingStokKarti == null)
             {
                 throw new KayitBulunamadiException("Stok kartı bulunamadı.");
             }
 
-            if (await _context.StokKartlari.AnyAsync(s => s.StokKodu == stokKarti.StokKodu && s.Id != stokKarti.Id))
+            if (await _context.StokKartlari.AnyAsync(s => s.StokKodu == stokKarti.StokKodu && s.Id != id))
             {
-                throw new IsKuraliException(nameof(StokKarti.StokKodu), "Bu stok kodu zaten kayıtlı.");
+                throw new IsKuraliException(nameof(StokKartiDto.StokKodu), "Bu stok kodu zaten kayıtlı.");
             }
 
-            existingStokKarti.StokKodu = stokKarti.StokKodu;
-            existingStokKarti.StokAdi = stokKarti.StokAdi;
-            existingStokKarti.Birim = stokKarti.Birim;
-            existingStokKarti.KdvOrani = stokKarti.KdvOrani;
-            existingStokKarti.AlisFiyati = stokKarti.AlisFiyati;
-            existingStokKarti.SatisFiyati = stokKarti.SatisFiyati;
-            existingStokKarti.KritikStok = stokKarti.KritikStok;
-            existingStokKarti.Aktif = stokKarti.Aktif;
+            stokKarti.ApplyTo(existingStokKarti);
             await _context.SaveChangesAsync();
         }
 

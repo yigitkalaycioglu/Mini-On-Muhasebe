@@ -2,7 +2,7 @@
 // Fatura kalem tablosu (Satış ve Alış faturası ortak)
 //
 // Kapsayıcı:  <div data-fatura-kalemleri
-//                  data-koleksiyon="SatisFaturaSatirlari"  → model binding koleksiyon adı
+//                  data-koleksiyon="Kalemler"  → model binding koleksiyon adı
 //                  data-fiyat="satis" | "alis"             → stok seçilince hangi fiyat gelsin
 //                  data-ondalik=","                        → sunucu kültürünün ondalık ayırıcısı
 //                  data-varsayilan-kdv="20"                → yeni satırda öntanımlı KDV (parametre)

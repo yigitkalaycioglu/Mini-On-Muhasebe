@@ -9,6 +9,10 @@ namespace OnMuhasebe.Infrastructure.Persistence.Configurations
         public void Configure(EntityTypeBuilder<Parametre> builder)
         {
             builder.HasIndex(p => p.ParametreKodu).IsUnique();
+
+            builder.Property(p => p.ParametreKodu).HasMaxLength(50);
+            builder.Property(p => p.ParametreDegeri).HasMaxLength(250);
+            builder.Property(p => p.Aciklama).HasMaxLength(250);
         }
     }
 }

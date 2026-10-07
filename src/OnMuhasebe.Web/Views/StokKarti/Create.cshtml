@@ -1,9 +1,9 @@
 @*
     YENİ STOK KARTI — StokKartiController
     GET  Create()                 (isteğe bağlı: ViewData["VarsayilanKdv"] = parametredeki KDV oranı)
-    POST Create(StokKarti stokKarti) → başarılıysa RedirectToAction("Index")
+    POST Create(StokKartiDto stokKarti) → başarılıysa RedirectToAction("Index")
 *@
-@model StokKarti
+@model StokKartiDto
 @{
     ViewData["Title"] = "Yeni Stok Kartı";
 }

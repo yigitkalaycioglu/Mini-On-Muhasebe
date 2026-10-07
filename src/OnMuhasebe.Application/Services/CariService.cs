@@ -1,6 +1,7 @@
 using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using OnMuhasebe.Application.Abstractions;
+using OnMuhasebe.Application.Dtos;
 using OnMuhasebe.Application.Exceptions;
 using OnMuhasebe.Application.Extensions;
 using OnMuhasebe.Application.Models;
@@ -130,17 +131,18 @@ namespace OnMuhasebe.Application.Services
                 .SumAsync(Etki);
         }
 
-        public async Task<Cari> CreateCariAsync(Cari cari)
+        public async Task<Cari> CreateCariAsync(CariDto cari)
         {
-            cari.Id = 0; // Id veritabanında üretilir
             if (await _context.Cariler.AnyAsync(c => c.CariKodu == cari.CariKodu))
             {
-                throw new IsKuraliException(nameof(Cari.CariKodu), "Bu cari kodu zaten kayıtlı.");
+                throw new IsKuraliException(nameof(CariDto.CariKodu), "Bu cari kodu zaten kayıtlı.");
             }
 
-            _context.Cariler.Add(cari);
+            var yeni = new Cari();
+            cari.ApplyTo(yeni);
+            _context.Cariler.Add(yeni);
             await _context.SaveChangesAsync();
-            return cari;
+            return yeni;
         }
 
         public async Task<bool> DeleteCariAsync(int id)
@@ -168,27 +170,20 @@ namespace OnMuhasebe.Application.Services
             return !kayitliIslemVar;
         }
 
-        public async Task UpdateCariAsync(Cari cari)
+        public async Task UpdateCariAsync(int id, CariDto cari)
         {
-            var existingCari = await _context.Cariler.FindAsync(cari.Id);
+            var existingCari = await _context.Cariler.FindAsync(id);
             if (existingCari == null)
             {
                 throw new KayitBulunamadiException("Cari bulunamadı.");
             }
 
-            if (await _context.Cariler.AnyAsync(c => c.CariKodu == cari.CariKodu && c.Id != cari.Id))
+            if (await _context.Cariler.AnyAsync(c => c.CariKodu == cari.CariKodu && c.Id != id))
             {
-                throw new IsKuraliException(nameof(Cari.CariKodu), "Bu cari kodu zaten kayıtlı.");
+                throw new IsKuraliException(nameof(CariDto.CariKodu), "Bu cari kodu zaten kayıtlı.");
             }
 
-            existingCari.CariKodu = cari.CariKodu;
-            existingCari.Unvan = cari.Unvan;
-            existingCari.CariTipi = cari.CariTipi;
-            existingCari.VergiDairesi = cari.VergiDairesi;
-            existingCari.VergiNo = cari.VergiNo;
-            existingCari.Telefon = cari.Telefon;
-            existingCari.Adres = cari.Adres;
-            existingCari.Aktif = cari.Aktif;
+            cari.ApplyTo(existingCari);
             await _context.SaveChangesAsync();
         }
     }

@@ -1,3 +1,4 @@
+using OnMuhasebe.Application.Dtos;
 using OnMuhasebe.Application.Models;
 using OnMuhasebe.Domain.Entities;
 
@@ -7,8 +8,8 @@ namespace OnMuhasebe.Application.Services
     {
         Task<StokKarti?> GetStokKartiByIdAsync(int id);
         Task<List<StokKarti>> GetAllStokKartlariAsync();
-        Task<StokKarti> CreateStokKartiAsync(StokKarti stokKarti);
-        Task UpdateStokKartiAsync(StokKarti stokKarti);
+        Task<StokKarti> CreateStokKartiAsync(StokKartiDto stokKarti);
+        Task UpdateStokKartiAsync(int id, StokKartiDto stokKarti);
         // true: kayıt silindi, false: bağlı kayıtları olduğu için pasife alındı.
         Task<bool> DeleteStokKartiAsync(int id);
         Task<decimal> GetMevcutMiktarAsync(int stokId);

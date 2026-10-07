@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using OnMuhasebe.Application.Dtos;
 using OnMuhasebe.Application.Exceptions;
 using OnMuhasebe.Application.Services;
 using OnMuhasebe.Domain;
-using OnMuhasebe.Domain.Entities;
 using OnMuhasebe.Web.Extensions;
 
 namespace OnMuhasebe.Web.Controllers
@@ -20,13 +20,13 @@ namespace OnMuhasebe.Web.Controllers
         public async Task<IActionResult> Index()
         {
             var parametreler = await _parametreService.GetAllParametrelerAsync();
-            return View(parametreler);
+            return View(parametreler.Select(ParametreDegeriDto.FromEntity).ToList());
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         [ActionName("Index")]
-        public async Task<IActionResult> IndexPost(List<Parametre> parametreler)
+        public async Task<IActionResult> IndexPost(List<ParametreDegeriDto> parametreler)
         {
             if (ModelState.IsValid)
             {

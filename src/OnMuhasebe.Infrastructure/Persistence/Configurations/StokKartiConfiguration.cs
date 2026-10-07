@@ -10,6 +10,9 @@ namespace OnMuhasebe.Infrastructure.Persistence.Configurations
         {
             builder.HasIndex(s => s.StokKodu).IsUnique();
 
+            builder.Property(s => s.StokKodu).HasMaxLength(20);
+            builder.Property(s => s.StokAdi).HasMaxLength(150);
+            builder.Property(s => s.Birim).HasMaxLength(10);
             builder.Property(s => s.KdvOrani).HasPrecision(5, 2);
         }
     }

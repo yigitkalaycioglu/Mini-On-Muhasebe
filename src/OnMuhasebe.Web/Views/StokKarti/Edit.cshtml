@@ -1,13 +1,13 @@
 @*
     STOK KARTI (DÜZENLE) — StokKartiController
-    GET  Edit(int id)                      → View(stokKarti)  (stok özeti için .Include(s => s.StokHareketleri))
-    POST Edit(int id, StokKarti stokKarti) → başarılıysa RedirectToAction("Index")
+    GET  Edit(int id)                         → View(StokKartiDuzenleViewModel)  (form alanları + kayıtlı karttan stok özeti)
+    POST Edit(int id, StokKartiDto stokKarti) → başarılıysa RedirectToAction("Index")
 *@
-@model StokKarti
+@model StokKartiDuzenleViewModel
 @{
     ViewData["Title"] = "Stok Kartı";
 
-    var ozet = ViewData["Ozet"] as StokOzetiViewModel ?? new StokOzetiViewModel();
+    var ozet = Model.Ozet;
     var giris = ozet.ToplamGiris;
     var cikis = ozet.ToplamCikis;
     var mevcut = ozet.Mevcut;
@@ -16,8 +16,8 @@
 
 <div class="page-header">
     <div>
-        <h1>@Model.StokAdi</h1>
-        <p class="page-subtitle"><span class="text-mono">@Model.StokKodu</span> · @Model.Birim</p>
+        <h1>@Model.Form.StokAdi</h1>
+        <p class="page-subtitle"><span class="text-mono">@Model.Form.StokKodu</span> · @Model.Form.Birim</p>
     </div>
     <div class="d-flex gap-2">
         <a asp-controller="StokHareket" asp-action="Index" asp-route-stokId="@Model.Id" class="btn btn-outline-secondary">Hareketler</a>
@@ -31,9 +31,7 @@
             <div class="card-body">
                 <form asp-action="Edit" asp-route-id="@Model.Id" method="post">
                     <div asp-validation-summary="ModelOnly"></div>
-                    <input type="hidden" asp-for="Id" />
-
-                    <partial name="_Form" model="Model" />
+                    <partial name="_Form" model="Model.Form" />
 
                     <div class="form-actions">
                         <button type="submit" class="btn btn-primary">Değişiklikleri Kaydet</button>
@@ -51,22 +49,22 @@
                 <div class="toplamlar" style="max-width: none;">
                     <div class="toplamlar-satir">
                         <span>Toplam giriş</span>
-                        <span>@giris.ToString("N2") @Model.Birim</span>
+                        <span>@giris.ToString("N2") @Model.Form.Birim</span>
                     </div>
                     <div class="toplamlar-satir">
                         <span>Toplam çıkış</span>
-                        <span>@cikis.ToString("N2") @Model.Birim</span>
+                        <span>@cikis.ToString("N2") @Model.Form.Birim</span>
                     </div>
                     <div class="toplamlar-satir genel">
                         <span>Mevcut</span>
-                        <span>@mevcut.ToString("N2") @Model.Birim</span>
+                        <span>@mevcut.ToString("N2") @Model.Form.Birim</span>
                     </div>
                 </div>
                 @if (kritik)
                 {
                     <div class="info-box is-warning mt-3 mb-0">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>
-                        <span>Kritik seviyede (sınır: @Model.KritikStok.ToString("N2"))</span>
+                        <span>Kritik seviyede (sınır: @Model.Form.KritikStok.ToString("N2"))</span>
                     </div>
                 }
             </div>

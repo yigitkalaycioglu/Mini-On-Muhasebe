@@ -4,15 +4,15 @@
          ViewData["Cariler"]      : IEnumerable<Cari>       — aktif tedarikçiler (CariTipi 2 veya 3)
          ViewData["Stoklar"]      : IEnumerable<StokKarti>  — aktif stoklar
          ViewData["YeniFaturaNo"] : string (isteğe bağlı)   — ör. "ALS-2026-0003" önizleme
-    POST Create(AlisFaturasi alisFaturasi)
-         Kalemler alisFaturasi.AlisFaturaSatirlari içinde gelir (StokId, Miktar, BirimFiyat, KdvOrani).
+    POST Create(AlisFaturasiDto fatura)
+         Kalemler fatura.Kalemler içinde gelir (StokId, Miktar, BirimFiyat, KdvOrani).
          Backend'de yapılacaklar (tek transaction):
            - SatirTutari, AraToplam, KdvToplam, GenelToplam SUNUCUDA hesaplanır
            - FaturaNo, KullaniciId, OlusturmaTarihi atanır
            - Her kalem için StokHareket (HareketTipi="Alis", Yon="Giris")
            - Tedarikçiye CariHareket (IslemTipi="Alis", Alacak=GenelToplam)
 *@
-@model AlisFaturasi
+@model AlisFaturasiDto
 @{
     ViewData["Title"] = "Yeni Alış Faturası";
 
@@ -20,9 +20,9 @@
     var yeniNo = ViewData["YeniFaturaNo"] as string;
     var tarih = (Model == null || Model.Tarih == default) ? DateTime.Today : Model.Tarih;
 
-    ViewData["KalemKoleksiyonu"] = "AlisFaturaSatirlari";
+    ViewData["KalemKoleksiyonu"] = nameof(AlisFaturasiDto.Kalemler);
     ViewData["KalemFiyatTipi"] = "alis";
-    ViewData["IlkKalemler"] = Model?.AlisFaturaSatirlari
+    ViewData["IlkKalemler"] = Model?.Kalemler
         .Select(k => new { stokId = k.StokId, miktar = k.Miktar, birimFiyat = k.BirimFiyat, kdvOrani = k.KdvOrani })
         .ToList();
 }

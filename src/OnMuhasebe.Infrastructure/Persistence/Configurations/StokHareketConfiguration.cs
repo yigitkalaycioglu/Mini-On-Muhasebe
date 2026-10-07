@@ -25,6 +25,7 @@ namespace OnMuhasebe.Infrastructure.Persistence.Configurations
             builder.Property(h => h.HareketTipi).HasMaxLength(20);
             builder.Property(h => h.Yon).HasMaxLength(10);
             builder.Property(h => h.BelgeNo).HasMaxLength(20);
+            builder.Property(h => h.Aciklama).HasMaxLength(250);
         }
     }
 }

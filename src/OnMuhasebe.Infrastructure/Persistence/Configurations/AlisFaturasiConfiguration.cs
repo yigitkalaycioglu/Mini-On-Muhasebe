@@ -24,6 +24,7 @@ namespace OnMuhasebe.Infrastructure.Persistence.Configurations
             builder.Property(f => f.FaturaNo).HasMaxLength(20);
             builder.Property(f => f.Tarih).HasColumnType("date");
             builder.Property(f => f.OlusturmaTarihi).HasColumnType("datetime");
+            builder.Property(f => f.Aciklama).HasMaxLength(250);
         }
     }
 }

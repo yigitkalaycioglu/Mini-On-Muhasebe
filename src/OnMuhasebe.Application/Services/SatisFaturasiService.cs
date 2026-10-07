@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using OnMuhasebe.Application.Abstractions;
+using OnMuhasebe.Application.Dtos;
 using OnMuhasebe.Application.Exceptions;
 using OnMuhasebe.Application.Extensions;
 using OnMuhasebe.Application.Models;
@@ -25,17 +26,12 @@ namespace OnMuhasebe.Application.Services
             _zaman = zaman;
         }
 
-        public async Task<SatisFaturasi> CreateSatisFaturasiAsync(SatisFaturasi satisFaturasi, int kullaniciId)
+        public async Task<SatisFaturasi> CreateSatisFaturasiAsync(SatisFaturasiDto fatura, int kullaniciId)
         {
-            if (satisFaturasi == null)
-            {
-                throw new ArgumentNullException(nameof(satisFaturasi));
-            }
-            if (kullaniciId <= 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(kullaniciId));
-            }
+            ArgumentNullException.ThrowIfNull(fatura);
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(kullaniciId);
 
+            var satisFaturasi = fatura.ToEntity();
             if (satisFaturasi.SatisFaturaSatirlari.Count == 0)
             {
                 throw new IsKuraliException("Faturaya en az bir kalem ekleyin.");
@@ -61,13 +57,6 @@ namespace OnMuhasebe.Application.Services
             if (stokAdlari.Count != stokIdler.Count)
             {
                 throw new IsKuraliException("Faturadaki ürünlerden biri bulunamadı ya da pasif.");
-            }
-
-            // Id'ler veritabanında üretilir; istekle gelen değerler yok sayılır.
-            satisFaturasi.Id = 0;
-            foreach (var kalem in satisFaturasi.SatisFaturaSatirlari)
-            {
-                kalem.Id = 0;
             }
 
             var faturaNo = await GetYeniFaturaNoAsync();

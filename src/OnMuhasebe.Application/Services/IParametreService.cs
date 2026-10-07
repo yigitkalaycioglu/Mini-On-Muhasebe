@@ -1,3 +1,4 @@
+using OnMuhasebe.Application.Dtos;
 using OnMuhasebe.Domain.Entities;
 
 namespace OnMuhasebe.Application.Services
@@ -5,7 +6,7 @@ namespace OnMuhasebe.Application.Services
     public interface IParametreService
     {
         Task<List<Parametre>> GetAllParametrelerAsync();
-        Task UpdateParametrelerAsync(List<Parametre> parametreler);
+        Task UpdateParametrelerAsync(IReadOnlyList<ParametreDegeriDto> parametreler);
 
         // Parametre tablosunda kayıt yoksa ya da değer okunamıyorsa dökümandaki varsayılan değer döner.
         Task<string> GetDegerAsync(string parametreKodu);

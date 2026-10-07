@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using OnMuhasebe.Application.Dtos;
 using OnMuhasebe.Application.Exceptions;
 using OnMuhasebe.Application.Services;
 using OnMuhasebe.Domain;
@@ -58,14 +59,13 @@ namespace OnMuhasebe.Web.Controllers
                 return NotFound();
             }
 
-            ViewData["Ozet"] = await StokOzetiHazirlaAsync(stokKarti);
-            return View(stokKarti);
+            return View(await DuzenlemeModeliAsync(id, StokKartiDto.FromEntity(stokKarti), stokKarti));
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         [ActionName("Create")]
-        public async Task<IActionResult> CreatePost(StokKarti stokKarti)
+        public async Task<IActionResult> CreatePost(StokKartiDto stokKarti)
         {
             if (ModelState.IsValid)
             {
@@ -86,15 +86,13 @@ namespace OnMuhasebe.Web.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [ActionName("Edit")]
-        public async Task<IActionResult> EditPost(int id, StokKarti stokKarti)
+        public async Task<IActionResult> EditPost(int id, StokKartiDto stokKarti)
         {
             if (ModelState.IsValid)
             {
-                stokKarti.Id = id;
-
                 try
                 {
-                    await _stokKartiService.UpdateStokKartiAsync(stokKarti);
+                    await _stokKartiService.UpdateStokKartiAsync(id, stokKarti);
                     this.BasariMesaji("Stok kartı güncellendi.");
                     return RedirectToAction("Index");
                 }
@@ -104,19 +102,27 @@ namespace OnMuhasebe.Web.Controllers
                 }
             }
 
-            // Formdan gelen nesnede hareket listesi boştur; stok özeti kayıtlı karttan hesaplanır.
+            // Form girilen değerlerle yeniden gösterilir; stok özeti kayıtlı karttan hesaplanır.
             var kayitli = await _stokKartiService.GetStokKartiByIdAsync(id);
-            ViewData["Ozet"] = kayitli == null ? new StokOzetiViewModel() : await StokOzetiHazirlaAsync(kayitli);
-            return View("Edit", stokKarti);
+            if (kayitli == null)
+            {
+                return NotFound();
+            }
+            return View("Edit", await DuzenlemeModeliAsync(id, stokKarti, kayitli));
         }
 
-        private async Task<StokOzetiViewModel> StokOzetiHazirlaAsync(StokKarti stokKarti) => new()
+        private async Task<StokKartiDuzenleViewModel> DuzenlemeModeliAsync(int id, StokKartiDto form, StokKarti kayitli) => new()
         {
-            ToplamGiris = _stokKartiService.ToplamGiris(stokKarti),
-            ToplamCikis = _stokKartiService.ToplamCikis(stokKarti),
-            Mevcut = _stokKartiService.MevcutMiktar(stokKarti),
-            Kritik = await _parametreService.AcikMiAsync(Sabitler.ParamKritikStokUyarisi)
-                && _stokKartiService.KritikSeviyede(stokKarti)
+            Id = id,
+            Form = form,
+            Ozet = new StokOzetiViewModel
+            {
+                ToplamGiris = _stokKartiService.ToplamGiris(kayitli),
+                ToplamCikis = _stokKartiService.ToplamCikis(kayitli),
+                Mevcut = _stokKartiService.MevcutMiktar(kayitli),
+                Kritik = await _parametreService.AcikMiAsync(Sabitler.ParamKritikStokUyarisi)
+                    && _stokKartiService.KritikSeviyede(kayitli)
+            }
         };
 
         [HttpPost]

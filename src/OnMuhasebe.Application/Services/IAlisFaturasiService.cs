@@ -1,3 +1,4 @@
+using OnMuhasebe.Application.Dtos;
 using OnMuhasebe.Domain.Entities;
 
 namespace OnMuhasebe.Application.Services
@@ -7,7 +8,7 @@ namespace OnMuhasebe.Application.Services
         Task<List<AlisFaturasi>> GetAllAlisFaturalariAsync(DateTime? baslangic, DateTime? bitis);
         Task<AlisFaturasi?> GetAlisFaturasiByIdAsync(int id);
         Task<string> GetYeniFaturaNoAsync();
-        Task<AlisFaturasi> CreateAlisFaturasiAsync(AlisFaturasi alisFaturasi, int kullaniciId);
+        Task<AlisFaturasi> CreateAlisFaturasiAsync(AlisFaturasiDto fatura, int kullaniciId);
         Task DeleteAlisFaturasiAsync(int id);
     }
 }

@@ -1,33 +1,20 @@
-using System.ComponentModel.DataAnnotations;
-
 namespace OnMuhasebe.Domain.Entities
 {
     public class SatisFaturasi
     {
         public int Id { get; set; }
-
-        // Formdan gelmez; controller otomatik üretip atar.
-        public string FaturaNo { get; set; } = null!; // Benzersiz, otomatik
-
-        [Required(ErrorMessage = "Tarih zorunludur.")]
+        public string FaturaNo { get; set; } = null!; // Benzersiz; "Satış Fatura No Formatı" parametresine göre üretilir
         public DateTime Tarih { get; set; }
-
-        [Range(1, int.MaxValue, ErrorMessage = "Müşteri seçilmelidir.")]
         public int CariId { get; set; } // Müşteri
-
-        [Range(1, int.MaxValue, ErrorMessage = "Satış elemanı seçilmelidir.")]
         public int SatisElemaniId { get; set; }
 
-        // AraToplam, KdvToplam, GenelToplam kalemlerden sunucuda hesaplanır; formdan gelmez.
+        // Kalemlerden hesaplanır.
         public decimal AraToplam { get; set; } // KDV hariç
         public decimal KdvToplam { get; set; }
         public decimal GenelToplam { get; set; }
 
-        [StringLength(250, ErrorMessage = "Açıklama en fazla 250 karakter olabilir.")]
         public string? Aciklama { get; set; }
-
-        // Formdan gelmez; oturum açan kullanıcıdan controller atar.
-        public int KullaniciId { get; set; }
+        public int KullaniciId { get; set; } // Faturayı kesen kullanıcı
         public DateTime OlusturmaTarihi { get; set; }
 
         // Navigation properties

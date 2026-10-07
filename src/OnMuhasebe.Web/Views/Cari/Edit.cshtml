@@ -1,13 +1,13 @@
 @*
     CARİ KARTI (DÜZENLE) — CariController
-    GET  Edit(int id)            → View(cari)   (hesap özeti için .Include(c => c.CariHareketleri))
-    POST Edit(int id, Cari cari) → başarılıysa RedirectToAction("Index")
+    GET  Edit(int id)               → View(CariDuzenleViewModel)  (form alanları + kayıtlı cariden hesap özeti)
+    POST Edit(int id, CariDto cari) → başarılıysa RedirectToAction("Index")
 *@
-@model Cari
+@model CariDuzenleViewModel
 @{
     ViewData["Title"] = "Cari Kartı";
 
-    var ozet = ViewData["Ozet"] as CariOzetiViewModel ?? new CariOzetiViewModel();
+    var ozet = Model.Ozet;
     var toplamBorc = ozet.ToplamBorc;
     var toplamAlacak = ozet.ToplamAlacak;
     var bakiye = ozet.Bakiye;
@@ -15,8 +15,8 @@
 
 <div class="page-header">
     <div>
-        <h1>@Model.Unvan</h1>
-        <p class="page-subtitle"><span class="text-mono">@Model.CariKodu</span></p>
+        <h1>@Model.Form.Unvan</h1>
+        <p class="page-subtitle"><span class="text-mono">@Model.Form.CariKodu</span></p>
     </div>
     <div class="d-flex gap-2">
         <a asp-action="Ekstre" asp-route-id="@Model.Id" class="btn btn-outline-secondary">Cari Ekstre</a>
@@ -30,9 +30,7 @@
             <div class="card-body">
                 <form asp-action="Edit" asp-route-id="@Model.Id" method="post">
                     <div asp-validation-summary="ModelOnly"></div>
-                    <input type="hidden" asp-for="Id" />
-
-                    <partial name="_Form" model="Model" />
+                    <partial name="_Form" model="Model.Form" />
 
                     <div class="form-actions">
                         <button type="submit" class="btn btn-primary">Değişiklikleri Kaydet</button>
@@ -66,7 +64,7 @@
                     </div>
                 </div>
                 <span class="form-hint mt-3">
-                    @Model.CariHareketleri.Count hareket ·
+                    @Model.HareketSayisi hareket ·
                     <strong>(B)</strong> cari bize borçlu, <strong>(A)</strong> biz cariye borçluyuz.
                 </span>
             </div>

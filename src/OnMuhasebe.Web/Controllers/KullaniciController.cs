@@ -1,11 +1,12 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using OnMuhasebe.Application.Dtos;
 using OnMuhasebe.Application.Exceptions;
 using OnMuhasebe.Application.Services;
 using OnMuhasebe.Domain;
-using OnMuhasebe.Domain.Entities;
 using OnMuhasebe.Web.Extensions;
 using OnMuhasebe.Web.Security;
+using OnMuhasebe.Web.ViewModels;
 
 namespace OnMuhasebe.Web.Controllers
 {
@@ -36,22 +37,17 @@ namespace OnMuhasebe.Web.Controllers
             {
                 return NotFound();
             }
-            return View(kullanici);
+            return View(new KullaniciDuzenleViewModel { Id = id, Form = KullaniciDto.FromEntity(kullanici) });
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SifreSifirla(int id, string yeniSifre, string yeniSifreTekrar)
         {
-            if (string.IsNullOrEmpty(yeniSifre) || yeniSifre.Length < 6)
+            var sifreHatasi = SifreHatasi(yeniSifre, yeniSifreTekrar);
+            if (sifreHatasi != null)
             {
-                this.UyariMesaji("Şifre en az 6 karakter olmalıdır.");
-                return RedirectToAction("Edit", new { id });
-            }
-
-            if (yeniSifre != yeniSifreTekrar)
-            {
-                this.UyariMesaji("Şifreler eşleşmiyor.");
+                this.UyariMesaji(sifreHatasi);
                 return RedirectToAction("Edit", new { id });
             }
 
@@ -64,24 +60,19 @@ namespace OnMuhasebe.Web.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [ActionName("Create")]
-        public async Task<IActionResult> CreatePost(Kullanici kullanici, string sifre, string sifreTekrar)
+        public async Task<IActionResult> CreatePost(KullaniciOlusturDto kullanici)
         {
-            ModelState.Remove("SifreHash");
-
-            if (string.IsNullOrEmpty(sifre) || sifre.Length < 6)
+            var sifreHatasi = SifreHatasi(kullanici.Sifre, kullanici.SifreTekrar);
+            if (sifreHatasi != null)
             {
-                ModelState.AddModelError(string.Empty, "Şifre en az 6 karakter olmalıdır.");
-            }
-            else if (sifre != sifreTekrar)
-            {
-                ModelState.AddModelError(string.Empty, "Şifreler eşleşmiyor.");
+                ModelState.AddModelError(string.Empty, sifreHatasi);
             }
 
             if (ModelState.IsValid)
             {
                 try
                 {
-                    await _kullaniciService.CreateKullaniciAsync(kullanici, sifre);
+                    await _kullaniciService.CreateKullaniciAsync(kullanici, kullanici.Sifre!);
                     this.BasariMesaji("Kullanıcı kaydedildi.");
                     return RedirectToAction("Index");
                 }
@@ -97,16 +88,13 @@ namespace OnMuhasebe.Web.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [ActionName("Edit")]
-        public async Task<IActionResult> EditPost(int id, Kullanici kullanici)
+        public async Task<IActionResult> EditPost(int id, KullaniciDto kullanici)
         {
-            ModelState.Remove("SifreHash");
-            kullanici.Id = id;
-
             if (ModelState.IsValid)
             {
                 try
                 {
-                    await _kullaniciService.UpdateKullaniciAsync(kullanici, User.KullaniciId());
+                    await _kullaniciService.UpdateKullaniciAsync(id, kullanici, User.KullaniciId());
                     this.BasariMesaji("Kullanıcı güncellendi.");
                     return RedirectToAction("Index");
                 }
@@ -116,7 +104,17 @@ namespace OnMuhasebe.Web.Controllers
                 }
             }
 
-            return View("Edit", kullanici);
+            return View("Edit", new KullaniciDuzenleViewModel { Id = id, Form = kullanici });
+        }
+
+        // Yeni kullanıcıda ve şifre sıfırlamada aynı kural: en az 6 karakter, tekrarıyla aynı.
+        private static string? SifreHatasi(string? sifre, string? tekrar)
+        {
+            if (string.IsNullOrEmpty(sifre) || sifre.Length < 6)
+            {
+                return "Şifre en az 6 karakter olmalıdır.";
+            }
+            return sifre != tekrar ? "Şifreler eşleşmiyor." : null;
         }
 
         [HttpPost]

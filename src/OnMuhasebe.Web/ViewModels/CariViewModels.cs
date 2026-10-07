@@ -1,3 +1,4 @@
+using OnMuhasebe.Application.Dtos;
 using OnMuhasebe.Domain.Entities;
 
 namespace OnMuhasebe.Web.ViewModels
@@ -81,5 +82,14 @@ namespace OnMuhasebe.Web.ViewModels
     {
         public Cari Cari { get; set; } = null!;
         public string UygunIslemler { get; set; } = "";
+    }
+
+    /// <summary>Cari kartı düzenleme ekranı: form alanları, kayıtlı cariden hesaplanan hesap özeti.</summary>
+    public class CariDuzenleViewModel
+    {
+        public int Id { get; set; }
+        public CariDto Form { get; set; } = new();
+        public CariOzetiViewModel Ozet { get; set; } = new();
+        public int HareketSayisi { get; set; }
     }
 }

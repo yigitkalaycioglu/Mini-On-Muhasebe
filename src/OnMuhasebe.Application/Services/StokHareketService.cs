@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using OnMuhasebe.Application.Abstractions;
+using OnMuhasebe.Application.Dtos;
 using OnMuhasebe.Application.Exceptions;
 using OnMuhasebe.Application.Extensions;
 using OnMuhasebe.Domain;
@@ -35,16 +36,12 @@ namespace OnMuhasebe.Application.Services
             return await query.OrderByDescending(h => h.Tarih).ThenByDescending(h => h.Id).ToListAsync();
         }
 
-        public async Task<StokHareket> CreateSayimFisiAsync(StokHareket sayimFisi, int kullaniciId)
+        public async Task<StokHareket> CreateSayimFisiAsync(SayimFisiDto fis, int kullaniciId)
         {
-            if (sayimFisi == null)
-            {
-                throw new ArgumentNullException(nameof(sayimFisi));
-            }
-            if (kullaniciId <= 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(kullaniciId));
-            }
+            ArgumentNullException.ThrowIfNull(fis);
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(kullaniciId);
+
+            var sayimFisi = fis.ToEntity();
 
             // Sayım fazlası stoğu artırır (giriş), sayım eksiği azaltır (çıkış).
             string formatParametresi;
@@ -89,7 +86,6 @@ namespace OnMuhasebe.Application.Services
             sayimFisi.BelgeNo = await _parametreService.YeniBelgeNoAsync(
                 formatParametresi,
                 _context.StokHareketler.Where(h => h.HareketTipi == tip).Select(h => h.BelgeNo));
-            sayimFisi.Id = 0; // Id veritabanında üretilir
             sayimFisi.KullaniciId = kullaniciId;
 
             _context.StokHareketler.Add(sayimFisi);

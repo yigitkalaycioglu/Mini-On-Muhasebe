@@ -1,11 +1,10 @@
 @*
     YENİ KULLANICI — KullaniciController  [Yalnızca Yönetici]
     GET  Create()
-    POST Create(Kullanici kullanici, string sifre, string sifreTekrar)
-         → şifre hash'lenip kullanici.SifreHash'e yazılmalı (düz metin saklanmaz)
-         → SifreHash formdan gelmediği için ModelState.Remove("SifreHash") gerekebilir
+    POST Create(KullaniciOlusturDto kullanici)  — form alanları + sifre, sifreTekrar
+         → şifre serviste hash'lenir (düz metin saklanmaz)
 *@
-@model Kullanici
+@model KullaniciOlusturDto
 @{
     ViewData["Title"] = "Yeni Kullanıcı";
 }

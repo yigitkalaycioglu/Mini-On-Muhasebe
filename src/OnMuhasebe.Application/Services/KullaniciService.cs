@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using OnMuhasebe.Application.Abstractions;
+using OnMuhasebe.Application.Dtos;
 using OnMuhasebe.Application.Exceptions;
 using OnMuhasebe.Domain;
 using OnMuhasebe.Domain.Entities;
@@ -45,23 +46,23 @@ namespace OnMuhasebe.Application.Services
             return !await _context.Kullanicilar.AnyAsync(k => k.KullaniciAdi.ToLower() == normalizedName && (!excludeId.HasValue || k.Id != excludeId.Value));
         }
 
-        public async Task<Kullanici> CreateKullaniciAsync(Kullanici kullanici, string sifre)
+        public async Task<Kullanici> CreateKullaniciAsync(KullaniciDto kullanici, string sifre)
         {
             if (!await IsKullaniciNameUniqueAsync(kullanici.KullaniciAdi))
             {
-                throw new IsKuraliException(nameof(Kullanici.KullaniciAdi), "Bu kullanıcı adı zaten kayıtlı.");
+                throw new IsKuraliException(nameof(KullaniciDto.KullaniciAdi), "Bu kullanıcı adı zaten kayıtlı.");
             }
 
-            kullanici.Id = 0; // Id veritabanında üretilir
-            kullanici.SifreHash = _sifreHashleyici.HashOlustur(sifre);
-            _context.Kullanicilar.Add(kullanici);
+            var yeni = new Kullanici { SifreHash = _sifreHashleyici.HashOlustur(sifre) };
+            kullanici.ApplyTo(yeni);
+            _context.Kullanicilar.Add(yeni);
             await _context.SaveChangesAsync();
-            return kullanici;
+            return yeni;
         }
 
-        public async Task UpdateKullaniciAsync(Kullanici kullanici, int islemYapanId)
+        public async Task UpdateKullaniciAsync(int id, KullaniciDto kullanici, int islemYapanId)
         {
-            var existingKullanici = await _context.Kullanicilar.FindAsync(kullanici.Id);
+            var existingKullanici = await _context.Kullanicilar.FindAsync(id);
             if (existingKullanici == null)
             {
                 throw new KayitBulunamadiException("Kullanıcı bulunamadı.");
@@ -79,15 +80,12 @@ namespace OnMuhasebe.Application.Services
                 await SonYoneticiDegilseDevamAsync(existingKullanici.Id);
             }
 
-            if (!await IsKullaniciNameUniqueAsync(kullanici.KullaniciAdi, kullanici.Id))
+            if (!await IsKullaniciNameUniqueAsync(kullanici.KullaniciAdi, id))
             {
-                throw new IsKuraliException(nameof(Kullanici.KullaniciAdi), "Bu kullanıcı adı zaten kayıtlı.");
+                throw new IsKuraliException(nameof(KullaniciDto.KullaniciAdi), "Bu kullanıcı adı zaten kayıtlı.");
             }
 
-            existingKullanici.KullaniciAdi = kullanici.KullaniciAdi;
-            existingKullanici.AdSoyad = kullanici.AdSoyad;
-            existingKullanici.Rol = kullanici.Rol;
-            existingKullanici.Aktif = kullanici.Aktif;
+            kullanici.ApplyTo(existingKullanici);
 
             await _context.SaveChangesAsync();
         }
