@@ -10,7 +10,7 @@
 //                  data-ondalik-basamak="2">               → tutarların yuvarlandığı basamak (parametre)
 //
 // Model binding indeksleri 0'dan başlayıp kesintisiz olmalıdır
-// (SatisFaturaSatirlari[0].StokId, [1].StokId ...). Satır silinince
+// (Kalemler[0].StokId, Kalemler[1].StokId ...). Satır silinince
 // bütün satırlar yeniden numaralandırılır; aksi halde boşluktan sonraki
 // satırlar sunucuya hiç ulaşmaz.
 // ============================================================
