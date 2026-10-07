@@ -63,7 +63,7 @@ namespace OnMuhasebe.Web.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [ActionName("Delete")]
-        public async Task<IActionResult> DeletePost(int id)
+        public async Task<IActionResult> DeletePost([FromRoute] int id)
         {
             var silindi = await _satisElemaniService.DeleteSatisElemaniAsync(id);
             if (silindi)
@@ -81,7 +81,7 @@ namespace OnMuhasebe.Web.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [ActionName("Edit")]
-        public async Task<IActionResult> EditPost(int id, SatisElemaniDto satisElemani)
+        public async Task<IActionResult> EditPost([FromRoute] int id, SatisElemaniDto satisElemani)
         {
             if (ModelState.IsValid)
             {

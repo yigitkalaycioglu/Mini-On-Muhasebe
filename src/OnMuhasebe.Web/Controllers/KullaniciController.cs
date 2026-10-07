@@ -42,7 +42,7 @@ namespace OnMuhasebe.Web.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> SifreSifirla(int id, string yeniSifre, string yeniSifreTekrar)
+        public async Task<IActionResult> SifreSifirla([FromRoute] int id, string yeniSifre, string yeniSifreTekrar)
         {
             var sifreHatasi = SifreHatasi(yeniSifre, yeniSifreTekrar);
             if (sifreHatasi != null)
@@ -88,7 +88,7 @@ namespace OnMuhasebe.Web.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [ActionName("Edit")]
-        public async Task<IActionResult> EditPost(int id, KullaniciDto kullanici)
+        public async Task<IActionResult> EditPost([FromRoute] int id, KullaniciDto kullanici)
         {
             if (ModelState.IsValid)
             {
@@ -120,7 +120,7 @@ namespace OnMuhasebe.Web.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [ActionName("Delete")]
-        public async Task<IActionResult> DeletePost(int id)
+        public async Task<IActionResult> DeletePost([FromRoute] int id)
         {
             try
             {

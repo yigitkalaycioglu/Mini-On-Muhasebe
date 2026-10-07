@@ -82,7 +82,7 @@ namespace OnMuhasebe.Web.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [ActionName("Delete")]
-        public async Task<IActionResult> DeletePost(int id)
+        public async Task<IActionResult> DeletePost([FromRoute] int id)
         {
             try
             {

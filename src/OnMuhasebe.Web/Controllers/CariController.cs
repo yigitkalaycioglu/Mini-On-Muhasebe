@@ -117,7 +117,7 @@ namespace OnMuhasebe.Web.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [ActionName("Edit")]
-        public async Task<IActionResult> EditPost(int id, CariDto cari)
+        public async Task<IActionResult> EditPost([FromRoute] int id, CariDto cari)
         {
             if (ModelState.IsValid)
             {
@@ -158,7 +158,7 @@ namespace OnMuhasebe.Web.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [ActionName("Delete")]
-        public async Task<IActionResult> DeletePost(int id)
+        public async Task<IActionResult> DeletePost([FromRoute] int id)
         {
             var silindi = await _cariService.DeleteCariAsync(id);
             if (silindi)

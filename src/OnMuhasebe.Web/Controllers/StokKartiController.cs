@@ -86,7 +86,7 @@ namespace OnMuhasebe.Web.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [ActionName("Edit")]
-        public async Task<IActionResult> EditPost(int id, StokKartiDto stokKarti)
+        public async Task<IActionResult> EditPost([FromRoute] int id, StokKartiDto stokKarti)
         {
             if (ModelState.IsValid)
             {
@@ -128,7 +128,7 @@ namespace OnMuhasebe.Web.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [ActionName("Delete")]
-        public async Task<IActionResult> DeletePost(int id)
+        public async Task<IActionResult> DeletePost([FromRoute] int id)
         {
             var silindi = await _stokKartiService.DeleteStokKartiAsync(id);
             if (silindi)
