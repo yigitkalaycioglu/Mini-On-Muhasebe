@@ -1,10 +1,11 @@
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Options;
 
 namespace OnMuhasebe.Web.Security
 {
     /// <summary>
-    /// Kaba kuvvet (şifre deneme) saldırısına karşı iki katman:
-    /// 1) IP başına hız sınırı: aynı adresten dakikada en fazla 10 giriş denemesi (Program.cs, "giris" politikası).
+    /// Kaba kuvvet (şifre deneme) saldırısına karşı iki katman (sınırlar GirisGuvenligiAyarlari'nda):
+    /// 1) IP başına hız sınırı: aynı adresten dakikada en fazla 10 giriş denemesi ("giris" politikası, AddWeb).
     /// 2) Kullanıcı adı başına kilit: üst üste 5 hatalı denemeden sonra o kullanıcı adıyla 5 dakika giriş yapılamaz.
     ///    Farklı IP'lerden dağıtılmış denemeleri de durdurur.
     ///
@@ -15,9 +16,6 @@ namespace OnMuhasebe.Web.Security
     public class GirisDenemeTakibi
     {
         public const string HizSiniriPolitikasi = "giris";
-        public const int IpBasinaDakikadaDeneme = 10;
-        public const int EnFazlaHataliDeneme = 5;
-        public static readonly TimeSpan KilitSuresi = TimeSpan.FromMinutes(5);
 
         private sealed class Kayit
         {
@@ -27,11 +25,16 @@ namespace OnMuhasebe.Web.Security
 
         private readonly IMemoryCache _cache;
         private readonly TimeProvider _zaman;
-        public GirisDenemeTakibi(IMemoryCache cache, TimeProvider zaman)
+        private readonly GirisGuvenligiAyarlari _ayarlar;
+        public GirisDenemeTakibi(IMemoryCache cache, TimeProvider zaman, IOptions<GirisGuvenligiAyarlari> ayarlar)
         {
             _cache = cache;
             _zaman = zaman;
+            _ayarlar = ayarlar.Value;
         }
+
+        public int EnFazlaHataliDeneme => _ayarlar.EnFazlaHataliDeneme;
+        public TimeSpan KilitSuresi => _ayarlar.KilitSuresi;
 
         private static string Anahtar(string kullaniciAdi) => "giris-denemesi:" + kullaniciAdi.Trim().ToLowerInvariant();
 
@@ -57,8 +60,8 @@ namespace OnMuhasebe.Web.Security
         {
             var kayit = _cache.GetOrCreate(Anahtar(kullaniciAdi), giris =>
             {
-                // Son hatalı denemeden 15 dakika sonra sayaç kendiliğinden silinir.
-                giris.SlidingExpiration = TimeSpan.FromMinutes(15);
+                // Son hatalı denemeden 15 dakika (kilit daha uzunsa kilit süresi kadar) sonra sayaç kendiliğinden silinir.
+                giris.SlidingExpiration = KilitSuresi > TimeSpan.FromMinutes(15) ? KilitSuresi : TimeSpan.FromMinutes(15);
                 return new Kayit();
             })!;
 

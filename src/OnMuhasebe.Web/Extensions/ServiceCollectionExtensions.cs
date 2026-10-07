@@ -1,5 +1,6 @@
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.Extensions.Options;
 using OnMuhasebe.Web.Filters;
 using OnMuhasebe.Web.Security;
 
@@ -38,18 +39,25 @@ namespace OnMuhasebe.Web.Extensions
                 mesajlar.SetMissingRequestBodyRequiredValueAccessor(() => "İstek gövdesi boş olamaz.");
             });
 
+            // Giriş güvenliği sınırları appsettings.json'daki "GirisGuvenligi" bölümünden; geçersiz değerle uygulama başlamaz.
+            services.AddOptions<GirisGuvenligiAyarlari>()
+                .BindConfiguration(GirisGuvenligiAyarlari.Bolum)
+                .ValidateDataAnnotations()
+                .ValidateOnStart();
+
             services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
                 .AddCookie(options =>
                 {
                     options.LoginPath = "/Account/Login";
                     options.LogoutPath = "/Account/Logout";
                     options.AccessDeniedPath = "/Account/AccessDenied";
-                    options.ExpireTimeSpan = TimeSpan.FromHours(8);
                     options.SlidingExpiration = true;
 
                     // Pasife alınan ya da rolü değişen kullanıcının açık oturumu bir sonraki istekte kapanır.
                     options.Events.OnValidatePrincipal = OturumDogrulama.DogrulaAsync;
                 });
+            services.AddOptions<CookieAuthenticationOptions>(CookieAuthenticationDefaults.AuthenticationScheme)
+                .Configure<IOptions<GirisGuvenligiAyarlari>>((options, ayarlar) => options.ExpireTimeSpan = ayarlar.Value.OturumSuresi);
 
             // Kaba kuvvet saldırısına karşı: kullanıcı adı başına hatalı deneme sayacı (bellekte)...
             services.AddMemoryCache();
@@ -64,7 +72,7 @@ namespace OnMuhasebe.Web.Extensions
                         context.Connection.RemoteIpAddress?.ToString() ?? "bilinmiyor",
                         _ => new FixedWindowRateLimiterOptions
                         {
-                            PermitLimit = GirisDenemeTakibi.IpBasinaDakikadaDeneme,
+                            PermitLimit = context.RequestServices.GetRequiredService<IOptions<GirisGuvenligiAyarlari>>().Value.IpBasinaDakikadaDeneme,
                             Window = TimeSpan.FromMinutes(1),
                             QueueLimit = 0
                         }));

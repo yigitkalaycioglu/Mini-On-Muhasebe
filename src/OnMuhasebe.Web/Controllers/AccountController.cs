@@ -60,8 +60,8 @@ namespace OnMuhasebe.Web.Controllers
                 if (kilitlendi)
                 {
                     _logger.LogWarning("{KullaniciAdi} için {Deneme} hatalı denemeden sonra giriş {Dakika} dakika kilitlendi, IP {Ip}",
-                        gunlukAdi, GirisDenemeTakibi.EnFazlaHataliDeneme, GirisDenemeTakibi.KilitSuresi.TotalMinutes, ip);
-                    ModelState.AddModelError(string.Empty, KilitMesaji(GirisDenemeTakibi.KilitSuresi));
+                        gunlukAdi, _denemeTakibi.EnFazlaHataliDeneme, _denemeTakibi.KilitSuresi.TotalMinutes, ip);
+                    ModelState.AddModelError(string.Empty, KilitMesaji(_denemeTakibi.KilitSuresi));
                 }
                 else
                 {
