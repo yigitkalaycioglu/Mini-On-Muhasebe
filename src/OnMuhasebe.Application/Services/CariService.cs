@@ -135,7 +135,7 @@ namespace OnMuhasebe.Application.Services
             cari.Id = 0; // Id veritabanında üretilir
             if (await _context.Cariler.AnyAsync(c => c.CariKodu == cari.CariKodu))
             {
-                throw new AlanHatasiException(nameof(Cari.CariKodu), "Bu cari kodu zaten kayıtlı.");
+                throw new IsKuraliException(nameof(Cari.CariKodu), "Bu cari kodu zaten kayıtlı.");
             }
 
             _context.Cariler.Add(cari);
@@ -148,7 +148,7 @@ namespace OnMuhasebe.Application.Services
             var cari = await _context.Cariler.FindAsync(id);
             if (cari == null)
             {
-                throw new KeyNotFoundException("Cari bulunamadı.");
+                throw new KayitBulunamadiException("Cari bulunamadı.");
             }
 
             var kayitliIslemVar = await _context.SatisFaturalari.AnyAsync(f => f.CariId == id)
@@ -173,12 +173,12 @@ namespace OnMuhasebe.Application.Services
             var existingCari = await _context.Cariler.FindAsync(cari.Id);
             if (existingCari == null)
             {
-                throw new KeyNotFoundException("Cari bulunamadı.");
+                throw new KayitBulunamadiException("Cari bulunamadı.");
             }
 
             if (await _context.Cariler.AnyAsync(c => c.CariKodu == cari.CariKodu && c.Id != cari.Id))
             {
-                throw new AlanHatasiException(nameof(Cari.CariKodu), "Bu cari kodu zaten kayıtlı.");
+                throw new IsKuraliException(nameof(Cari.CariKodu), "Bu cari kodu zaten kayıtlı.");
             }
 
             existingCari.CariKodu = cari.CariKodu;

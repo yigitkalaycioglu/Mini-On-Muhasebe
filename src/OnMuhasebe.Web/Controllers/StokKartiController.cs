@@ -4,6 +4,7 @@ using OnMuhasebe.Application.Exceptions;
 using OnMuhasebe.Application.Services;
 using OnMuhasebe.Domain;
 using OnMuhasebe.Domain.Entities;
+using OnMuhasebe.Web.Extensions;
 using OnMuhasebe.Web.ViewModels;
 
 namespace OnMuhasebe.Web.Controllers
@@ -71,17 +72,12 @@ namespace OnMuhasebe.Web.Controllers
                 try
                 {
                     await _stokKartiService.CreateStokKartiAsync(stokKarti);
-                    TempData["Mesaj"] = "Stok kartı kaydedildi.";
-                    TempData["MesajTipi"] = "success";
+                    this.BasariMesaji("Stok kartı kaydedildi.");
                     return RedirectToAction("Index");
                 }
-                catch (AlanHatasiException ex)
+                catch (IsKuraliException ex)
                 {
-                    ModelState.AddModelError(ex.Alan, ex.Message);
-                }
-                catch (InvalidOperationException ex)
-                {
-                    ModelState.AddModelError(string.Empty, ex.Message);
+                    ModelState.HataEkle(ex);
                 }
             }
             return View("Create", stokKarti);
@@ -99,21 +95,12 @@ namespace OnMuhasebe.Web.Controllers
                 try
                 {
                     await _stokKartiService.UpdateStokKartiAsync(stokKarti);
-                    TempData["Mesaj"] = "Stok kartı güncellendi.";
-                    TempData["MesajTipi"] = "success";
+                    this.BasariMesaji("Stok kartı güncellendi.");
                     return RedirectToAction("Index");
                 }
-                catch (AlanHatasiException ex)
+                catch (IsKuraliException ex)
                 {
-                    ModelState.AddModelError(ex.Alan, ex.Message);
-                }
-                catch (InvalidOperationException ex)
-                {
-                    ModelState.AddModelError(string.Empty, ex.Message);
-                }
-                catch (KeyNotFoundException)
-                {
-                    return NotFound();
+                    ModelState.HataEkle(ex);
                 }
             }
 
@@ -137,17 +124,14 @@ namespace OnMuhasebe.Web.Controllers
         [ActionName("Delete")]
         public async Task<IActionResult> DeletePost(int id)
         {
-            try
+            var silindi = await _stokKartiService.DeleteStokKartiAsync(id);
+            if (silindi)
             {
-                var silindi = await _stokKartiService.DeleteStokKartiAsync(id);
-                TempData["Mesaj"] = silindi
-                    ? "Stok kartı silindi."
-                    : "Bu stok kartının fatura veya hareket kayıtları olduğu için silinemedi; bunun yerine pasife alındı.";
-                TempData["MesajTipi"] = silindi ? "success" : "warning";
+                this.BasariMesaji("Stok kartı silindi.");
             }
-            catch (KeyNotFoundException)
+            else
             {
-                return NotFound();
+                this.UyariMesaji("Bu stok kartının fatura veya hareket kayıtları olduğu için silinemedi; bunun yerine pasife alındı.");
             }
 
             return RedirectToAction("Index");

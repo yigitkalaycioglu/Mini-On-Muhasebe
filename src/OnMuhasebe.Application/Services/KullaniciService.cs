@@ -49,7 +49,7 @@ namespace OnMuhasebe.Application.Services
         {
             if (!await IsKullaniciNameUniqueAsync(kullanici.KullaniciAdi))
             {
-                throw new AlanHatasiException(nameof(Kullanici.KullaniciAdi), "Bu kullanıcı adı zaten kayıtlı.");
+                throw new IsKuraliException(nameof(Kullanici.KullaniciAdi), "Bu kullanıcı adı zaten kayıtlı.");
             }
 
             kullanici.Id = 0; // Id veritabanında üretilir
@@ -64,7 +64,7 @@ namespace OnMuhasebe.Application.Services
             var existingKullanici = await _context.Kullanicilar.FindAsync(kullanici.Id);
             if (existingKullanici == null)
             {
-                throw new KeyNotFoundException("Kullanıcı bulunamadı.");
+                throw new KayitBulunamadiException("Kullanıcı bulunamadı.");
             }
 
             // Aktif bir yönetici pasife alınıyor ya da rolü düşürülüyorsa yönetimsiz kalınmamalı.
@@ -74,14 +74,14 @@ namespace OnMuhasebe.Application.Services
             {
                 if (existingKullanici.Id == islemYapanId)
                 {
-                    throw new InvalidOperationException("Kendi yönetici yetkinizi kaldıramaz, kendinizi pasife alamazsınız.");
+                    throw new IsKuraliException("Kendi yönetici yetkinizi kaldıramaz, kendinizi pasife alamazsınız.");
                 }
                 await SonYoneticiDegilseDevamAsync(existingKullanici.Id);
             }
 
             if (!await IsKullaniciNameUniqueAsync(kullanici.KullaniciAdi, kullanici.Id))
             {
-                throw new AlanHatasiException(nameof(Kullanici.KullaniciAdi), "Bu kullanıcı adı zaten kayıtlı.");
+                throw new IsKuraliException(nameof(Kullanici.KullaniciAdi), "Bu kullanıcı adı zaten kayıtlı.");
             }
 
             existingKullanici.KullaniciAdi = kullanici.KullaniciAdi;
@@ -97,12 +97,12 @@ namespace OnMuhasebe.Application.Services
             var kullanici = await _context.Kullanicilar.FindAsync(id);
             if (kullanici == null)
             {
-                throw new KeyNotFoundException("Kullanıcı bulunamadı.");
+                throw new KayitBulunamadiException("Kullanıcı bulunamadı.");
             }
 
             if (id == islemYapanId)
             {
-                throw new InvalidOperationException("Kendi hesabınızı silemez, pasife alamazsınız.");
+                throw new IsKuraliException("Kendi hesabınızı silemez, pasife alamazsınız.");
             }
             if (AktifYonetici(kullanici))
             {
@@ -137,7 +137,7 @@ namespace OnMuhasebe.Application.Services
                 .AnyAsync(k => k.Id != haricTutulanId && k.Aktif && k.Rol == Sabitler.RolYonetici);
             if (!baskaYoneticiVar)
             {
-                throw new InvalidOperationException("Sistemde en az bir aktif yönetici kalmalıdır.");
+                throw new IsKuraliException("Sistemde en az bir aktif yönetici kalmalıdır.");
             }
         }
 
@@ -146,7 +146,7 @@ namespace OnMuhasebe.Application.Services
             var kullanici = await _context.Kullanicilar.FindAsync(id);
             if (kullanici == null)
             {
-                throw new KeyNotFoundException("Kullanıcı bulunamadı.");
+                throw new KayitBulunamadiException("Kullanıcı bulunamadı.");
             }
             kullanici.SifreHash = _sifreHashleyici.HashOlustur(yeniSifre);
             await _context.SaveChangesAsync();

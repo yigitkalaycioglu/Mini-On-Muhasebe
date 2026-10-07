@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using OnMuhasebe.Application.Exceptions;
 using OnMuhasebe.Application.Services;
 using OnMuhasebe.Domain.Entities;
+using OnMuhasebe.Web.Extensions;
 
 namespace OnMuhasebe.Web.Controllers
 {
@@ -46,17 +47,12 @@ namespace OnMuhasebe.Web.Controllers
                 try
                 {
                     await _satisElemaniService.CreateSatisElemaniAsync(satisElemani);
-                    TempData["Mesaj"] = "Satış elemanı kaydedildi.";
-                    TempData["MesajTipi"] = "success";
+                    this.BasariMesaji("Satış elemanı kaydedildi.");
                     return RedirectToAction("Index");
                 }
-                catch (AlanHatasiException ex)
+                catch (IsKuraliException ex)
                 {
-                    ModelState.AddModelError(ex.Alan, ex.Message);
-                }
-                catch (InvalidOperationException ex)
-                {
-                    ModelState.AddModelError(string.Empty, ex.Message);
+                    ModelState.HataEkle(ex);
                 }
             }
 
@@ -68,17 +64,14 @@ namespace OnMuhasebe.Web.Controllers
         [ActionName("Delete")]
         public async Task<IActionResult> DeletePost(int id)
         {
-            try
+            var silindi = await _satisElemaniService.DeleteSatisElemaniAsync(id);
+            if (silindi)
             {
-                var silindi = await _satisElemaniService.DeleteSatisElemaniAsync(id);
-                TempData["Mesaj"] = silindi
-                    ? "Satış elemanı silindi."
-                    : "Bu satış elemanının faturaları olduğu için silinemedi; bunun yerine pasife alındı.";
-                TempData["MesajTipi"] = silindi ? "success" : "warning";
+                this.BasariMesaji("Satış elemanı silindi.");
             }
-            catch (KeyNotFoundException)
+            else
             {
-                return NotFound();
+                this.UyariMesaji("Bu satış elemanının faturaları olduğu için silinemedi; bunun yerine pasife alındı.");
             }
 
             return RedirectToAction("Index");
@@ -96,21 +89,12 @@ namespace OnMuhasebe.Web.Controllers
                 try
                 {
                     await _satisElemaniService.UpdateSatisElemaniAsync(satisElemani);
-                    TempData["Mesaj"] = "Satış elemanı güncellendi.";
-                    TempData["MesajTipi"] = "success";
+                    this.BasariMesaji("Satış elemanı güncellendi.");
                     return RedirectToAction("Index");
                 }
-                catch (AlanHatasiException ex)
+                catch (IsKuraliException ex)
                 {
-                    ModelState.AddModelError(ex.Alan, ex.Message);
-                }
-                catch (InvalidOperationException ex)
-                {
-                    ModelState.AddModelError(string.Empty, ex.Message);
-                }
-                catch (KeyNotFoundException)
-                {
-                    return NotFound();
+                    ModelState.HataEkle(ex);
                 }
             }
 

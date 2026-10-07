@@ -1,11 +1,11 @@
 @*
     İŞLEM MESAJI — tüm liste ve detay ekranlarında ortak
-    Controller: TempData["Mesaj"] = "...";  TempData["MesajTipi"] = "success" | "warning"
+    Controller: this.BasariMesaji("...") ya da this.UyariMesaji("...")  (Extensions/ControllerExtensions.cs)
     Uyarılar sarı kutuda ünlem ikonuyla, başarı mesajları onay ikonuyla gösterilir.
 *@
 @{
-    var mesaj = TempData["Mesaj"] as string;
-    var uyari = TempData["MesajTipi"] as string == "warning";
+    var mesaj = TempData[IslemMesaji.Anahtar] as string;
+    var uyari = TempData[IslemMesaji.TipAnahtari] as string == IslemMesaji.Uyari;
 }
 @if (!string.IsNullOrEmpty(mesaj))
 {

@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using OnMuhasebe.Application.Abstractions;
+using OnMuhasebe.Application.Exceptions;
 using OnMuhasebe.Application.Extensions;
 using OnMuhasebe.Domain;
 using OnMuhasebe.Domain.Entities;
@@ -59,18 +60,18 @@ namespace OnMuhasebe.Application.Services
             }
             else
             {
-                throw new InvalidOperationException("Fiş türü Sayım Fazlası veya Sayım Eksiği olmalıdır.");
+                throw new IsKuraliException("Fiş türü Sayım Fazlası veya Sayım Eksiği olmalıdır.");
             }
 
             if (sayimFisi.Miktar <= 0)
             {
-                throw new InvalidOperationException("Miktar sıfırdan büyük olmalıdır.");
+                throw new IsKuraliException("Miktar sıfırdan büyük olmalıdır.");
             }
 
             var stokKarti = await _context.StokKartlari.FindAsync(sayimFisi.StokId);
             if (stokKarti == null || !stokKarti.Aktif)
             {
-                throw new InvalidOperationException("Geçerli ve aktif bir ürün seçilmelidir.");
+                throw new IsKuraliException("Geçerli ve aktif bir ürün seçilmelidir.");
             }
 
             // Negatif stok kontrolü açıksa sayım eksiği mevcut miktarı aşamaz.
@@ -79,7 +80,7 @@ namespace OnMuhasebe.Application.Services
                 var mevcut = await _stokKartiService.GetMevcutMiktarAsync(sayimFisi.StokId);
                 if (mevcut < sayimFisi.Miktar)
                 {
-                    throw new InvalidOperationException($"{stokKarti.StokAdi} için yeterli stok yok. Mevcut: {mevcut:N2}, sayım eksiği: {sayimFisi.Miktar:N2}");
+                    throw new IsKuraliException($"{stokKarti.StokAdi} için yeterli stok yok. Mevcut: {mevcut:N2}, sayım eksiği: {sayimFisi.Miktar:N2}");
                 }
             }
 
@@ -103,13 +104,13 @@ namespace OnMuhasebe.Application.Services
                 .FirstOrDefaultAsync(h => h.Id == id);
             if (hareket == null)
             {
-                throw new KeyNotFoundException("Stok hareketi bulunamadı.");
+                throw new KayitBulunamadiException("Stok hareketi bulunamadı.");
             }
 
             // Fatura hareketleri faturayla birlikte yaşar; tek başına silinirse fatura ile stok tutarsız kalır.
             if (hareket.HareketTipi != Sabitler.HareketSayimFazlasi && hareket.HareketTipi != Sabitler.HareketSayimEksigi)
             {
-                throw new InvalidOperationException("Fatura hareketleri buradan silinemez; ilgili faturayı silin.");
+                throw new IsKuraliException("Fatura hareketleri buradan silinemez; ilgili faturayı silin.");
             }
 
             // Sayım fazlası silinirse stok azalır; negatif stok kontrolü açıksa eksiye düşürülmez.
@@ -118,7 +119,7 @@ namespace OnMuhasebe.Application.Services
                 var mevcut = await _stokKartiService.GetMevcutMiktarAsync(hareket.StokId);
                 if (mevcut < hareket.Miktar)
                 {
-                    throw new InvalidOperationException($"{hareket.BelgeNo} silinirse {hareket.StokKarti.StokAdi} stoğu eksiye düşer. Mevcut: {mevcut:N2}");
+                    throw new IsKuraliException($"{hareket.BelgeNo} silinirse {hareket.StokKarti.StokAdi} stoğu eksiye düşer. Mevcut: {mevcut:N2}");
                 }
             }
 

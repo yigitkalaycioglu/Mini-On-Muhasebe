@@ -35,12 +35,12 @@ namespace OnMuhasebe.Application.Services
 
             if (!await IsSatisElemaniNameUniqueAsync(satisElemani.AdSoyad))
             {
-                throw new AlanHatasiException(nameof(SatisElemani.AdSoyad), "Bu ad ve soyad zaten kayıtlı.");
+                throw new IsKuraliException(nameof(SatisElemani.AdSoyad), "Bu ad ve soyad zaten kayıtlı.");
             }
 
             if (await _context.SatisElemanlari.AnyAsync(e => e.Telefon == satisElemani.Telefon))
             {
-                throw new AlanHatasiException(nameof(SatisElemani.Telefon), "Bu telefon numarası zaten kayıtlı.");
+                throw new IsKuraliException(nameof(SatisElemani.Telefon), "Bu telefon numarası zaten kayıtlı.");
             }
 
             _context.SatisElemanlari.Add(satisElemani);
@@ -53,7 +53,7 @@ namespace OnMuhasebe.Application.Services
             var satisElemani = await _context.SatisElemanlari.FindAsync(id);
             if (satisElemani == null)
             {
-                throw new KeyNotFoundException("Satış elemanı bulunamadı.");
+                throw new KayitBulunamadiException("Satış elemanı bulunamadı.");
             }
 
             var faturasiVar = await _context.SatisFaturalari.AnyAsync(f => f.SatisElemaniId == id);
@@ -75,17 +75,17 @@ namespace OnMuhasebe.Application.Services
             var existingSatisElemani = await _context.SatisElemanlari.FindAsync(satisElemani.Id);
             if (existingSatisElemani == null)
             {
-                throw new KeyNotFoundException("Satış elemanı bulunamadı.");
+                throw new KayitBulunamadiException("Satış elemanı bulunamadı.");
             }
 
             if (!await IsSatisElemaniNameUniqueAsync(satisElemani.AdSoyad, satisElemani.Id))
             {
-                throw new AlanHatasiException(nameof(SatisElemani.AdSoyad), "Bu ad ve soyad zaten kayıtlı.");
+                throw new IsKuraliException(nameof(SatisElemani.AdSoyad), "Bu ad ve soyad zaten kayıtlı.");
             }
 
             if (await _context.SatisElemanlari.AnyAsync(e => e.Telefon == satisElemani.Telefon && e.Id != satisElemani.Id))
             {
-                throw new AlanHatasiException(nameof(SatisElemani.Telefon), "Bu telefon numarası zaten kayıtlı.");
+                throw new IsKuraliException(nameof(SatisElemani.Telefon), "Bu telefon numarası zaten kayıtlı.");
             }
 
             existingSatisElemani.AdSoyad = satisElemani.AdSoyad;

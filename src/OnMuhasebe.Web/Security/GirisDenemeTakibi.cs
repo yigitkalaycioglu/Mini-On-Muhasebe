@@ -26,9 +26,11 @@ namespace OnMuhasebe.Web.Security
         }
 
         private readonly IMemoryCache _cache;
-        public GirisDenemeTakibi(IMemoryCache cache)
+        private readonly TimeProvider _zaman;
+        public GirisDenemeTakibi(IMemoryCache cache, TimeProvider zaman)
         {
             _cache = cache;
+            _zaman = zaman;
         }
 
         private static string Anahtar(string kullaniciAdi) => "giris-denemesi:" + kullaniciAdi.Trim().ToLowerInvariant();
@@ -40,7 +42,7 @@ namespace OnMuhasebe.Web.Security
             {
                 lock (kayit)
                 {
-                    var kalan = kayit.KilitBitisi - DateTimeOffset.UtcNow;
+                    var kalan = kayit.KilitBitisi - _zaman.GetUtcNow();
                     if (kalan > TimeSpan.Zero)
                     {
                         return kalan;
@@ -63,7 +65,7 @@ namespace OnMuhasebe.Web.Security
             lock (kayit)
             {
                 // Süresi dolmuş bir kilitten sonra sayım baştan başlar.
-                if (kayit.KilitBitisi <= DateTimeOffset.UtcNow)
+                if (kayit.KilitBitisi <= _zaman.GetUtcNow())
                 {
                     kayit.KilitBitisi = null;
                     kayit.HataliDeneme = 0;
@@ -76,7 +78,7 @@ namespace OnMuhasebe.Web.Security
                 }
 
                 kayit.HataliDeneme = 0;
-                kayit.KilitBitisi = DateTimeOffset.UtcNow + KilitSuresi;
+                kayit.KilitBitisi = _zaman.GetUtcNow() + KilitSuresi;
                 return true;
             }
         }

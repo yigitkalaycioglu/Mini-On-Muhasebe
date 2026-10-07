@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using OnMuhasebe.Application.Exceptions;
 using OnMuhasebe.Application.Services;
 using OnMuhasebe.Domain;
 using OnMuhasebe.Domain.Entities;
+using OnMuhasebe.Web.Extensions;
 
 namespace OnMuhasebe.Web.Controllers
 {
@@ -31,16 +33,12 @@ namespace OnMuhasebe.Web.Controllers
                 try
                 {
                     await _parametreService.UpdateParametrelerAsync(parametreler);
-                    TempData["Mesaj"] = "Parametreler kaydedildi.";
+                    this.BasariMesaji("Parametreler kaydedildi.");
                     return RedirectToAction("Index");
                 }
-                catch (InvalidOperationException ex)
+                catch (IsKuraliException ex)
                 {
-                    ModelState.AddModelError(string.Empty, ex.Message);
-                }
-                catch (KeyNotFoundException)
-                {
-                    return NotFound();
+                    ModelState.HataEkle(ex);
                 }
             }
 

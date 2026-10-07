@@ -1,8 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using OnMuhasebe.Application.Abstractions;
+using OnMuhasebe.Application.Exceptions;
 using OnMuhasebe.Application.Extensions;
 using OnMuhasebe.Domain;
 using OnMuhasebe.Domain.Entities;
+using OnMuhasebe.Domain.Rules;
 
 namespace OnMuhasebe.Application.Services
 {
@@ -45,20 +47,20 @@ namespace OnMuhasebe.Application.Services
             }
             if (!TahsilatVeyaOdeme(hareket.IslemTipi))
             {
-                throw new InvalidOperationException("İşlem Tahsilat veya Ödeme olmalıdır.");
+                throw new IsKuraliException("İşlem Tahsilat veya Ödeme olmalıdır.");
             }
 
             // Tutar "Ondalık Basamak" parametresine göre yuvarlanır.
             var basamak = await _parametreService.GetOndalikBasamakAsync();
-            tutar = Math.Round(tutar, basamak, MidpointRounding.AwayFromZero);
+            tutar = TutarHesabi.Yuvarla(tutar, basamak);
             if (tutar <= 0)
             {
-                throw new InvalidOperationException("Tutar sıfırdan büyük olmalıdır.");
+                throw new IsKuraliException("Tutar sıfırdan büyük olmalıdır.");
             }
 
             if (string.IsNullOrEmpty(hareket.OdemeTuru) || !Sabitler.OdemeTurleri.Contains(hareket.OdemeTuru))
             {
-                throw new InvalidOperationException("Ödeme türü Nakit, Havale veya Çek olmalıdır.");
+                throw new IsKuraliException("Ödeme türü Nakit, Havale veya Çek olmalıdır.");
             }
 
             var tahsilat = hareket.IslemTipi == Sabitler.IslemTahsilat;
@@ -67,15 +69,15 @@ namespace OnMuhasebe.Application.Services
             var cari = await _context.Cariler.FindAsync(hareket.CariId);
             if (cari == null || !cari.Aktif)
             {
-                throw new InvalidOperationException("Geçerli ve aktif bir cari seçilmelidir.");
+                throw new IsKuraliException("Geçerli ve aktif bir cari seçilmelidir.");
             }
             if (tahsilat && !_cariService.MusteriMi(cari))
             {
-                throw new InvalidOperationException("Tahsilat yalnızca müşteri carilerinden yapılabilir.");
+                throw new IsKuraliException("Tahsilat yalnızca müşteri carilerinden yapılabilir.");
             }
             if (!tahsilat && !_cariService.TedarikciMi(cari))
             {
-                throw new InvalidOperationException("Ödeme yalnızca tedarikçi carilerine yapılabilir.");
+                throw new IsKuraliException("Ödeme yalnızca tedarikçi carilerine yapılabilir.");
             }
 
             hareket.Borc = tahsilat ? 0 : tutar;
@@ -99,13 +101,13 @@ namespace OnMuhasebe.Application.Services
             var hareket = await _context.CariHareketler.FindAsync(id);
             if (hareket == null)
             {
-                throw new KeyNotFoundException("Kayıt bulunamadı.");
+                throw new KayitBulunamadiException("Kayıt bulunamadı.");
             }
 
             // Fatura hareketleri faturayla birlikte yaşar; tek başına silinirse fatura ile cari tutarsız kalır.
             if (!TahsilatVeyaOdeme(hareket.IslemTipi))
             {
-                throw new InvalidOperationException("Fatura hareketleri buradan silinemez; ilgili faturayı silin.");
+                throw new IsKuraliException("Fatura hareketleri buradan silinemez; ilgili faturayı silin.");
             }
 
             _context.CariHareketler.Remove(hareket);

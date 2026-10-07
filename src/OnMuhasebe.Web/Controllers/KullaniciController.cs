@@ -4,6 +4,7 @@ using OnMuhasebe.Application.Exceptions;
 using OnMuhasebe.Application.Services;
 using OnMuhasebe.Domain;
 using OnMuhasebe.Domain.Entities;
+using OnMuhasebe.Web.Extensions;
 using OnMuhasebe.Web.Security;
 
 namespace OnMuhasebe.Web.Controllers
@@ -44,28 +45,18 @@ namespace OnMuhasebe.Web.Controllers
         {
             if (string.IsNullOrEmpty(yeniSifre) || yeniSifre.Length < 6)
             {
-                TempData["Mesaj"] = "Şifre en az 6 karakter olmalıdır.";
-                TempData["MesajTipi"] = "warning";
+                this.UyariMesaji("Şifre en az 6 karakter olmalıdır.");
                 return RedirectToAction("Edit", new { id });
             }
 
             if (yeniSifre != yeniSifreTekrar)
             {
-                TempData["Mesaj"] = "Şifreler eşleşmiyor.";
-                TempData["MesajTipi"] = "warning";
+                this.UyariMesaji("Şifreler eşleşmiyor.");
                 return RedirectToAction("Edit", new { id });
             }
 
-            try
-            {
-                await _kullaniciService.SifreSifirlaAsync(id, yeniSifre);
-                TempData["Mesaj"] = "Şifre sıfırlandı.";
-                TempData["MesajTipi"] = "success";
-            }
-            catch (KeyNotFoundException)
-            {
-                return NotFound();
-            }
+            await _kullaniciService.SifreSifirlaAsync(id, yeniSifre);
+            this.BasariMesaji("Şifre sıfırlandı.");
 
             return RedirectToAction("Edit", new { id });
         }
@@ -91,17 +82,12 @@ namespace OnMuhasebe.Web.Controllers
                 try
                 {
                     await _kullaniciService.CreateKullaniciAsync(kullanici, sifre);
-                    TempData["Mesaj"] = "Kullanıcı kaydedildi.";
-                    TempData["MesajTipi"] = "success";
+                    this.BasariMesaji("Kullanıcı kaydedildi.");
                     return RedirectToAction("Index");
                 }
-                catch (AlanHatasiException ex)
+                catch (IsKuraliException ex)
                 {
-                    ModelState.AddModelError(ex.Alan, ex.Message);
-                }
-                catch (InvalidOperationException ex)
-                {
-                    ModelState.AddModelError(string.Empty, ex.Message);
+                    ModelState.HataEkle(ex);
                 }
             }
 
@@ -121,21 +107,12 @@ namespace OnMuhasebe.Web.Controllers
                 try
                 {
                     await _kullaniciService.UpdateKullaniciAsync(kullanici, User.KullaniciId());
-                    TempData["Mesaj"] = "Kullanıcı güncellendi.";
-                    TempData["MesajTipi"] = "success";
+                    this.BasariMesaji("Kullanıcı güncellendi.");
                     return RedirectToAction("Index");
                 }
-                catch (AlanHatasiException ex)
+                catch (IsKuraliException ex)
                 {
-                    ModelState.AddModelError(ex.Alan, ex.Message);
-                }
-                catch (InvalidOperationException ex)
-                {
-                    ModelState.AddModelError(string.Empty, ex.Message);
-                }
-                catch (KeyNotFoundException)
-                {
-                    return NotFound();
+                    ModelState.HataEkle(ex);
                 }
             }
 
@@ -150,20 +127,19 @@ namespace OnMuhasebe.Web.Controllers
             try
             {
                 var silindi = await _kullaniciService.DeleteKullaniciAsync(id, User.KullaniciId());
-                TempData["Mesaj"] = silindi
-                    ? "Kullanıcı silindi."
-                    : "Bu kullanıcının işlem kayıtları olduğu için silinemedi; bunun yerine pasife alındı.";
-                TempData["MesajTipi"] = silindi ? "success" : "warning";
+                if (silindi)
+                {
+                    this.BasariMesaji("Kullanıcı silindi.");
+                }
+                else
+                {
+                    this.UyariMesaji("Bu kullanıcının işlem kayıtları olduğu için silinemedi; bunun yerine pasife alındı.");
+                }
             }
-            catch (KeyNotFoundException)
-            {
-                return NotFound();
-            }
-            catch (InvalidOperationException ex)
+            catch (IsKuraliException ex)
             {
                 // Kendini ya da son yöneticiyi silme girişimi
-                TempData["Mesaj"] = ex.Message;
-                TempData["MesajTipi"] = "warning";
+                this.UyariMesaji(ex.Message);
             }
 
             return RedirectToAction("Index");

@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using OnMuhasebe.Application.Exceptions;
 using OnMuhasebe.Application.Services;
 using OnMuhasebe.Domain;
 using OnMuhasebe.Domain.Entities;
+using OnMuhasebe.Web.Extensions;
 using OnMuhasebe.Web.Security;
 
 namespace OnMuhasebe.Web.Controllers
@@ -61,13 +63,12 @@ namespace OnMuhasebe.Web.Controllers
                 try
                 {
                     await _alisFaturasiService.CreateAlisFaturasiAsync(alisFaturasi, User.KullaniciId());
-                    TempData["Mesaj"] = $"{alisFaturasi.FaturaNo} numaralı fatura kaydedildi.";
-                    TempData["MesajTipi"] = "success";
+                    this.BasariMesaji($"{alisFaturasi.FaturaNo} numaralı fatura kaydedildi.");
                     return RedirectToAction("Index");
                 }
-                catch (InvalidOperationException ex)
+                catch (IsKuraliException ex)
                 {
-                    ModelState.AddModelError(string.Empty, ex.Message);
+                    ModelState.HataEkle(ex);
                 }
             }
 
@@ -93,17 +94,11 @@ namespace OnMuhasebe.Web.Controllers
             try
             {
                 await _alisFaturasiService.DeleteAlisFaturasiAsync(id);
-                TempData["Mesaj"] = "Fatura silindi; stok ve cari hareketleri geri alındı.";
-                TempData["MesajTipi"] = "success";
+                this.BasariMesaji("Fatura silindi; stok ve cari hareketleri geri alındı.");
             }
-            catch (KeyNotFoundException)
+            catch (IsKuraliException ex)
             {
-                return NotFound();
-            }
-            catch (InvalidOperationException ex)
-            {
-                TempData["Mesaj"] = ex.Message;
-                TempData["MesajTipi"] = "warning";
+                this.UyariMesaji(ex.Message);
                 return RedirectToAction("Detay", new { id });
             }
 

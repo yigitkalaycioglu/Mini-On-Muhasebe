@@ -115,7 +115,7 @@ namespace OnMuhasebe.Application.Services
             stokKarti.Id = 0; // Id veritabanında üretilir
             if (await _context.StokKartlari.AnyAsync(s => s.StokKodu == stokKarti.StokKodu))
             {
-                throw new AlanHatasiException(nameof(StokKarti.StokKodu), "Bu stok kodu zaten kayıtlı.");
+                throw new IsKuraliException(nameof(StokKarti.StokKodu), "Bu stok kodu zaten kayıtlı.");
             }
 
             _context.StokKartlari.Add(stokKarti);
@@ -128,12 +128,12 @@ namespace OnMuhasebe.Application.Services
             var existingStokKarti = await _context.StokKartlari.FindAsync(stokKarti.Id);
             if (existingStokKarti == null)
             {
-                throw new KeyNotFoundException("Stok kartı bulunamadı.");
+                throw new KayitBulunamadiException("Stok kartı bulunamadı.");
             }
 
             if (await _context.StokKartlari.AnyAsync(s => s.StokKodu == stokKarti.StokKodu && s.Id != stokKarti.Id))
             {
-                throw new AlanHatasiException(nameof(StokKarti.StokKodu), "Bu stok kodu zaten kayıtlı.");
+                throw new IsKuraliException(nameof(StokKarti.StokKodu), "Bu stok kodu zaten kayıtlı.");
             }
 
             existingStokKarti.StokKodu = stokKarti.StokKodu;
@@ -152,7 +152,7 @@ namespace OnMuhasebe.Application.Services
             var stokKarti = await _context.StokKartlari.FindAsync(id);
             if (stokKarti == null)
             {
-                throw new KeyNotFoundException("Stok kartı bulunamadı.");
+                throw new KayitBulunamadiException("Stok kartı bulunamadı.");
             }
 
             var kayitliIslemVar = await _context.SatisFaturaSatirlari.AnyAsync(s => s.StokId == id)

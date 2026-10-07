@@ -18,6 +18,9 @@ namespace OnMuhasebe.Web.Extensions
             {
                 options.Filters.Add<GorunumParametreleriFilter>();
 
+                // Serviste bulunamayan kayıt her action'da ayrı ayrı yakalanmaz; burada 404'e çevrilir.
+                options.Filters.Add<KayitBulunamadiFiltresi>();
+
                 // Model bağlama hataları (ör. tutar alanına harf girilmesi) varsayılan olarak İngilizce gelir.
                 var mesajlar = options.ModelBindingMessageProvider;
                 mesajlar.SetValueIsInvalidAccessor(deger => $"'{deger}' geçerli bir değer değil.");

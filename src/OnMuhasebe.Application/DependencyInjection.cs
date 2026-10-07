@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using OnMuhasebe.Application.Services;
 
 namespace OnMuhasebe.Application
@@ -18,6 +19,9 @@ namespace OnMuhasebe.Application
             services.AddScoped<IParametreService, ParametreService>();
             services.AddScoped<IStokHareketService, StokHareketService>();
             services.AddScoped<ITahsilatOdemeService, TahsilatOdemeService>();
+
+            // Servisler "şimdi"yi doğrudan DateTime.Now'dan değil TimeProvider'dan alır; testlerde zaman sabitlenebilir.
+            services.TryAddSingleton(TimeProvider.System);
 
             return services;
         }

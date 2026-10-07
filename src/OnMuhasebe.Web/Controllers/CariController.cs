@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using OnMuhasebe.Application.Exceptions;
 using OnMuhasebe.Application.Services;
 using OnMuhasebe.Domain.Entities;
+using OnMuhasebe.Web.Extensions;
 using OnMuhasebe.Web.ViewModels;
 
 namespace OnMuhasebe.Web.Controllers
@@ -102,17 +103,12 @@ namespace OnMuhasebe.Web.Controllers
                 try
                 {
                     await _cariService.CreateCariAsync(cari);
-                    TempData["Mesaj"] = "Cari kaydedildi.";
-                    TempData["MesajTipi"] = "success";
+                    this.BasariMesaji("Cari kaydedildi.");
                     return RedirectToAction("Index");
                 }
-                catch (AlanHatasiException ex)
+                catch (IsKuraliException ex)
                 {
-                    ModelState.AddModelError(ex.Alan, ex.Message);
-                }
-                catch (InvalidOperationException ex)
-                {
-                    ModelState.AddModelError(string.Empty, ex.Message);
+                    ModelState.HataEkle(ex);
                 }
             }
             return View("Create", cari);
@@ -130,21 +126,12 @@ namespace OnMuhasebe.Web.Controllers
                 try
                 {
                     await _cariService.UpdateCariAsync(cari);
-                    TempData["Mesaj"] = "Cari güncellendi.";
-                    TempData["MesajTipi"] = "success";
+                    this.BasariMesaji("Cari güncellendi.");
                     return RedirectToAction("Index");
                 }
-                catch (AlanHatasiException ex)
+                catch (IsKuraliException ex)
                 {
-                    ModelState.AddModelError(ex.Alan, ex.Message);
-                }
-                catch (InvalidOperationException ex)
-                {
-                    ModelState.AddModelError(string.Empty, ex.Message);
-                }
-                catch (KeyNotFoundException)
-                {
-                    return NotFound();
+                    ModelState.HataEkle(ex);
                 }
             }
 
@@ -166,17 +153,14 @@ namespace OnMuhasebe.Web.Controllers
         [ActionName("Delete")]
         public async Task<IActionResult> DeletePost(int id)
         {
-            try
+            var silindi = await _cariService.DeleteCariAsync(id);
+            if (silindi)
             {
-                var silindi = await _cariService.DeleteCariAsync(id);
-                TempData["Mesaj"] = silindi
-                    ? "Cari silindi."
-                    : "Bu carinin fatura veya hareket kayıtları olduğu için silinemedi; bunun yerine pasife alındı.";
-                TempData["MesajTipi"] = silindi ? "success" : "warning";
+                this.BasariMesaji("Cari silindi.");
             }
-            catch (KeyNotFoundException)
+            else
             {
-                return NotFound();
+                this.UyariMesaji("Bu carinin fatura veya hareket kayıtları olduğu için silinemedi; bunun yerine pasife alındı.");
             }
 
             return RedirectToAction("Index");

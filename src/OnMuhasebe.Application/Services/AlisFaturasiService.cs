@@ -1,8 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using OnMuhasebe.Application.Abstractions;
+using OnMuhasebe.Application.Exceptions;
 using OnMuhasebe.Application.Extensions;
 using OnMuhasebe.Domain;
 using OnMuhasebe.Domain.Entities;
+using OnMuhasebe.Domain.Rules;
 
 namespace OnMuhasebe.Application.Services
 {
@@ -12,12 +14,14 @@ namespace OnMuhasebe.Application.Services
         private readonly IParametreService _parametreService;
         private readonly IStokKartiService _stokKartiService;
         private readonly ICariService _cariService;
-        public AlisFaturasiService(IApplicationDbContext context, IParametreService parametreService, IStokKartiService stokKartiService, ICariService cariService)
+        private readonly TimeProvider _zaman;
+        public AlisFaturasiService(IApplicationDbContext context, IParametreService parametreService, IStokKartiService stokKartiService, ICariService cariService, TimeProvider zaman)
         {
             _context = context;
             _parametreService = parametreService;
             _stokKartiService = stokKartiService;
             _cariService = cariService;
+            _zaman = zaman;
         }
 
         public async Task<AlisFaturasi> CreateAlisFaturasiAsync(AlisFaturasi alisFaturasi, int kullaniciId)
@@ -33,21 +37,21 @@ namespace OnMuhasebe.Application.Services
 
             if (alisFaturasi.AlisFaturaSatirlari.Count == 0)
             {
-                throw new InvalidOperationException("Faturaya en az bir kalem ekleyin.");
+                throw new IsKuraliException("Faturaya en az bir kalem ekleyin.");
             }
 
             // Form ekranda süzülse de istek elle değiştirilebilir; seçimler sunucuda da doğrulanır.
             var cari = await _context.Cariler.FindAsync(alisFaturasi.CariId);
             if (cari == null || !cari.Aktif || !_cariService.TedarikciMi(cari))
             {
-                throw new InvalidOperationException("Geçerli ve aktif bir tedarikçi seçilmelidir.");
+                throw new IsKuraliException("Geçerli ve aktif bir tedarikçi seçilmelidir.");
             }
 
             var stokIdler = alisFaturasi.AlisFaturaSatirlari.Select(k => k.StokId).Distinct().ToList();
             var aktifStokSayisi = await _context.StokKartlari.CountAsync(s => stokIdler.Contains(s.Id) && s.Aktif);
             if (aktifStokSayisi != stokIdler.Count)
             {
-                throw new InvalidOperationException("Faturadaki ürünlerden biri bulunamadı ya da pasif.");
+                throw new IsKuraliException("Faturadaki ürünlerden biri bulunamadı ya da pasif.");
             }
 
             // Id'ler veritabanında üretilir; istekle gelen değerler yok sayılır.
@@ -60,19 +64,18 @@ namespace OnMuhasebe.Application.Services
             var faturaNo = await GetYeniFaturaNoAsync();
             alisFaturasi.FaturaNo = faturaNo;
             alisFaturasi.KullaniciId = kullaniciId;
-            alisFaturasi.OlusturmaTarihi = DateTime.Now;
+            alisFaturasi.OlusturmaTarihi = _zaman.GetLocalNow().DateTime;
             alisFaturasi.AraToplam = 0;
             alisFaturasi.KdvToplam = 0;
 
-            // Tutarlar "Ondalık Basamak" parametresine göre ticari usulde (yarım yukarı) yuvarlanır;
-            // Math.Round varsayılanı bankacı yuvarlamasıdır (0,365 → 0,36) ve ekrandaki hesapla uyuşmaz.
+            // Tutarlar "Ondalık Basamak" parametresine göre ticari usulde yuvarlanır (TutarHesabi).
             var basamak = await _parametreService.GetOndalikBasamakAsync();
 
             foreach (var kalem in alisFaturasi.AlisFaturaSatirlari)
             {
-                kalem.SatirTutari = Math.Round(kalem.Miktar * kalem.BirimFiyat, basamak, MidpointRounding.AwayFromZero);
+                kalem.SatirTutari = TutarHesabi.SatirTutari(kalem.Miktar, kalem.BirimFiyat, basamak);
                 alisFaturasi.AraToplam += kalem.SatirTutari;
-                alisFaturasi.KdvToplam += Math.Round(kalem.SatirTutari * kalem.KdvOrani / 100, basamak, MidpointRounding.AwayFromZero);
+                alisFaturasi.KdvToplam += TutarHesabi.Kdv(kalem.SatirTutari, kalem.KdvOrani, basamak);
 
                 var stokHareket = new StokHareket
                 {
@@ -112,7 +115,7 @@ namespace OnMuhasebe.Application.Services
                 // Aynı anda kaydedilen iki fatura aynı numarayı alırsa benzersiz indeks ikincisini reddeder.
                 if (await _context.AlisFaturalari.AsNoTracking().AnyAsync(f => f.FaturaNo == faturaNo))
                 {
-                    throw new InvalidOperationException($"{faturaNo} numarası bu sırada başka bir faturaya verildi. Faturayı tekrar kaydedin.");
+                    throw new IsKuraliException($"{faturaNo} numarası bu sırada başka bir faturaya verildi. Faturayı tekrar kaydedin.");
                 }
                 throw;
             }
@@ -124,7 +127,7 @@ namespace OnMuhasebe.Application.Services
             var alisFaturasi = await _context.AlisFaturalari.FindAsync(id);
             if (alisFaturasi == null)
             {
-                throw new KeyNotFoundException("Alış faturası bulunamadı.");
+                throw new KayitBulunamadiException("Alış faturası bulunamadı.");
             }
 
             // Hareketler belge numarası ve türüyle bulunur; başka türde aynı numaralı belge olsa da ona dokunulmaz.
@@ -144,7 +147,7 @@ namespace OnMuhasebe.Application.Services
                     if (mevcut < geriAlinacak)
                     {
                         var stokAdi = grup.First().StokKarti.StokAdi;
-                        throw new InvalidOperationException($"{alisFaturasi.FaturaNo} silinirse {stokAdi} stoğu eksiye düşer. Mevcut: {mevcut:N2}, faturadaki giriş: {geriAlinacak:N2}");
+                        throw new IsKuraliException($"{alisFaturasi.FaturaNo} silinirse {stokAdi} stoğu eksiye düşer. Mevcut: {mevcut:N2}, faturadaki giriş: {geriAlinacak:N2}");
                     }
                 }
             }

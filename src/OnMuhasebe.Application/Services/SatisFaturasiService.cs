@@ -1,9 +1,11 @@
 using Microsoft.EntityFrameworkCore;
 using OnMuhasebe.Application.Abstractions;
+using OnMuhasebe.Application.Exceptions;
 using OnMuhasebe.Application.Extensions;
 using OnMuhasebe.Application.Models;
 using OnMuhasebe.Domain;
 using OnMuhasebe.Domain.Entities;
+using OnMuhasebe.Domain.Rules;
 
 namespace OnMuhasebe.Application.Services
 {
@@ -13,12 +15,14 @@ namespace OnMuhasebe.Application.Services
         private readonly IParametreService _parametreService;
         private readonly IStokKartiService _stokKartiService;
         private readonly ICariService _cariService;
-        public SatisFaturasiService(IApplicationDbContext context, IParametreService parametreService, IStokKartiService stokKartiService, ICariService cariService)
+        private readonly TimeProvider _zaman;
+        public SatisFaturasiService(IApplicationDbContext context, IParametreService parametreService, IStokKartiService stokKartiService, ICariService cariService, TimeProvider zaman)
         {
             _context = context;
             _parametreService = parametreService;
             _stokKartiService = stokKartiService;
             _cariService = cariService;
+            _zaman = zaman;
         }
 
         public async Task<SatisFaturasi> CreateSatisFaturasiAsync(SatisFaturasi satisFaturasi, int kullaniciId)
@@ -34,20 +38,20 @@ namespace OnMuhasebe.Application.Services
 
             if (satisFaturasi.SatisFaturaSatirlari.Count == 0)
             {
-                throw new InvalidOperationException("Faturaya en az bir kalem ekleyin.");
+                throw new IsKuraliException("Faturaya en az bir kalem ekleyin.");
             }
 
             // Form ekranda süzülse de istek elle değiştirilebilir; seçimler sunucuda da doğrulanır.
             var cari = await _context.Cariler.FindAsync(satisFaturasi.CariId);
             if (cari == null || !cari.Aktif || !_cariService.MusteriMi(cari))
             {
-                throw new InvalidOperationException("Geçerli ve aktif bir müşteri seçilmelidir.");
+                throw new IsKuraliException("Geçerli ve aktif bir müşteri seçilmelidir.");
             }
 
             var satisElemani = await _context.SatisElemanlari.FindAsync(satisFaturasi.SatisElemaniId);
             if (satisElemani == null || !satisElemani.Aktif)
             {
-                throw new InvalidOperationException("Geçerli ve aktif bir satış elemanı seçilmelidir.");
+                throw new IsKuraliException("Geçerli ve aktif bir satış elemanı seçilmelidir.");
             }
 
             var stokIdler = satisFaturasi.SatisFaturaSatirlari.Select(k => k.StokId).Distinct().ToList();
@@ -56,7 +60,7 @@ namespace OnMuhasebe.Application.Services
                 .ToDictionaryAsync(s => s.Id, s => s.StokAdi);
             if (stokAdlari.Count != stokIdler.Count)
             {
-                throw new InvalidOperationException("Faturadaki ürünlerden biri bulunamadı ya da pasif.");
+                throw new IsKuraliException("Faturadaki ürünlerden biri bulunamadı ya da pasif.");
             }
 
             // Id'ler veritabanında üretilir; istekle gelen değerler yok sayılır.
@@ -69,7 +73,7 @@ namespace OnMuhasebe.Application.Services
             var faturaNo = await GetYeniFaturaNoAsync();
             satisFaturasi.FaturaNo = faturaNo;
             satisFaturasi.KullaniciId = kullaniciId;
-            satisFaturasi.OlusturmaTarihi = DateTime.Now;
+            satisFaturasi.OlusturmaTarihi = _zaman.GetLocalNow().DateTime;
             satisFaturasi.AraToplam = 0;
             satisFaturasi.KdvToplam = 0;
 
@@ -84,20 +88,19 @@ namespace OnMuhasebe.Application.Services
 
                     if (mevcutMiktar < istenenToplam)
                     {
-                        throw new InvalidOperationException($"{stokAdlari[grup.Key]} için yeterli stok yok. Mevcut: {mevcutMiktar:N2}, istenen: {istenenToplam:N2}");
+                        throw new IsKuraliException($"{stokAdlari[grup.Key]} için yeterli stok yok. Mevcut: {mevcutMiktar:N2}, istenen: {istenenToplam:N2}");
                     }
                 }
             }
 
-            // Tutarlar "Ondalık Basamak" parametresine göre ticari usulde (yarım yukarı) yuvarlanır;
-            // Math.Round varsayılanı bankacı yuvarlamasıdır (0,365 → 0,36) ve ekrandaki hesapla uyuşmaz.
+            // Tutarlar "Ondalık Basamak" parametresine göre ticari usulde yuvarlanır (TutarHesabi).
             var basamak = await _parametreService.GetOndalikBasamakAsync();
 
             foreach (var kalem in satisFaturasi.SatisFaturaSatirlari)
             {
-                kalem.SatirTutari = Math.Round(kalem.Miktar * kalem.BirimFiyat, basamak, MidpointRounding.AwayFromZero);
+                kalem.SatirTutari = TutarHesabi.SatirTutari(kalem.Miktar, kalem.BirimFiyat, basamak);
                 satisFaturasi.AraToplam += kalem.SatirTutari;
-                satisFaturasi.KdvToplam += Math.Round(kalem.SatirTutari * kalem.KdvOrani / 100, basamak, MidpointRounding.AwayFromZero);
+                satisFaturasi.KdvToplam += TutarHesabi.Kdv(kalem.SatirTutari, kalem.KdvOrani, basamak);
 
                 var stokHareket = new StokHareket
                 {
@@ -137,7 +140,7 @@ namespace OnMuhasebe.Application.Services
                 // Aynı anda kaydedilen iki fatura aynı numarayı alırsa benzersiz indeks ikincisini reddeder.
                 if (await _context.SatisFaturalari.AsNoTracking().AnyAsync(f => f.FaturaNo == faturaNo))
                 {
-                    throw new InvalidOperationException($"{faturaNo} numarası bu sırada başka bir faturaya verildi. Faturayı tekrar kaydedin.");
+                    throw new IsKuraliException($"{faturaNo} numarası bu sırada başka bir faturaya verildi. Faturayı tekrar kaydedin.");
                 }
                 throw;
             }
@@ -149,7 +152,7 @@ namespace OnMuhasebe.Application.Services
             var satisFaturasi = await _context.SatisFaturalari.FindAsync(id);
             if (satisFaturasi == null)
             {
-                throw new KeyNotFoundException("Satış faturası bulunamadı.");
+                throw new KayitBulunamadiException("Satış faturası bulunamadı.");
             }
 
             // Hareketler belge numarası ve türüyle bulunur; başka türde aynı numaralı belge olsa da ona dokunulmaz.

@@ -1,9 +1,11 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
+using OnMuhasebe.Application.Exceptions;
 using OnMuhasebe.Application.Services;
 using OnMuhasebe.Domain;
 using OnMuhasebe.Domain.Entities;
+using OnMuhasebe.Web.Extensions;
 using OnMuhasebe.Web.Security;
 using OnMuhasebe.Web.ViewModels;
 
@@ -68,13 +70,12 @@ namespace OnMuhasebe.Web.Controllers
                 try
                 {
                     await _tahsilatOdemeService.CreateTahsilatOdemeAsync(cariHareket, tutar!.Value, User.KullaniciId());
-                    TempData["Mesaj"] = $"{cariHareket.BelgeNo} numaralı {_cariService.IslemTipiAdi(cariHareket.IslemTipi).ToLower()} kaydedildi.";
-                    TempData["MesajTipi"] = "success";
+                    this.BasariMesaji($"{cariHareket.BelgeNo} numaralı {_cariService.IslemTipiAdi(cariHareket.IslemTipi).ToLower()} kaydedildi.");
                     return RedirectToAction("Index");
                 }
-                catch (InvalidOperationException ex)
+                catch (IsKuraliException ex)
                 {
-                    ModelState.AddModelError(string.Empty, ex.Message);
+                    ModelState.HataEkle(ex);
                 }
             }
 
@@ -90,17 +91,11 @@ namespace OnMuhasebe.Web.Controllers
             try
             {
                 await _tahsilatOdemeService.DeleteTahsilatOdemeAsync(id);
-                TempData["Mesaj"] = "Kayıt silindi; cari bakiye güncellendi.";
-                TempData["MesajTipi"] = "success";
+                this.BasariMesaji("Kayıt silindi; cari bakiye güncellendi.");
             }
-            catch (KeyNotFoundException)
+            catch (IsKuraliException ex)
             {
-                return NotFound();
-            }
-            catch (InvalidOperationException ex)
-            {
-                TempData["Mesaj"] = ex.Message;
-                TempData["MesajTipi"] = "warning";
+                this.UyariMesaji(ex.Message);
             }
 
             return RedirectToAction("Index");

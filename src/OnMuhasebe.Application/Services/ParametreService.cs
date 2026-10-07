@@ -1,23 +1,29 @@
 using System.Globalization;
-using System.Text.RegularExpressions;
 using Microsoft.EntityFrameworkCore;
 using OnMuhasebe.Application.Abstractions;
+using OnMuhasebe.Application.Exceptions;
 using OnMuhasebe.Domain;
 using OnMuhasebe.Domain.Entities;
+using OnMuhasebe.Domain.Rules;
 
 namespace OnMuhasebe.Application.Services
 {
     public class ParametreService : IParametreService
     {
         private readonly IApplicationDbContext _context;
+        private readonly TimeProvider _zaman;
 
         // Servis istek başına oluşturulduğu için (Scoped) parametreler bir istekte bir kez okunur.
         private Dictionary<string, string>? _degerler;
 
-        public ParametreService(IApplicationDbContext context)
+        public ParametreService(IApplicationDbContext context, TimeProvider zaman)
         {
             _context = context;
+            _zaman = zaman;
         }
+
+        // Belge numaralarındaki yıl yerel saate göre belirlenir.
+        private DateTime Simdi => _zaman.GetLocalNow().DateTime;
 
         // Dökümanın 9. bölümündeki örnek değerler. Tabloda kayıt yoksa bunlar kullanılır.
         // Negatif stok kontrolü güvenli taraf olsun diye varsayılan olarak açıktır.
@@ -56,8 +62,6 @@ namespace OnMuhasebe.Application.Services
         // Tutar kolonları decimal(18,2); daha fazla basamak saklanamaz.
         private const int EnFazlaOndalikBasamak = 2;
 
-        private static readonly Regex SiraDeseni = new(@"\{(0+)\}");
-
         public async Task<List<Parametre>> GetAllParametrelerAsync()
         {
             return await _context.Parametreler.OrderBy(p => p.Id).ToListAsync();
@@ -74,11 +78,11 @@ namespace OnMuhasebe.Application.Services
             {
                 if (!kayitlar.TryGetValue(gelen.Id, out var kayit))
                 {
-                    throw new KeyNotFoundException("Parametre bulunamadı.");
+                    throw new KayitBulunamadiException("Parametre bulunamadı.");
                 }
 
                 // Kod formdan gizli alan olarak gelse de değiştirilmez; doğrulama kayıttaki koda göre yapılır.
-                kayit.ParametreDegeri = DegeriDogrula(kayit.ParametreKodu, gelen.ParametreDegeri);
+                kayit.ParametreDegeri = DegeriDogrula(kayit.ParametreKodu, gelen.ParametreDegeri, Simdi);
             }
 
             await FormatlarFarkliMiAsync();
@@ -102,36 +106,36 @@ namespace OnMuhasebe.Application.Services
                 .Concat(new[] { Sabitler.TahsilatNoFormati, Sabitler.OdemeNoFormati });
 
             var cakisanVar = formatlar
-                .Select(f => FormatCoz(f, DateTime.Now))
+                .Select(f => FormatCoz(f, Simdi))
                 .GroupBy(f => (f.OnEk.ToUpperInvariant(), f.SonEk.ToUpperInvariant()))
                 .Any(g => g.Count() > 1);
 
             if (cakisanVar)
             {
-                throw new InvalidOperationException("Belge numarası formatları birbirinden farklı olmalıdır (ör. SAT-, ALS-, SF-, SE-; TAH- ve ODE- tahsilat/ödeme için ayrılmıştır).");
+                throw new IsKuraliException("Belge numarası formatları birbirinden farklı olmalıdır (ör. SAT-, ALS-, SF-, SE-; TAH- ve ODE- tahsilat/ödeme için ayrılmıştır).");
             }
         }
 
-        private static string DegeriDogrula(string kod, string? deger)
+        private static string DegeriDogrula(string kod, string? deger, DateTime simdi)
         {
             deger = deger?.Trim() ?? "";
             if (deger.Length == 0)
             {
-                throw new InvalidOperationException($"{kod} parametresi boş bırakılamaz.");
+                throw new IsKuraliException($"{kod} parametresi boş bırakılamaz.");
             }
 
             if (AnahtarParametreler.Contains(kod))
             {
                 if (deger != Sabitler.DegerAcik && deger != Sabitler.DegerKapali)
                 {
-                    throw new InvalidOperationException($"{kod} parametresi Acik veya Kapali olmalıdır.");
+                    throw new IsKuraliException($"{kod} parametresi Acik veya Kapali olmalıdır.");
                 }
             }
             else if (kod == Sabitler.ParamVarsayilanKdvOrani)
             {
                 if (!SayiyaCevir(deger, out var kdv) || kdv < 0 || kdv > 100)
                 {
-                    throw new InvalidOperationException("Varsayılan KDV oranı 0 ile 100 arasında bir sayı olmalıdır.");
+                    throw new IsKuraliException("Varsayılan KDV oranı 0 ile 100 arasında bir sayı olmalıdır.");
                 }
                 deger = kdv.ToString(CultureInfo.InvariantCulture);
             }
@@ -139,22 +143,21 @@ namespace OnMuhasebe.Application.Services
             {
                 if (!int.TryParse(deger, out var basamak) || basamak < 0 || basamak > EnFazlaOndalikBasamak)
                 {
-                    throw new InvalidOperationException($"Ondalık basamak 0 ile {EnFazlaOndalikBasamak} arasında bir tam sayı olmalıdır (tutarlar 2 basamakla saklanır).");
+                    throw new IsKuraliException($"Ondalık basamak 0 ile {EnFazlaOndalikBasamak} arasında bir tam sayı olmalıdır (tutarlar 2 basamakla saklanır).");
                 }
             }
             else if (FormatParametreleri.Contains(kod))
             {
                 // Format çözülemiyorsa FormatCoz hata fırlatır.
-                var (onEk, sonEk, basamak) = FormatCoz(deger, DateTime.Now);
-                if (onEk.Length + basamak + sonEk.Length > BelgeNoUzunlugu)
+                if (FormatCoz(deger, simdi).NumaraUzunlugu > BelgeNoUzunlugu)
                 {
-                    throw new InvalidOperationException($"{kod} formatı en fazla {BelgeNoUzunlugu} karakterlik numara üretmelidir.");
+                    throw new IsKuraliException($"{kod} formatı en fazla {BelgeNoUzunlugu} karakterlik numara üretmelidir.");
                 }
             }
 
             if (deger.Length > 250)
             {
-                throw new InvalidOperationException($"{kod} parametresi en fazla 250 karakter olabilir.");
+                throw new IsKuraliException($"{kod} parametresi en fazla 250 karakter olabilir.");
             }
 
             return deger;
@@ -213,48 +216,28 @@ namespace OnMuhasebe.Application.Services
 
         public async Task<string> YeniBelgeNoFormattanAsync(string format, IQueryable<string?> mevcutNolar)
         {
-            var (onEk, sonEk, basamak) = FormatCoz(format, DateTime.Now);
+            var bicim = FormatCoz(format, Simdi);
 
+            // Yalnızca aynı ön ekle başlayan numaralar veritabanından getirilir; en büyük sıra burada bulunur.
+            var onEk = bicim.OnEk;
             var nolar = await mevcutNolar
                 .Where(n => n != null && n.StartsWith(onEk))
                 .ToListAsync();
 
-            var sonSira = 0;
-            foreach (var no in nolar)
-            {
-                if (no == null || !no.EndsWith(sonEk) || no.Length < onEk.Length + sonEk.Length)
-                {
-                    continue;
-                }
-
-                var sira = no.Substring(onEk.Length, no.Length - onEk.Length - sonEk.Length);
-                if (int.TryParse(sira, out var sayi) && sayi > sonSira)
-                {
-                    sonSira = sayi;
-                }
-            }
-
-            return onEk + (sonSira + 1).ToString().PadLeft(basamak, '0') + sonEk;
+            return bicim.Sonraki(nolar);
         }
 
-        /// <summary>
-        /// "SAT-{yyyy}-{0000}" → ön ek "SAT-2026-", son ek "", sıra no basamağı 4.
-        /// {yyyy}: dört haneli yıl, {yy}: iki haneli yıl, {0000}: sıfır sayısı kadar basamaklı sıra no.
-        /// </summary>
-        private static (string OnEk, string SonEk, int Basamak) FormatCoz(string format, DateTime tarih)
+        /// <summary>Format çözülemiyorsa (ör. {0000} alanı yok) kullanıcıya gösterilecek iş kuralı hatası verir.</summary>
+        private static BelgeNoFormati FormatCoz(string format, DateTime tarih)
         {
-            var yilli = format
-                .Replace("{yyyy}", tarih.Year.ToString())
-                .Replace("{yy}", (tarih.Year % 100).ToString("D2"));
-
-            var eslesmeler = SiraDeseni.Matches(yilli);
-            if (eslesmeler.Count != 1)
+            try
             {
-                throw new InvalidOperationException($"\"{format}\" formatında sıra numarası için tek bir {{0000}} alanı olmalıdır.");
+                return BelgeNoFormati.Coz(format, tarih);
             }
-
-            var m = eslesmeler[0];
-            return (yilli[..m.Index], yilli[(m.Index + m.Length)..], m.Groups[1].Length);
+            catch (FormatException ex)
+            {
+                throw new IsKuraliException(ex.Message);
+            }
         }
     }
 }
