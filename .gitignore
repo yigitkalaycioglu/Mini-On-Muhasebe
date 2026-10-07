@@ -15,6 +15,9 @@
 *.sln.docstates
 *.userprefs
 
+# Test sonuçları
+[Tt]est[Rr]esults/
+
 # Build sonuçları
 *.dll
 *.exe
