@@ -1,13 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
+  <!-- İş kuralları ve kullanım senaryoları. Yalnızca Domain'e bağlıdır; veritabanına IApplicationDbContext üzerinden erişir. -->
+
   <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\OnMuhasebe.Infrastructure\OnMuhasebe.Infrastructure.csproj" />
     <ProjectReference Include="..\OnMuhasebe.Domain\OnMuhasebe.Domain.csproj" />
-    <ProjectReference Include="..\OnMuhasebe.Utility\OnMuhasebe.Utility.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,20 +1,20 @@
 using System.Globalization;
 using System.Text.RegularExpressions;
 using Microsoft.EntityFrameworkCore;
-using OnMuhasebe.Business.Services.IServices;
-using OnMuhasebe.DataAccess;
-using OnMuhasebe.Models;
+using OnMuhasebe.Application.Abstractions;
+using OnMuhasebe.Domain;
+using OnMuhasebe.Domain.Entities;
 
-namespace OnMuhasebe.Business.Services
+namespace OnMuhasebe.Application.Services
 {
     public class ParametreService : IParametreService
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IApplicationDbContext _context;
 
         // Servis istek başına oluşturulduğu için (Scoped) parametreler bir istekte bir kez okunur.
         private Dictionary<string, string>? _degerler;
 
-        public ParametreService(ApplicationDbContext context)
+        public ParametreService(IApplicationDbContext context)
         {
             _context = context;
         }

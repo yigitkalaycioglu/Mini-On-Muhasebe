@@ -1,16 +1,17 @@
 using Microsoft.EntityFrameworkCore;
-using OnMuhasebe.Business.Services.IServices;
-using OnMuhasebe.DataAccess;
-using OnMuhasebe.Models;
+using OnMuhasebe.Application.Abstractions;
+using OnMuhasebe.Application.Extensions;
+using OnMuhasebe.Domain;
+using OnMuhasebe.Domain.Entities;
 
-namespace OnMuhasebe.Business.Services
+namespace OnMuhasebe.Application.Services
 {
     public class StokHareketService : IStokHareketService
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IApplicationDbContext _context;
         private readonly IParametreService _parametreService;
         private readonly IStokKartiService _stokKartiService;
-        public StokHareketService(ApplicationDbContext context, IParametreService parametreService, IStokKartiService stokKartiService)
+        public StokHareketService(IApplicationDbContext context, IParametreService parametreService, IStokKartiService stokKartiService)
         {
             _context = context;
             _parametreService = parametreService;

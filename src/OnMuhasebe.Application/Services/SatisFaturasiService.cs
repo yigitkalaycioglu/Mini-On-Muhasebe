@@ -1,17 +1,19 @@
 using Microsoft.EntityFrameworkCore;
-using OnMuhasebe.Business.Services.IServices;
-using OnMuhasebe.DataAccess;
-using OnMuhasebe.Models;
+using OnMuhasebe.Application.Abstractions;
+using OnMuhasebe.Application.Extensions;
+using OnMuhasebe.Application.Models;
+using OnMuhasebe.Domain;
+using OnMuhasebe.Domain.Entities;
 
-namespace OnMuhasebe.Business.Services
+namespace OnMuhasebe.Application.Services
 {
     public class SatisFaturasiService : ISatisFaturasiService
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IApplicationDbContext _context;
         private readonly IParametreService _parametreService;
         private readonly IStokKartiService _stokKartiService;
         private readonly ICariService _cariService;
-        public SatisFaturasiService(ApplicationDbContext context, IParametreService parametreService, IStokKartiService stokKartiService, ICariService cariService)
+        public SatisFaturasiService(IApplicationDbContext context, IParametreService parametreService, IStokKartiService stokKartiService, ICariService cariService)
         {
             _context = context;
             _parametreService = parametreService;

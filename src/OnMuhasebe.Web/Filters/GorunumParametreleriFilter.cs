@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
-using OnMuhasebe.Business;
-using OnMuhasebe.Business.Services.IServices;
+using OnMuhasebe.Application.Services;
+using OnMuhasebe.Domain;
 
-namespace OnMuhasebeWeb.Filters
+namespace OnMuhasebe.Web.Filters
 {
     /// <summary>
     /// Her sayfada gereken görüntü parametrelerini (firma bilgisi, para birimi, tutar biçimi) ViewData'ya koyar.

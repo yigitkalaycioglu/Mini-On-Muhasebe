@@ -3,7 +3,6 @@
     <Project Path="src/OnMuhasebe.Domain/OnMuhasebe.Domain.csproj" />
     <Project Path="src/OnMuhasebe.Application/OnMuhasebe.Application.csproj" />
     <Project Path="src/OnMuhasebe.Infrastructure/OnMuhasebe.Infrastructure.csproj" />
-    <Project Path="src/OnMuhasebe.Utility/OnMuhasebe.Utility.csproj" />
     <Project Path="src/OnMuhasebe.Web/OnMuhasebe.Web.csproj" />
   </Folder>
   <Folder Name="/Solution Items/">

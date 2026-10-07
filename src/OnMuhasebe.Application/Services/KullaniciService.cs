@@ -1,21 +1,20 @@
 using Microsoft.EntityFrameworkCore;
-using OnMuhasebe.Business.Services.IServices;
-using OnMuhasebe.DataAccess;
-using OnMuhasebe.Models;
-using OnMuhasebe.Utility;
+using OnMuhasebe.Application.Abstractions;
+using OnMuhasebe.Application.Exceptions;
+using OnMuhasebe.Domain;
+using OnMuhasebe.Domain.Entities;
 
-namespace OnMuhasebe.Business.Services
+namespace OnMuhasebe.Application.Services
 {
     public class KullaniciService : IKullaniciService
     {
-        private readonly ApplicationDbContext _context;
-        public KullaniciService(ApplicationDbContext context)
+        private readonly IApplicationDbContext _context;
+        private readonly ISifreHashleyici _sifreHashleyici;
+        public KullaniciService(IApplicationDbContext context, ISifreHashleyici sifreHashleyici)
         {
             _context = context;
+            _sifreHashleyici = sifreHashleyici;
         }
-
-        // Kayıtlı olmayan kullanıcı adıyla girişte karşılaştırılan geçerli biçimli bir özet.
-        private static readonly Lazy<string> SahteSifreHash = new(() => SifreYardimcisi.HashOlustur(Guid.NewGuid().ToString()));
 
         public async Task<List<Kullanici>> GetAllKullanicilarAsync()
         {
@@ -34,7 +33,7 @@ namespace OnMuhasebe.Business.Services
 
             // Kullanıcı bulunamasa da şifre doğrulaması aynı sürede çalıştırılır; böylece yanıt
             // süresinden kullanıcı adının kayıtlı olup olmadığı anlaşılamaz.
-            var sifreDogru = SifreYardimcisi.Dogrula(sifre, kullanici?.SifreHash ?? SahteSifreHash.Value);
+            var sifreDogru = _sifreHashleyici.Dogrula(sifre, kullanici?.SifreHash);
 
             // Pasif kullanıcı giriş yapamaz.
             return kullanici != null && kullanici.Aktif && sifreDogru ? kullanici : null;
@@ -54,7 +53,7 @@ namespace OnMuhasebe.Business.Services
             }
 
             kullanici.Id = 0; // Id veritabanında üretilir
-            kullanici.SifreHash = SifreYardimcisi.HashOlustur(sifre);
+            kullanici.SifreHash = _sifreHashleyici.HashOlustur(sifre);
             _context.Kullanicilar.Add(kullanici);
             await _context.SaveChangesAsync();
             return kullanici;
@@ -149,7 +148,7 @@ namespace OnMuhasebe.Business.Services
             {
                 throw new KeyNotFoundException("Kullanıcı bulunamadı.");
             }
-            kullanici.SifreHash = SifreYardimcisi.HashOlustur(yeniSifre);
+            kullanici.SifreHash = _sifreHashleyici.HashOlustur(yeniSifre);
             await _context.SaveChangesAsync();
         }
 

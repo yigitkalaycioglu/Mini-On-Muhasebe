@@ -1,14 +1,14 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using OnMuhasebe.Business.Services.IServices;
-using OnMuhasebe.DataAccess;
-using OnMuhasebe.Models;
+using OnMuhasebe.Application.Abstractions;
+using OnMuhasebe.Application.Exceptions;
+using OnMuhasebe.Domain.Entities;
 
-namespace OnMuhasebe.Business.Services
+namespace OnMuhasebe.Application.Services
 {
     public class SatisElemaniService : ISatisElemaniService
     {
-        private readonly ApplicationDbContext _context;
-        public SatisElemaniService(ApplicationDbContext context)
+        private readonly IApplicationDbContext _context;
+        public SatisElemaniService(IApplicationDbContext context)
         {
             _context = context;
         }

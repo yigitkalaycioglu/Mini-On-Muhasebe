@@ -1,16 +1,17 @@
 using Microsoft.EntityFrameworkCore;
-using OnMuhasebe.Business.Services.IServices;
-using OnMuhasebe.DataAccess;
-using OnMuhasebe.Models;
+using OnMuhasebe.Application.Abstractions;
+using OnMuhasebe.Application.Extensions;
+using OnMuhasebe.Domain;
+using OnMuhasebe.Domain.Entities;
 
-namespace OnMuhasebe.Business.Services
+namespace OnMuhasebe.Application.Services
 {
     public class TahsilatOdemeService : ITahsilatOdemeService
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IApplicationDbContext _context;
         private readonly IParametreService _parametreService;
         private readonly ICariService _cariService;
-        public TahsilatOdemeService(ApplicationDbContext context, IParametreService parametreService, ICariService cariService)
+        public TahsilatOdemeService(IApplicationDbContext context, IParametreService parametreService, ICariService cariService)
         {
             _context = context;
             _parametreService = parametreService;

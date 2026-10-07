@@ -1,6 +1,6 @@
-using OnMuhasebe.Models;
+using OnMuhasebe.Domain.Entities;
 
-namespace OnMuhasebeWeb.ViewModels
+namespace OnMuhasebe.Web.ViewModels
 {
     // Ekranların ihtiyaç duyduğu hazır veriler. Hesaplar servis katmanında yapılır,
     // buraya sonuç olarak gelir; view hiçbir hesap yapmaz.

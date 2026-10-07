@@ -1,15 +1,17 @@
 using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
-using OnMuhasebe.Business.Services.IServices;
-using OnMuhasebe.DataAccess;
-using OnMuhasebe.Models;
+using OnMuhasebe.Application.Abstractions;
+using OnMuhasebe.Application.Exceptions;
+using OnMuhasebe.Application.Models;
+using OnMuhasebe.Domain;
+using OnMuhasebe.Domain.Entities;
 
-namespace OnMuhasebe.Business.Services
+namespace OnMuhasebe.Application.Services
 {
     public class StokKartiService : IStokKartiService
     {
-        private readonly ApplicationDbContext _context;
-        public StokKartiService(ApplicationDbContext context)
+        private readonly IApplicationDbContext _context;
+        public StokKartiService(IApplicationDbContext context)
         {
             _context = context;
         }
@@ -134,7 +136,14 @@ namespace OnMuhasebe.Business.Services
                 throw new AlanHatasiException(nameof(StokKarti.StokKodu), "Bu stok kodu zaten kayıtlı.");
             }
 
-            _context.Entry(existingStokKarti).CurrentValues.SetValues(stokKarti);
+            existingStokKarti.StokKodu = stokKarti.StokKodu;
+            existingStokKarti.StokAdi = stokKarti.StokAdi;
+            existingStokKarti.Birim = stokKarti.Birim;
+            existingStokKarti.KdvOrani = stokKarti.KdvOrani;
+            existingStokKarti.AlisFiyati = stokKarti.AlisFiyati;
+            existingStokKarti.SatisFiyati = stokKarti.SatisFiyati;
+            existingStokKarti.KritikStok = stokKarti.KritikStok;
+            existingStokKarti.Aktif = stokKarti.Aktif;
             await _context.SaveChangesAsync();
         }
 

@@ -1,15 +1,18 @@
 using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
-using OnMuhasebe.Business.Services.IServices;
-using OnMuhasebe.DataAccess;
-using OnMuhasebe.Models;
+using OnMuhasebe.Application.Abstractions;
+using OnMuhasebe.Application.Exceptions;
+using OnMuhasebe.Application.Extensions;
+using OnMuhasebe.Application.Models;
+using OnMuhasebe.Domain;
+using OnMuhasebe.Domain.Entities;
 
-namespace OnMuhasebe.Business.Services
+namespace OnMuhasebe.Application.Services
 {
     public class CariService : ICariService
     {
-        private readonly ApplicationDbContext _context;
-        public CariService(ApplicationDbContext context)
+        private readonly IApplicationDbContext _context;
+        public CariService(IApplicationDbContext context)
         {
             _context = context;
         }
@@ -178,7 +181,14 @@ namespace OnMuhasebe.Business.Services
                 throw new AlanHatasiException(nameof(Cari.CariKodu), "Bu cari kodu zaten kayıtlı.");
             }
 
-            _context.Entry(existingCari).CurrentValues.SetValues(cari);
+            existingCari.CariKodu = cari.CariKodu;
+            existingCari.Unvan = cari.Unvan;
+            existingCari.CariTipi = cari.CariTipi;
+            existingCari.VergiDairesi = cari.VergiDairesi;
+            existingCari.VergiNo = cari.VergiNo;
+            existingCari.Telefon = cari.Telefon;
+            existingCari.Adres = cari.Adres;
+            existingCari.Aktif = cari.Aktif;
             await _context.SaveChangesAsync();
         }
     }

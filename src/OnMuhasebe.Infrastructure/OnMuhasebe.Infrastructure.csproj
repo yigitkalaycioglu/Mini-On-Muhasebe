@@ -1,11 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
+  <!-- Dış dünya: EF Core + SQL Server ile veritabanı, PBKDF2 parola özeti. Application'daki arayüzleri uygular. -->
+
   <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\OnMuhasebe.Domain\OnMuhasebe.Domain.csproj" />
+    <ProjectReference Include="..\OnMuhasebe.Application\OnMuhasebe.Application.csproj" />
   </ItemGroup>
 
 </Project>
